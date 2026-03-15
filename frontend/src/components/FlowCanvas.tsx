@@ -226,7 +226,7 @@ function Canvas({
           title="Copy breadcrumb path"
           className="ml-auto text-gray-600 hover:text-gray-400 transition-colors p-1"
         >
-          {copiedBreadcrumb ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3" />}
+          {copiedBreadcrumb ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
         </button>
       </div>
 
@@ -254,9 +254,9 @@ function Canvas({
             <button
               onClick={handleCopy}
               title="Copy flow as text"
-              style={{ background: "transparent", border: "none", cursor: "pointer", padding: "6px", color: copied ? "#4ade80" : "#6b7280" }}
+              className={`p-1.5 rounded-md border transition-colors ${copied ? "text-emerald-400 border-emerald-500/30 bg-emerald-500/10" : "text-gray-600 border-white/10 bg-black/40 hover:text-gray-400 hover:border-white/20"}`}
             >
-              {copied ? <Check size={16} /> : <Copy size={16} />}
+              {copied ? <Check size={14} /> : <Copy size={14} />}
             </button>
           </Panel>
           <Background variant={BackgroundVariant.Dots} gap={24} size={1} color="rgba(255,255,255,0.05)" />

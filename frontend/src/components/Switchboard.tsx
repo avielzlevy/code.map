@@ -26,7 +26,7 @@ export function Switchboard({ paths, selectedPath, onSelectPath }: SwitchboardPr
           <span className="font-mono text-[15px] font-bold tracking-tight text-white leading-none">
             code<span className="text-emerald-400">.</span>map
           </span>
-          <span className="font-mono text-[8px] tracking-[0.22em] text-white/25 uppercase leading-none">
+          <span className="font-mono text-[10px] tracking-[0.2em] text-white/30 uppercase leading-none">
             execution flow
           </span>
         </div>
@@ -49,7 +49,7 @@ export function Switchboard({ paths, selectedPath, onSelectPath }: SwitchboardPr
                   className={clsx(
                     "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all text-left border",
                     isSelected
-                      ? "bg-white/10 border-white/20 text-white shadow-[0_0_15px_rgba(255,255,255,0.1),inset_2px_0_0_0_#ffffff]"
+                      ? "bg-emerald-500/10 border-emerald-500/25 text-white shadow-[inset_2px_0_0_0_rgba(16,185,129,0.7)]"
                       : "border-transparent text-gray-400 hover:bg-white/5 hover:text-white"
                   )}
                 >
@@ -67,7 +67,7 @@ export function Switchboard({ paths, selectedPath, onSelectPath }: SwitchboardPr
                   <span className={clsx("truncate flex-1 font-medium", isSelected ? "text-white" : "")}>
                     {path.endpoint}
                   </span>
-                  {isSelected && <ChevronRight className="w-4 h-4 text-white shrink-0 drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]" />}
+                  {isSelected && <ChevronRight className="w-4 h-4 text-emerald-400 shrink-0" />}
                 </button>
               </li>
             );

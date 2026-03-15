@@ -172,7 +172,7 @@ export function CommandPalette({ paths, onSelectEndpoint, onSelectNode }: Comman
                       onClick={() => handleSelect(index)}
                       className={clsx(
                         "w-full flex items-center justify-between px-3 py-3 rounded-lg transition-all text-left",
-                        active ? "bg-white/10 shadow-[inset_2px_0_0_0_#ffffff]" : "hover:bg-white/5"
+                        active ? "bg-white/8 shadow-[inset_2px_0_0_0_rgba(16,185,129,0.6)]" : "hover:bg-white/5"
                       )}
                     >
                       <div className="flex items-center gap-3">
@@ -180,8 +180,8 @@ export function CommandPalette({ paths, onSelectEndpoint, onSelectNode }: Comman
                           className={clsx(
                             "p-1.5 rounded-md border",
                             item.type === "endpoint"
-                              ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.2)]"
-                              : "bg-blue-500/10 border-blue-500/20 text-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.2)]"
+                              ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+                              : "bg-white/5 border-white/10 text-gray-400"
                           )}
                         >
                           {item.type === "endpoint" ? <Network className="w-4 h-4" /> : <FunctionSquare className="w-4 h-4" />}
