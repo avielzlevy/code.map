@@ -33,7 +33,8 @@ export function IntelSidebar({ node, onClose, onDrillDown }: IntelSidebarProps) 
             </div>
             <button
               onClick={onClose}
-              className="p-1 hover:bg-white/10 rounded-md transition-colors text-gray-500 hover:text-white shrink-0 mt-0.5"
+              aria-label="Close"
+              className="p-1 hover:bg-white/10 active:bg-white/15 rounded-md transition-colors text-gray-500 hover:text-white shrink-0 mt-0.5"
             >
               <X className="w-4 h-4" />
             </button>
@@ -46,7 +47,7 @@ export function IntelSidebar({ node, onClose, onDrillDown }: IntelSidebarProps) 
                 <h3 className="text-[10px] uppercase tracking-wider text-gray-600 font-semibold mb-2 flex items-center gap-1.5">
                   <Tag className="w-3 h-3" /> Intent
                 </h3>
-                <div className="bg-emerald-500/10 border border-emerald-500/30 p-2.5 rounded-md text-emerald-400 font-mono text-sm shadow-[inset_0_1px_4px_rgba(16,185,129,0.1)]">
+                <div className="bg-emerald-500/10 border border-emerald-500/30 p-2.5 rounded-md text-emerald-400 font-mono text-sm">
                   {node.intentTag}
                 </div>
               </div>
@@ -92,7 +93,7 @@ export function IntelSidebar({ node, onClose, onDrillDown }: IntelSidebarProps) 
             {node.hasDetail && (
               <button
                 onClick={() => { onDrillDown(node); onClose(); }}
-                className="w-full flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-black py-2.5 px-4 rounded-md font-semibold transition-colors"
+                className="w-full flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-400 active:bg-emerald-600 active:scale-[0.98] text-black py-2.5 px-4 rounded-md font-semibold transition-all"
               >
                 <Layers className="w-4 h-4" />
                 Explore Internals
@@ -100,7 +101,7 @@ export function IntelSidebar({ node, onClose, onDrillDown }: IntelSidebarProps) 
             )}
             <a
               href={getVSCodeUrl(node.fileName, node.line)}
-              className="w-full flex items-center justify-center gap-2 bg-transparent hover:bg-white/5 border border-white/15 hover:border-white/25 text-gray-400 hover:text-white py-2.5 px-4 rounded-md font-medium transition-colors"
+              className="w-full flex items-center justify-center gap-2 bg-transparent hover:bg-white/5 active:bg-white/10 border border-white/15 hover:border-white/25 text-gray-400 hover:text-white py-2.5 px-4 rounded-md font-medium transition-colors"
             >
               <ExternalLink className="w-4 h-4" />
               Open in VS Code

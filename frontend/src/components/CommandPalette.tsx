@@ -151,6 +151,7 @@ export function CommandPalette({ paths, onSelectEndpoint, onSelectNode }: Comman
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Search endpoints and functions..."
+                aria-label="Search endpoints and functions"
                 className="flex-1 bg-transparent border-none outline-none text-white px-3 text-lg placeholder:text-gray-500"
               />
               <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-white/5 border border-white/10 text-gray-400 text-xs font-mono">
@@ -172,7 +173,7 @@ export function CommandPalette({ paths, onSelectEndpoint, onSelectNode }: Comman
                       onClick={() => handleSelect(index)}
                       className={clsx(
                         "w-full flex items-center justify-between px-3 py-3 rounded-lg transition-all text-left",
-                        active ? "bg-white/8 shadow-[inset_2px_0_0_0_rgba(16,185,129,0.6)]" : "hover:bg-white/5"
+                        active ? "bg-white/[0.08] shadow-[inset_2px_0_0_0_rgba(16,185,129,0.6)]" : "hover:bg-white/5"
                       )}
                     >
                       <div className="flex items-center gap-3">

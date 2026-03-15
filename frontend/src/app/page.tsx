@@ -65,17 +65,17 @@ export default function Home() {
 
   if (status === "loading") {
     return (
-      <div className="flex w-full h-screen bg-[#0f1115] items-center justify-center">
-        <div className="flex flex-col items-center gap-3 text-gray-500">
-          <div className="w-6 h-6 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
-          <span className="text-sm">Connecting to FlowMap sidecar…</span>
+      <div className="flex w-full h-screen bg-black items-center justify-center">
+        <div className="flex flex-col items-center gap-3 text-gray-600">
+          <div className="w-5 h-5 rounded-full border-2 border-white/10 border-t-emerald-400 animate-spin" />
+          <span className="text-xs font-mono text-gray-600">Connecting to sidecar…</span>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex w-full h-screen bg-[#0f1115] text-[#e2e8f0] overflow-hidden">
+    <div className="flex w-full h-screen bg-black text-[#e2e8f0] overflow-hidden">
       {usingMockData && (
         <div className="absolute top-2 left-1/2 -translate-x-1/2 z-50 text-xs bg-yellow-900/60 border border-yellow-700 text-yellow-300 px-3 py-1 rounded-full">
           Sidecar offline — showing demo data
@@ -99,8 +99,29 @@ export default function Home() {
             onBackTo={handleBackTo}
           />
         ) : (
-          <div className="flex h-full items-center justify-center text-gray-500">
-            Select an endpoint to visualize its execution path.
+          <div className="flex h-full flex-col items-center justify-center gap-7">
+            {/* Mini flow illustration */}
+            <div className="flex flex-col items-center select-none" aria-hidden="true">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="flex flex-col items-center">
+                  <div className="w-28 h-7 rounded-lg border border-white/[0.07] bg-white/[0.025]" />
+                  {i < 2 && <div className="w-px h-4 border-l border-dashed border-white/[0.08]" />}
+                </div>
+              ))}
+            </div>
+            {/* Copy + CTA */}
+            <div className="flex flex-col items-center gap-3">
+              <p className="text-xs font-mono text-gray-600 text-center max-w-[190px] leading-relaxed">
+                Select an endpoint to visualize its execution path.
+              </p>
+              <button
+                onClick={() => window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true, bubbles: true }))}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/[0.08] bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/[0.12] active:bg-white/[0.08] transition-colors text-gray-500 hover:text-gray-300 text-xs font-mono"
+              >
+                Search endpoints
+                <kbd className="text-[10px] bg-white/5 border border-white/10 px-1.5 py-0.5 rounded text-gray-600">⌘K</kbd>
+              </button>
+            </div>
           </div>
         )}
       </main>

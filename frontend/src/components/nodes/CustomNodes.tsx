@@ -28,7 +28,7 @@ export function GhostEntryPin({ data }: any) {
 export function StandardNode({ data }: any) {
   return (
     <div
-      className={`px-5 py-4 rounded-xl bg-white/5 backdrop-blur-xl border w-[450px] transition-all group relative
+      className={`px-5 py-4 rounded-xl bg-white/5 backdrop-blur-xl border w-[450px] transition-colors group relative
         ${data.hasDetail
           ? "border-white/20 hover:border-white/40 cursor-pointer shadow-[0_4px_24px_rgba(0,0,0,0.6),0_0_15px_rgba(255,255,255,0.05)]"
           : "border-white/10 shadow-[0_4px_24px_rgba(0,0,0,0.6)]"
@@ -75,7 +75,7 @@ export function StandardNode({ data }: any) {
 export function EnhancedNode({ data }: any) {
   return (
     <div
-      className={`px-5 py-4 rounded-xl bg-black/40 backdrop-blur-xl border w-[450px] relative group transition-all
+      className={`px-5 py-4 rounded-xl bg-black/40 backdrop-blur-xl border w-[450px] relative group transition-colors
         ${data.hasDetail
           ? "border-emerald-500/50 hover:border-emerald-400 cursor-pointer shadow-[0_4px_30px_rgba(16,185,129,0.2),0_0_15px_rgba(16,185,129,0.1)]"
           : "border-emerald-500/30 hover:border-emerald-500/40 shadow-[0_4px_30px_rgba(16,185,129,0.15)]"

@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "FlowMap Dashboard",
-  description: "Developer flow-mapping tool for API execution paths",
+  title: "code.map",
+  description: "Visualize API execution paths",
 };
 
 export default function RootLayout({

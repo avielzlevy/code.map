@@ -1,7 +1,7 @@
 "use client";
 
 import { ExecutionPath } from "@/lib/mockData";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Search } from "lucide-react";
 import clsx from "clsx";
 
 interface SwitchboardProps {
@@ -32,7 +32,19 @@ export function Switchboard({ paths, selectedPath, onSelectPath }: SwitchboardPr
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto py-3">
+      {/* Search trigger — teaches ⌘K shortcut */}
+      <div className="px-3 py-2 shrink-0">
+        <button
+          onClick={() => window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true, bubbles: true }))}
+          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/10 active:bg-white/[0.07] transition-colors text-gray-600 hover:text-gray-400 text-xs"
+        >
+          <Search className="w-3.5 h-3.5 shrink-0" />
+          <span className="flex-1 text-left font-mono">Search…</span>
+          <kbd className="text-[10px] font-mono bg-white/5 border border-white/10 px-1.5 py-0.5 rounded text-gray-600">⌘K</kbd>
+        </button>
+      </div>
+
+      <div className="flex-1 overflow-y-auto py-1">
         <ul className="space-y-1 px-3">
           {paths.map((path) => {
             const isSelected = selectedPath?.endpoint === path.endpoint;
@@ -41,7 +53,7 @@ export function Switchboard({ paths, selectedPath, onSelectPath }: SwitchboardPr
                 <button
                   onClick={() => onSelectPath(path)}
                   className={clsx(
-                    "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all text-left border",
+                    "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors text-left border",
                     isSelected
                       ? "bg-emerald-500/10 border-emerald-500/25 text-white shadow-[inset_2px_0_0_0_rgba(16,185,129,0.7)]"
                       : "border-transparent text-gray-400 hover:bg-white/5 hover:text-white"
