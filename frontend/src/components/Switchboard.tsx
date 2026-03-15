@@ -12,51 +12,23 @@ interface SwitchboardProps {
 
 export function Switchboard({ paths, selectedPath, onSelectPath }: SwitchboardProps) {
   return (
-    <div className="w-80 h-screen border-r border-white/10 bg-black/80 backdrop-blur-3xl flex flex-col pt-6 shrink-0 relative z-20 shadow-[4px_0_30px_rgba(0,0,0,0.8)]">
-      {/* Hyper-Creative Flashy Topbar */}
-      <div className="w-full relative py-10 flex flex-col items-center justify-center border-b border-white/5 bg-gradient-to-b from-white/[0.02] to-transparent overflow-hidden shrink-0">
-        
-        {/* Dynamic Background Effects */}
-        <div className="absolute inset-0 pointer-events-none">
-          {/* Radial gradient glow */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-emerald-500/10 blur-[60px] rounded-full" />
-          
-          {/* Animated data lines */}
-          <div className="absolute top-0 left-[20%] w-[1px] h-full bg-gradient-to-b from-transparent via-emerald-500/20 to-transparent" />
-          <div className="absolute top-0 right-[20%] w-[1px] h-full bg-gradient-to-b from-transparent via-blue-500/20 to-transparent" />
+    <div className="w-80 h-screen border-r border-white/10 bg-black/80 backdrop-blur-3xl flex flex-col shrink-0 relative z-20 shadow-[4px_0_30px_rgba(0,0,0,0.8)]">
+      {/* Topbar */}
+      <div className="w-full px-5 py-4 border-b border-white/[0.06] shrink-0 flex items-center gap-3">
+
+        {/* Logomark: fn node — mirrors the app's own card language */}
+        <div className="w-9 h-9 shrink-0 rounded-lg border border-emerald-500/25 bg-emerald-500/[0.07] flex items-center justify-center animate-[glow-pulse_3s_ease-in-out_infinite]">
+          <span className="font-mono text-[11px] font-bold text-emerald-400 tracking-tighter">fn</span>
         </div>
 
-        <div className="relative z-10 flex flex-col items-center gap-5 w-full px-6">
-          
-          {/* Custom Animated Logo Icon: "The Data Nexus" */}
-          <div className="relative w-14 h-14 flex items-center justify-center group flex-shrink-0 cursor-pointer">
-            {/* Outer stabilizing glass ring */}
-            <div className="absolute inset-0 rounded-2xl border border-white/10 bg-white/[0.02] backdrop-blur-md transition-all duration-700 group-hover:bg-white/[0.05] group-hover:border-white/20 group-hover:rotate-12 group-hover:scale-110 shadow-[0_0_20px_rgba(0,0,0,1)]" />
-            
-            {/* Rotating UI Elements */}
-            <div className="absolute inset-2 border border-dashed border-emerald-500/40 rounded-full animate-[spin_6s_linear_infinite]" />
-            <div className="absolute inset-[10px] border-t-2 border-transparent border-t-blue-400 rounded-full animate-[spin_3s_linear_infinite]" />
-            <div className="absolute inset-[10px] border-b-2 border-transparent border-b-purple-400 rounded-full animate-[spin_4s_linear_infinite_reverse]" />
-            
-            {/* Central Glowing Core */}
-            <div className="w-3 h-3 bg-white rounded-sm rotate-45 shadow-[0_0_20px_rgba(255,255,255,0.9)] transition-all duration-500 group-hover:scale-150 group-hover:bg-emerald-300 group-hover:shadow-[0_0_30px_rgba(16,185,129,1)]" />
-          </div>
-
-          <div className="flex flex-col items-center w-full">
-            <h1 className="text-3xl font-black tracking-tighter text-white leading-none flex items-center gap-1.5 drop-shadow-[0_0_20px_rgba(255,255,255,0.2)]">
-              code
-              <span className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_15px_rgba(16,185,129,1)]" />
-              map
-            </h1>
-            
-            {/* High-tech aesthetic underline */}
-            <div className="mt-4 flex items-center justify-center gap-1.5 w-full opacity-70">
-              <span className="h-[1px] flex-1 bg-gradient-to-r from-transparent to-emerald-500/50" />
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
-              <span className="w-1 h-1 rounded-full bg-blue-400 shadow-[0_0_8px_rgba(59,130,246,0.8)]" />
-              <span className="h-[1px] flex-1 bg-gradient-to-l from-transparent to-emerald-500/50" />
-            </div>
-          </div>
+        {/* Wordmark */}
+        <div className="flex flex-col justify-center gap-[3px]">
+          <span className="font-mono text-[15px] font-bold tracking-tight text-white leading-none">
+            code<span className="text-emerald-400">.</span>map
+          </span>
+          <span className="font-mono text-[8px] tracking-[0.22em] text-white/25 uppercase leading-none">
+            execution flow
+          </span>
         </div>
       </div>
 

@@ -31,6 +31,19 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+@keyframes glow-pulse {
+  0%, 100% {
+    border-color: rgba(52, 211, 153, 0.25);
+    box-shadow: 0 0 0px rgba(52, 211, 153, 0);
+    background-color: rgba(52, 211, 153, 0.07);
+  }
+  50% {
+    border-color: rgba(52, 211, 153, 0.55);
+    box-shadow: 0 0 14px rgba(52, 211, 153, 0.25);
+    background-color: rgba(52, 211, 153, 0.13);
+  }
+}
+
 /* React Flow customizations to match premium dark theme */
 .react-flow__bg {
   background-color: var(--background);
