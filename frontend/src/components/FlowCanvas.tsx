@@ -45,7 +45,8 @@ function buildDagreLayout(nodes: FlowNode[], edges: FlowEdge[]) {
 }
 
 function buildReactFlowEdge(e: FlowEdge): Edge {
-  const color = "#10b981";
+  const color = "rgba(255, 255, 255, 0.45)";
+  const glow = "rgba(255, 255, 255, 0.8)";
   return {
     id: e.id,
     source: e.source,
@@ -55,13 +56,13 @@ function buildReactFlowEdge(e: FlowEdge): Edge {
     style: {
       stroke: color,
       strokeWidth: 2,
-      filter: `drop-shadow(0 0 4px ${color}60)`,
+      filter: `drop-shadow(0 0 6px ${glow})`,
     },
     markerEnd: {
       type: MarkerType.ArrowClosed,
       color,
-      width: 16,
-      height: 16,
+      width: 14,
+      height: 14,
     },
   };
 }
@@ -148,9 +149,9 @@ function Canvas({
   const isDetail = drillStack.length > 0;
 
   return (
-    <div className="w-full h-full bg-[#0a0c10] relative flex flex-col">
+    <div className="w-full h-full bg-black relative flex flex-col">
       {/* Breadcrumb bar */}
-      <div className="flex items-center gap-1 px-4 py-2 border-b border-[#1e222a] bg-[#0d0f14] shrink-0 min-h-[40px] justify-between">
+      <div className="flex items-center gap-1 px-4 py-2 border-b border-white/10 bg-black/50 backdrop-blur-md shrink-0 min-h-[40px] justify-between z-20">
         <button
           onClick={() => onBackTo(-1)}
           className={`flex items-center gap-1.5 text-xs transition-colors ${
@@ -216,10 +217,10 @@ function Canvas({
               {copied ? <Check size={16} /> : <Copy size={16} />}
             </button>
           </Panel>
-          <Background variant={BackgroundVariant.Dots} gap={24} size={1} color="#1f242e" />
+          <Background variant={BackgroundVariant.Dots} gap={24} size={1} color="rgba(255,255,255,0.05)" />
           <Controls
             showInteractive={false}
-            className="bg-[#13151a] border-[#2a2f3a] fill-gray-400 stroke-gray-400 text-gray-400 [&>button]:!bg-[#13151a] [&>button]:!border-b-[#2a2f3a] [&>button:hover]:!bg-[#1e222a]"
+            className="!bg-black/60 !backdrop-blur-xl !border !border-white/10 fill-gray-400 stroke-gray-400 text-gray-400 [&>button]:!bg-transparent [&>button]:!border-b [&>button]:!border-white/10 [&>button:hover]:!bg-white/10"
           />
         </ReactFlow>
       </div>

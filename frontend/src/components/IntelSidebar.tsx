@@ -34,17 +34,17 @@ export function IntelSidebar({ node, onClose, onDrillDown }: IntelSidebarProps) 
           animate={{ x: 0, opacity: 1 }}
           exit={{ x: "100%", opacity: 0 }}
           transition={{ type: "spring", damping: 25, stiffness: 200 }}
-          className="absolute top-0 right-0 w-96 h-full bg-[#1e222a]/95 backdrop-blur-md border-l border-[#333a45] shadow-[-10px_0_30px_rgba(0,0,0,0.5)] flex flex-col z-50 text-[#e2e8f0]"
+          className="absolute top-0 right-0 w-96 h-full bg-black/60 backdrop-blur-2xl border-l border-white/10 shadow-[-10px_0_30px_rgba(0,0,0,0.8)] flex flex-col z-50 text-gray-200"
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-[#333a45]">
-            <h2 className="text-lg font-bold flex items-center gap-2">
-              <Code2 className="w-5 h-5 text-[#3b82f6]" />
+          <div className="flex items-center justify-between p-4 border-b border-white/10">
+            <h2 className="text-lg font-bold flex items-center gap-2 text-white">
+              <Code2 className="w-5 h-5 text-white" />
               Intel Report
             </h2>
             <button
               onClick={onClose}
-              className="p-1 hover:bg-[#333a45] rounded-md transition-colors text-gray-400 hover:text-white"
+              className="p-1 hover:bg-white/10 rounded-md transition-colors text-gray-400 hover:text-white"
             >
               <X className="w-5 h-5" />
             </button>
@@ -56,8 +56,8 @@ export function IntelSidebar({ node, onClose, onDrillDown }: IntelSidebarProps) 
               <h3 className="text-xs uppercase tracking-wider text-gray-500 font-semibold mb-3">
                 Structural Layer
               </h3>
-              <div className="bg-[#0f1115] p-3 rounded-md border border-[#333a45]">
-                <div className="font-mono text-sm text-[#3b82f6] font-bold mb-1">
+              <div className="bg-white/5 p-3 rounded-md border border-white/10 shadow-[0_4px_20px_rgba(0,0,0,0.2)]">
+                <div className="font-mono text-sm text-white font-bold mb-1">
                   {node.funcName}()
                 </div>
                 <div className="text-xs text-gray-400 font-mono break-all">
@@ -72,7 +72,7 @@ export function IntelSidebar({ node, onClose, onDrillDown }: IntelSidebarProps) 
                 <h3 className="text-xs uppercase tracking-wider text-gray-500 font-semibold mb-3 flex items-center gap-2">
                   <Tag className="w-4 h-4" /> Intent Layer
                 </h3>
-                <div className="bg-[#10b981]/10 border border-[#10b981]/30 p-2.5 rounded-md text-[#10b981] font-mono text-sm">
+                <div className="bg-emerald-500/10 border border-emerald-500/30 p-2.5 rounded-md text-emerald-400 font-mono text-sm shadow-[inset_0_1px_4px_rgba(16,185,129,0.1)]">
                   {node.intentTag}
                 </div>
               </div>
@@ -84,39 +84,49 @@ export function IntelSidebar({ node, onClose, onDrillDown }: IntelSidebarProps) 
                 <h3 className="text-xs uppercase tracking-wider text-gray-500 font-semibold mb-3 flex items-center gap-2">
                   <FileText className="w-4 h-4" /> Developer Layer
                 </h3>
-                <pre className="bg-[#0f1115] p-3 rounded-md border border-[#333a45] text-xs text-gray-300 font-mono whitespace-pre-wrap">
+                <pre className="bg-white/5 p-3 rounded-md border border-white/10 text-xs text-gray-300 font-mono whitespace-pre-wrap shadow-[0_4px_20px_rgba(0,0,0,0.2)]">
                   {node.docstring}
                 </pre>
               </div>
             )}
 
             {/* Narrative Layer (AI) */}
-            <div>
-              <h3 className="text-xs uppercase tracking-wider text-gray-500 font-semibold mb-3 flex items-center gap-2">
-                <BrainCircuit className="w-4 h-4 text-purple-400" /> Narrative Layer
-              </h3>
-              <div className="bg-[#0f1115] p-4 rounded-md border border-purple-900/50 shadow-[inset_0_0_20px_rgba(168,85,247,0.05)]">
-                {loadingAI ? (
-                  <div className="animate-pulse space-y-2">
-                    <div className="h-3 bg-[#333a45] rounded rounded-full w-3/4"></div>
-                    <div className="h-3 bg-[#333a45] rounded rounded-full w-full"></div>
-                    <div className="h-3 bg-[#333a45] rounded rounded-full w-5/6"></div>
+            <AnimatePresence>
+              {node.aiSummary && (
+                <motion.div
+                  initial={{ opacity: 0, y: -20, height: 0 }}
+                  animate={{ opacity: 1, y: 0, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="overflow-hidden"
+                >
+                  <h3 className="text-xs uppercase tracking-wider text-gray-500 font-semibold mb-3 flex items-center gap-2 mt-2">
+                    <BrainCircuit className="w-4 h-4 text-purple-400" /> Narrative Layer
+                  </h3>
+                  <div className="bg-purple-900/10 p-4 rounded-md border border-purple-500/20 shadow-[inset_0_0_20px_rgba(168,85,247,0.05),0_4px_20px_rgba(0,0,0,0.2)]">
+                    {loadingAI ? (
+                      <div className="animate-pulse space-y-2">
+                        <div className="h-3 bg-white/10 rounded-full w-3/4"></div>
+                        <div className="h-3 bg-white/10 rounded-full w-full"></div>
+                        <div className="h-3 bg-white/10 rounded-full w-5/6"></div>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-300 leading-relaxed">
+                        {node.aiSummary}
+                      </p>
+                    )}
                   </div>
-                ) : (
-                  <p className="text-sm text-gray-300 leading-relaxed">
-                    {node.aiSummary || "No AI summary available for this node."}
-                  </p>
-                )}
-              </div>
-            </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           {/* Action Footer */}
-          <div className="p-4 border-t border-[#333a45] bg-[#0f1115] flex flex-col gap-2">
+          <div className="p-4 border-t border-white/10 bg-black/40 flex flex-col gap-2">
             {node.hasDetail && (
               <button
                 onClick={() => { onDrillDown(node); onClose(); }}
-                className="w-full flex items-center justify-center gap-2 bg-[#10b981]/15 hover:bg-[#10b981]/25 border border-[#10b981]/40 hover:border-[#10b981]/70 text-[#10b981] py-2.5 px-4 rounded-md font-medium transition-colors"
+                className="w-full flex items-center justify-center gap-2 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 hover:border-emerald-500/70 text-emerald-400 py-2.5 px-4 rounded-md font-medium transition-colors shadow-[0_0_10px_rgba(16,185,129,0.1)]"
               >
                 <Layers className="w-4 h-4" />
                 Dive Deeper
@@ -124,7 +134,7 @@ export function IntelSidebar({ node, onClose, onDrillDown }: IntelSidebarProps) 
             )}
             <a
               href={getVSCodeUrl(node.fileName, node.line)}
-              className="w-full flex items-center justify-center gap-2 bg-[#3b82f6] hover:bg-[#2563eb] text-white py-2.5 px-4 rounded-md font-medium transition-colors"
+              className="w-full flex items-center justify-center gap-2 bg-white hover:bg-gray-200 text-black py-2.5 px-4 rounded-md font-medium transition-colors shadow-[0_0_15px_rgba(255,255,255,0.2)]"
             >
               <ExternalLink className="w-4 h-4" />
               View Code in VS Code

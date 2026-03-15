@@ -1,15 +1,15 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0f1115; /* Deep dark grey/blue background */
+  --background: #000000; /* Pure deep black background */
   --foreground: #e2e8f0; /* Crisp light gray for text */
-  --primary: #3b82f6; /* Bright blue for accents */
-  --primary-glow: rgba(59, 130, 246, 0.4);
-  --node-bg: #1e222a; /* Slightly lighter for nodes */
-  --node-border: #333a45;
+  --primary: #ffffff; /* Pure white for bright accents */
+  --primary-glow: rgba(255, 255, 255, 0.4);
+  --node-bg: rgba(20, 20, 20, 0.35); /* Glassmorphic dark */
+  --node-border: rgba(255, 255, 255, 0.08); /* Extremely subtle white border */
   --accent: #10b981; /* Emerald green for enhanced nodes */
   --accent-glow: rgba(16, 185, 129, 0.6);
-  --panel-bg: rgba(15, 17, 21, 0.85); /* Frosty backdrop */
+  --panel-bg: rgba(0, 0, 0, 0.65); /* Frosty backdrop */
 }
 
 @theme inline {
