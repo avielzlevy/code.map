@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Code2, Tag, FileText, BrainCircuit, ExternalLink, Layers } from "lucide-react";
 import { FlowNode } from "@/lib/mockData";
 import { getVSCodeUrl } from "@/lib/deep-link";
-import { useState, useEffect } from "react";
 
 interface IntelSidebarProps {
   node: FlowNode | null;
@@ -13,19 +12,6 @@ interface IntelSidebarProps {
 }
 
 export function IntelSidebar({ node, onClose, onDrillDown }: IntelSidebarProps) {
-  const [loadingAI, setLoadingAI] = useState(false);
-
-  // Simulate loading new AI summary on node change
-  useEffect(() => {
-    if (node) {
-      setLoadingAI(true);
-      const timer = setTimeout(() => {
-        setLoadingAI(false);
-      }, 800);
-      return () => clearTimeout(timer);
-    }
-  }, [node?.id]);
-
   return (
     <AnimatePresence>
       {node && (
@@ -105,17 +91,9 @@ export function IntelSidebar({ node, onClose, onDrillDown }: IntelSidebarProps) 
                     <BrainCircuit className="w-4 h-4 text-purple-400" /> Narrative Layer
                   </h3>
                   <div className="bg-purple-900/10 p-4 rounded-md border border-purple-500/20 shadow-[inset_0_0_20px_rgba(168,85,247,0.05),0_4px_20px_rgba(0,0,0,0.2)]">
-                    {loadingAI ? (
-                      <div className="animate-pulse space-y-2">
-                        <div className="h-3 bg-white/10 rounded-full w-3/4"></div>
-                        <div className="h-3 bg-white/10 rounded-full w-full"></div>
-                        <div className="h-3 bg-white/10 rounded-full w-5/6"></div>
-                      </div>
-                    ) : (
-                      <p className="text-sm text-gray-300 leading-relaxed">
-                        {node.aiSummary}
-                      </p>
-                    )}
+                    <p className="text-sm text-gray-300 leading-relaxed">
+                      {node.aiSummary}
+                    </p>
                   </div>
                 </motion.div>
               )}

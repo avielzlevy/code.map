@@ -1,5 +1,29 @@
 import { Handle, Position } from "@xyflow/react";
-import { FunctionSquare, Layers } from "lucide-react";
+import { FunctionSquare, Layers, CornerLeftUp } from "lucide-react";
+
+export function GhostEntryPin({ data }: any) {
+  return (
+    <div className="flex flex-col items-center select-none group cursor-pointer" style={{ width: 450 }}
+      onClick={(e) => { e.stopPropagation(); data.onBack?.(); }}
+    >
+      {/* Dashed line going up off-screen */}
+      <div className="w-px h-12 border-l-2 border-dashed border-white/15 transition-colors duration-200 group-hover:border-white/40" />
+
+      {/* The chip */}
+      <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-white/[0.04] backdrop-blur-sm transition-all duration-200 group-hover:border-white/30 group-hover:bg-white/[0.09]">
+        <CornerLeftUp className="w-3 h-3 text-white/30 -scale-x-100 transition-colors duration-200 group-hover:text-white/70" />
+        <span className="font-mono text-[11px] text-white/35 tracking-wide transition-colors duration-200 group-hover:text-white/70">
+          called by: <span className="text-white/55 group-hover:text-white/90 transition-colors duration-200">{data.callerLabel}</span>
+        </span>
+      </div>
+
+      {/* Connector down to the root node */}
+      <div className="w-px h-6 border-l-2 border-dashed border-white/15 transition-colors duration-200 group-hover:border-white/40" />
+
+      <Handle type="source" position={Position.Bottom} style={{ opacity: 0, pointerEvents: "none" }} />
+    </div>
+  );
+}
 
 export function StandardNode({ data }: any) {
   return (

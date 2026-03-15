@@ -20,10 +20,10 @@ import dagre from "dagre";
 import { ChevronRight, Home, Copy, Check } from "lucide-react";
 
 import { ExecutionPath, FlowNode, FlowEdge } from "@/lib/mockData";
-import { StandardNode, EnhancedNode } from "./nodes/CustomNodes";
+import { StandardNode, EnhancedNode, GhostEntryPin } from "./nodes/CustomNodes";
 import { DrillEntry } from "@/app/page";
 
-const nodeTypes = { standard: StandardNode, enhanced: EnhancedNode };
+const nodeTypes = { standard: StandardNode, enhanced: EnhancedNode, ghostEntryPin: GhostEntryPin };
 
 interface FlowCanvasProps {
   path: ExecutionPath;
@@ -119,22 +119,46 @@ function Canvas({
     );
     const targets = new Set(validEdges.map((e) => e.target));
     const sources = new Set(validEdges.map((e) => e.source));
-    setNodes(
-      activeNodes.map((n) => {
-        const pos = g.node(n.id);
-        return {
-          id: n.id,
-          type: n.type,
-          data: { ...n, hasIncoming: targets.has(n.id), hasOutgoing: sources.has(n.id) },
-          position: { x: pos.x - 225, y: pos.y - ((n.intentTag || n.docstring) ? 55 : 40) },
-        };
-      }),
-    );
-    setEdges(validEdges.map((e) => buildReactFlowEdge(e)));
+
+    const layoutNodes: Node[] = activeNodes.map((n) => {
+      const pos = g.node(n.id);
+      return {
+        id: n.id,
+        type: n.type,
+        data: { ...n, hasIncoming: targets.has(n.id), hasOutgoing: sources.has(n.id) },
+        position: { x: pos.x - 225, y: pos.y - ((n.intentTag || n.docstring) ? 55 : 40) },
+      };
+    });
+
+    // When nested, prepend a ghost entry pin above the topmost node
+    const layoutEdges: Edge[] = validEdges.map((e) => buildReactFlowEdge(e));
+    if (drillStack.length > 0) {
+      const topNode = layoutNodes.reduce((a, b) => (a.position.y < b.position.y ? a : b));
+      const callerLabel = drillStack[drillStack.length - 1].label;
+      const pinId = "__ghost_entry_pin__";
+      layoutNodes.unshift({
+        id: pinId,
+        type: "ghostEntryPin",
+        data: { callerLabel, onBack: () => onBackTo(drillStack.length - 2) },
+        position: { x: topNode.position.x, y: topNode.position.y - 120 },
+        selectable: false,
+        draggable: false,
+      } as Node);
+      layoutEdges.unshift({
+        id: `${pinId}->${topNode.id}`,
+        source: pinId,
+        target: topNode.id,
+        style: { stroke: "rgba(255,255,255,0.08)", strokeWidth: 1, strokeDasharray: "4 4" },
+        animated: false,
+      });
+    }
+
+    setNodes(layoutNodes);
+    setEdges(layoutEdges);
 
     const t = setTimeout(() => fitView({ padding: 0.25, duration: 350 }), 60);
     return () => clearTimeout(t);
-  }, [activeNodes, activeEdges, setNodes, setEdges, fitView]);
+  }, [activeNodes, activeEdges, drillStack, setNodes, setEdges, fitView]);
 
   // Pan viewport left/right as the sidebar opens/closes (sidebar is 384px wide)
   const prevSidebarOpen = useRef(sidebarOpen);
@@ -147,7 +171,10 @@ function Canvas({
   }, [sidebarOpen, getViewport, setViewport]);
 
   const handleNodeClick = useCallback(
-    (_: React.MouseEvent, node: Node) => onNodeClick(node.data as FlowNode),
+    (_: React.MouseEvent, node: Node) => {
+      if (node.id === "__ghost_entry_pin__") return;
+      onNodeClick(node.data as FlowNode);
+    },
     [onNodeClick],
   );
 
@@ -219,6 +246,8 @@ function Canvas({
           nodesDraggable={false}
           nodesConnectable={false}
           connectOnClick={false}
+          zoomOnScroll={false}
+          zoomOnPinch={false}
           zoomOnDoubleClick={false}
         >
           <Panel position="top-right" style={{ margin: "8px" }}>
