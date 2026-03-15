@@ -66,10 +66,12 @@ export class FlowMapperService {
     const entryPoints = graph.nodes.filter((n) => n.type === 'controller');
     if (entryPoints.length === 0) return this.fallbackSinglePath(graph);
 
-    return entryPoints.map((controller) => {
-      const nodeDetails: Record<string, NodeDetail> = {};
-      const { nodes, edges } = this.buildRootLayer(controller, orderedAdj, nodeMap, nodeDetails);
+    // Single shared nodeDetails map across all paths — details are built lazily
+    // (on first access for each nodeId) with cycle detection via sentinel values.
+    const nodeDetails: Record<string, NodeDetail> = {};
 
+    return entryPoints.map((controller) => {
+      const { nodes, edges } = this.buildRootLayer(controller, orderedAdj, nodeMap, nodeDetails);
       return {
         endpoint: this.resolveEndpoint(controller),
         method: controller.httpMethod ?? 'GET',
@@ -119,7 +121,7 @@ export class FlowMapperService {
     const controllerHasDetail = (orderedAdj.get(controller.id) ?? []).length > 0;
     rootNodes.push(this.toFrontendNode(controller, { hasDetail: controllerHasDetail }));
     if (controllerHasDetail) {
-      nodeDetails[controller.id] = this.buildDetail(controller.id, orderedAdj, nodeMap);
+      this.buildDetail(controller.id, orderedAdj, nodeMap, nodeDetails);
     }
 
     let prevId = controller.id;
@@ -153,7 +155,7 @@ export class FlowMapperService {
       prevId = child.id;
 
       if (childHasDetail) {
-        nodeDetails[child.id] = this.buildDetail(child.id, orderedAdj, nodeMap);
+        this.buildDetail(child.id, orderedAdj, nodeMap, nodeDetails);
       }
 
       // Collect @FlowStep-tagged descendants of this child, in DFS source order
@@ -179,7 +181,7 @@ export class FlowMapperService {
         prevId = step.id;
 
         if (stepHasDetail) {
-          nodeDetails[step.id] = this.buildDetail(step.id, orderedAdj, nodeMap);
+          this.buildDetail(step.id, orderedAdj, nodeMap, nodeDetails);
         }
       }
     }
@@ -215,15 +217,26 @@ export class FlowMapperService {
 
   /**
    * Build the full internal call graph for a node (the detail / drill-down layer).
-   * Uses the same ordered sequential-chain approach, depth-limited.
+   * Recursively builds details for every drillable child, enabling infinite layers.
+   * Cycle detection: a sentinel empty entry is set before expanding to prevent re-entrant calls.
    */
   private buildDetail(
     startId: string,
     orderedAdj: OrderedAdj,
     nodeMap: Map<string, FlowNode>,
+    nodeDetails: Record<string, NodeDetail>,
   ): NodeDetail {
+    // Return cached or sentinel (cycle guard)
+    if (startId in nodeDetails) return nodeDetails[startId];
+
     const startNode = nodeMap.get(startId);
-    if (!startNode) return { nodes: [], edges: [] };
+    if (!startNode) {
+      nodeDetails[startId] = { nodes: [], edges: [] };
+      return nodeDetails[startId];
+    }
+
+    // Set sentinel before expanding to prevent cycles
+    nodeDetails[startId] = { nodes: [], edges: [] };
 
     const detailNodeMap = new Map<string, FlowNode>([[startId, startNode]]);
     const detailEdges: FrontendEdge[] = [];
@@ -257,10 +270,24 @@ export class FlowMapperService {
 
     expandChildren(startId, 0);
 
-    return {
-      nodes: [...detailNodeMap.values()].map((n) => this.toFrontendNode(n, { hasDetail: false })),
+    // Recursively build details for every drillable child we included
+    for (const [id] of detailNodeMap) {
+      if (id !== startId && (orderedAdj.get(id) ?? []).length > 0 && !(id in nodeDetails)) {
+        this.buildDetail(id, orderedAdj, nodeMap, nodeDetails);
+      }
+    }
+
+    const detail: NodeDetail = {
+      nodes: [...detailNodeMap.values()].map((n) =>
+        this.toFrontendNode(n, {
+          hasDetail: n.id !== startId && (orderedAdj.get(n.id) ?? []).length > 0,
+        }),
+      ),
       edges: detailEdges,
     };
+
+    nodeDetails[startId] = detail;
+    return detail;
   }
 
   private resolveEndpoint(controller: FlowNode): string {

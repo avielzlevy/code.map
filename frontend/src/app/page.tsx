@@ -3,42 +3,39 @@
 import { useState } from "react";
 
 import { useExecutionPaths } from "@/hooks/useExecutionPaths";
-import { ExecutionPath, FlowNode, NodeDetail } from "@/lib/mockData";
+import { ExecutionPath, FlowNode } from "@/lib/mockData";
 import { Switchboard } from "@/components/Switchboard";
 import { FlowCanvas } from "@/components/FlowCanvas";
 import { IntelSidebar } from "@/components/IntelSidebar";
+
+export type DrillEntry = { id: string; label: string };
 
 export default function Home() {
   const { paths, status, usingMockData } = useExecutionPaths();
   const [selectedPath, setSelectedPath] = useState<ExecutionPath | null>(null);
   const [selectedNode, setSelectedNode] = useState<FlowNode | null>(null);
-  const [drillNodeId, setDrillNodeId] = useState<string | null>(null);
+  const [drillStack, setDrillStack] = useState<DrillEntry[]>([]);
 
   const activePath = selectedPath ?? paths[0] ?? null;
-
-  // When drilling into a node, synthesize a temporary "path" from its detail graph
-  const activeDetail: NodeDetail | null =
-    drillNodeId && activePath ? (activePath.nodeDetails[drillNodeId] ?? null) : null;
 
   const handleSelectPath = (path: ExecutionPath) => {
     setSelectedPath(path);
     setSelectedNode(null);
-    setDrillNodeId(null);
+    setDrillStack([]);
   };
 
   const handleNodeClick = (node: FlowNode) => {
-    if (!drillNodeId && node.hasDetail) {
-      // Root layer: drill into this node's internal graph
-      setDrillNodeId(node.id);
+    if (node.hasDetail) {
+      setDrillStack((prev) => [...prev, { id: node.id, label: node.funcName }]);
       setSelectedNode(null);
     } else {
-      // Detail layer (or node without detail): open intel sidebar
       setSelectedNode(node);
     }
   };
 
-  const handleBack = () => {
-    setDrillNodeId(null);
+  const handleBackTo = (index: number) => {
+    // index === -1 means back to root
+    setDrillStack((prev) => prev.slice(0, index + 1));
     setSelectedNode(null);
   };
 
@@ -71,9 +68,9 @@ export default function Home() {
         {activePath ? (
           <FlowCanvas
             path={activePath}
-            detail={activeDetail}
+            drillStack={drillStack}
             onNodeClick={handleNodeClick}
-            onBack={handleBack}
+            onBackTo={handleBackTo}
           />
         ) : (
           <div className="flex h-full items-center justify-center text-gray-500">
