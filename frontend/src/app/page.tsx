@@ -7,6 +7,7 @@ import { ExecutionPath, FlowNode } from "@/lib/mockData";
 import { Switchboard } from "@/components/Switchboard";
 import { FlowCanvas } from "@/components/FlowCanvas";
 import { IntelSidebar } from "@/components/IntelSidebar";
+import { CommandPalette } from "@/components/CommandPalette";
 
 export type DrillEntry = { id: string; label: string };
 
@@ -42,6 +43,24 @@ export default function Home() {
     // index === -1 means back to root
     setDrillStack((prev) => prev.slice(0, index + 1));
     setSelectedNode(null);
+  };
+
+  const handleSelectEndpoint = (path: ExecutionPath) => {
+    setSelectedPath(path);
+    setSelectedNode(null);
+    setDrillStack([]);
+  };
+
+  const handleSelectNodeFromSearch = (path: ExecutionPath, node: FlowNode, parentId: string | null) => {
+    setSelectedPath(path);
+    setSelectedNode(node);
+    
+    if (parentId) {
+      const parentNode = path.nodes.find(n => n.id === parentId);
+      setDrillStack([{ id: parentId, label: parentNode ? parentNode.funcName : parentId }]);
+    } else {
+      setDrillStack([]);
+    }
   };
 
   if (status === "loading") {
@@ -86,6 +105,12 @@ export default function Home() {
       </main>
 
       <IntelSidebar node={selectedNode} onClose={() => setSelectedNode(null)} onDrillDown={handleNodeDrillDown} />
+      
+      <CommandPalette 
+        paths={paths} 
+        onSelectEndpoint={handleSelectEndpoint}
+        onSelectNode={handleSelectNodeFromSearch} 
+      />
     </div>
   );
 }

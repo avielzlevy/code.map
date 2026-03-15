@@ -1,5 +1,5 @@
 import { Handle, Position } from "@xyflow/react";
-import { FunctionSquare, Sparkles, Layers } from "lucide-react";
+import { FunctionSquare, Layers } from "lucide-react";
 
 export function StandardNode({ data }: any) {
   return (
@@ -79,7 +79,7 @@ export function EnhancedNode({ data }: any) {
       />
       <div className="flex items-center gap-3 relative z-10">
         <div className="p-2 bg-emerald-500/10 rounded-lg border border-emerald-500/30 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.3)]">
-          <Sparkles className="w-5 h-5" />
+          <FunctionSquare className="w-5 h-5" />
         </div>
         <div className="flex flex-col flex-1">
           <span className="text-[15px] font-semibold text-emerald-300 tracking-wide">{data.funcName}</span>
