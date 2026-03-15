@@ -280,7 +280,7 @@ function Canvas({
                 >
                   <span>click to inspect</span>
                   <span className="w-px h-3 bg-white/10" />
-                  <span>double-click <span className="text-emerald-500/40">◈</span> nodes to explore</span>
+                  <span>double-click <span className="text-emerald-500/40">◈</span> to drill in</span>
                 </motion.div>
               )}
             </AnimatePresence>

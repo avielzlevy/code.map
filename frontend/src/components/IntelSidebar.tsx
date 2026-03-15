@@ -96,7 +96,7 @@ export function IntelSidebar({ node, onClose, onDrillDown }: IntelSidebarProps) 
                 className="w-full flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-400 active:bg-emerald-600 active:scale-[0.98] text-black py-2.5 px-4 rounded-md font-semibold transition-all"
               >
                 <Layers className="w-4 h-4" />
-                Explore Internals
+                Drill into calls
               </button>
             )}
             <a

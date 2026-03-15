@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Command, CornerDownLeft, Network, FunctionSquare } from "lucide-react";
+import { Search, Command, Network, FunctionSquare } from "lucide-react";
 import { ExecutionPath, FlowNode } from "@/lib/mockData";
 import clsx from "clsx";
 
@@ -53,7 +53,7 @@ export function CommandPalette({ paths, onSelectEndpoint, onSelectNode }: Comman
         type: "endpoint",
         path,
         label: path.endpoint,
-        sublabel: `${path.method} Request`,
+        sublabel: `${path.method} endpoint`,
       });
 
       // Root nodes
@@ -196,7 +196,7 @@ export function CommandPalette({ paths, onSelectEndpoint, onSelectNode }: Comman
                       </div>
                       {active && (
                         <div className="flex items-center gap-1 text-gray-400 text-xs">
-                          Return <CornerDownLeft className="w-3 h-3" />
+                          ↵
                         </div>
                       )}
                     </button>
