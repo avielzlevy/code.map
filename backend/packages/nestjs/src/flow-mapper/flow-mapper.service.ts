@@ -244,60 +244,37 @@ export class FlowMapperService {
     const resultEdges: FrontendEdge[] = [];
     const visited = new Set<string>([startId]);
 
-    const flowSteps = this.collectFlowSteps(startId, orderedAdj, nodeMap, new Set(visited));
+    // Always show all direct children (depth 1), @FlowStep nodes get stepNumber highlight
+    const directChildren = orderedAdj.get(startId) ?? [];
+    resultNodes.push(this.toFrontendNode(startNode, { hasDetail: false }));
 
-    if (flowSteps.length > 0) {
-      // --- Annotated path: show @FlowStep chain ---
-      resultNodes.push(this.toFrontendNode(startNode, { hasDetail: false }));
+    let stepCounter = 0;
+    let prevId = startId;
+    directChildren.forEach((childId, i) => {
+      const child = nodeMap.get(childId);
+      if (!child || visited.has(childId)) return;
+      visited.add(childId);
 
-      let prevId = startId;
-      flowSteps.forEach((step, idx) => {
-        const hasChildren = (orderedAdj.get(step.id) ?? []).length > 0;
-        const alreadyExpanded = step.id in nodeDetails;
-        const stepHasDetail = hasChildren && !alreadyExpanded;
-        resultNodes.push(this.toFrontendNode(step, { hasDetail: stepHasDetail, stepNumber: idx + 1 }));
-        resultEdges.push({
-          id: `${prevId}→${step.id}`,
-          source: prevId,
-          target: step.id,
-          callOrder: idx,
-          edgeType: idx === 0 ? 'call' : 'step',
-        });
-        prevId = step.id;
-
-        if (stepHasDetail) {
-          this.buildDetail(step.id, orderedAdj, nodeMap, nodeDetails);
-        }
+      const childHasDetail = (orderedAdj.get(childId) ?? []).length > 0;
+      resultNodes.push(
+        this.toFrontendNode(child, {
+          hasDetail: childHasDetail,
+          stepNumber: child.customTag ? ++stepCounter : undefined,
+        }),
+      );
+      resultEdges.push({
+        id: `${prevId}→${childId}`,
+        source: prevId,
+        target: childId,
+        callOrder: i,
+        edgeType: i === 0 ? 'call' : 'step',
       });
-    } else {
-      // --- Unannotated fallback: direct children only (depth 1) ---
-      const directChildren = orderedAdj.get(startId) ?? [];
-      resultNodes.push(this.toFrontendNode(startNode, { hasDetail: false }));
+      prevId = childId;
 
-      let prevId = startId;
-      directChildren.forEach((childId, i) => {
-        const child = nodeMap.get(childId);
-        if (!child || visited.has(childId)) return;
-        visited.add(childId);
-
-        const hasChildren = (orderedAdj.get(childId) ?? []).length > 0;
-        const alreadyExpanded = childId in nodeDetails;
-        const childHasDetail = hasChildren && !alreadyExpanded;
-        resultNodes.push(this.toFrontendNode(child, { hasDetail: childHasDetail }));
-        resultEdges.push({
-          id: `${prevId}→${childId}`,
-          source: prevId,
-          target: childId,
-          callOrder: i,
-          edgeType: i === 0 ? 'call' : 'step',
-        });
-        prevId = childId;
-
-        if (childHasDetail) {
-          this.buildDetail(childId, orderedAdj, nodeMap, nodeDetails);
-        }
-      });
-    }
+      if (childHasDetail && !(childId in nodeDetails)) {
+        this.buildDetail(childId, orderedAdj, nodeMap, nodeDetails);
+      }
+    });
 
     const detail: NodeDetail = { nodes: resultNodes, edges: resultEdges };
     nodeDetails[startId] = detail;

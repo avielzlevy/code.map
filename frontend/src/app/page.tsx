@@ -30,7 +30,10 @@ export default function Home() {
 
   const handleNodeDrillDown = (node: FlowNode) => {
     if (node.hasDetail) {
-      setDrillStack((prev) => [...prev, { id: node.id, label: node.funcName }]);
+      setDrillStack((prev) => {
+        if (prev.some((e) => e.id === node.id)) return prev; // already in stack, prevent cycle
+        return [...prev, { id: node.id, label: node.funcName }];
+      });
       setSelectedNode(null);
     }
   };
