@@ -204,13 +204,10 @@ export function CommandPalette({ paths, onSelectEndpoint, onSelectNode }: Comman
               )}
             </div>
             {/* Footer */}
-            <div className="px-4 py-2 bg-white/5 border-t border-white/10 text-xs text-gray-500 flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <span className="flex items-center gap-1">↑↓ to navigate</span>
-                <span className="flex items-center gap-1">Enter to select</span>
-                <span className="flex items-center gap-1">Esc to close</span>
-              </div>
-              <div>code-map Command Palette</div>
+            <div className="px-4 py-2 bg-white/5 border-t border-white/10 text-xs text-gray-500 flex items-center gap-4">
+              <span>↑↓ navigate</span>
+              <span>↵ select</span>
+              <span>esc close</span>
             </div>
           </motion.div>
         </div>

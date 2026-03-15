@@ -73,6 +73,7 @@ function Canvas({
   activeNodes,
   activeEdges,
   drillStack,
+  endpointLabel,
   sidebarOpen,
   onNodeClick,
   onNodeDrillDown,
@@ -81,6 +82,7 @@ function Canvas({
   activeNodes: FlowNode[];
   activeEdges: FlowEdge[];
   drillStack: DrillEntry[];
+  endpointLabel: string;
   sidebarOpen: boolean;
   onNodeClick: (node: FlowNode) => void;
   onNodeDrillDown: (node: FlowNode) => void;
@@ -103,12 +105,12 @@ function Canvas({
   }, [activeNodes]);
 
   const handleCopyBreadcrumb = useCallback(() => {
-    const parts = ["Overview", ...drillStack.map((e) => e.label)];
+    const parts = [endpointLabel, ...drillStack.map((e) => e.label)];
     navigator.clipboard.writeText(parts.join(" > ")).then(() => {
       setCopiedBreadcrumb(true);
       setTimeout(() => setCopiedBreadcrumb(false), 1500);
     });
-  }, [drillStack]);
+  }, [drillStack, endpointLabel]);
 
   useEffect(() => {
     const g = buildDagreLayout(activeNodes, activeEdges);
@@ -199,7 +201,7 @@ function Canvas({
           }`}
         >
           <Home className="w-3 h-3" />
-          <span>Overview</span>
+          <span className="font-mono">{endpointLabel}</span>
         </button>
 
         {drillStack.map((entry, idx) => {
@@ -246,8 +248,6 @@ function Canvas({
           nodesDraggable={false}
           nodesConnectable={false}
           connectOnClick={false}
-          zoomOnScroll={false}
-          zoomOnPinch={false}
           zoomOnDoubleClick={false}
         >
           <Panel position="top-right" style={{ margin: "8px" }}>
@@ -277,12 +277,15 @@ export function FlowCanvas({ path, drillStack, sidebarOpen, onNodeClick, onNodeD
   const activeNodes = currentDetail ? currentDetail.nodes : path.nodes;
   const activeEdges = currentDetail ? currentDetail.edges : path.edges;
 
+  const endpointLabel = `${path.method} ${path.endpoint}`;
+
   return (
     <ReactFlowProvider>
       <Canvas
         activeNodes={activeNodes}
         activeEdges={activeEdges}
         drillStack={drillStack}
+        endpointLabel={endpointLabel}
         sidebarOpen={sidebarOpen}
         onNodeClick={onNodeClick}
         onNodeDrillDown={onNodeDrillDown}
