@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Code2, Tag, FileText, BrainCircuit, ExternalLink } from "lucide-react";
+import { X, Code2, Tag, FileText, BrainCircuit, ExternalLink, Layers } from "lucide-react";
 import { FlowNode } from "@/lib/mockData";
 import { getVSCodeUrl } from "@/lib/deep-link";
 import { useState, useEffect } from "react";
@@ -9,9 +9,10 @@ import { useState, useEffect } from "react";
 interface IntelSidebarProps {
   node: FlowNode | null;
   onClose: () => void;
+  onDrillDown: (node: FlowNode) => void;
 }
 
-export function IntelSidebar({ node, onClose }: IntelSidebarProps) {
+export function IntelSidebar({ node, onClose, onDrillDown }: IntelSidebarProps) {
   const [loadingAI, setLoadingAI] = useState(false);
 
   // Simulate loading new AI summary on node change
@@ -111,7 +112,16 @@ export function IntelSidebar({ node, onClose }: IntelSidebarProps) {
           </div>
 
           {/* Action Footer */}
-          <div className="p-4 border-t border-[#333a45] bg-[#0f1115]">
+          <div className="p-4 border-t border-[#333a45] bg-[#0f1115] flex flex-col gap-2">
+            {node.hasDetail && (
+              <button
+                onClick={() => { onDrillDown(node); onClose(); }}
+                className="w-full flex items-center justify-center gap-2 bg-[#10b981]/15 hover:bg-[#10b981]/25 border border-[#10b981]/40 hover:border-[#10b981]/70 text-[#10b981] py-2.5 px-4 rounded-md font-medium transition-colors"
+              >
+                <Layers className="w-4 h-4" />
+                Dive Deeper
+              </button>
+            )}
             <a
               href={getVSCodeUrl(node.fileName, node.line)}
               className="w-full flex items-center justify-center gap-2 bg-[#3b82f6] hover:bg-[#2563eb] text-white py-2.5 px-4 rounded-md font-medium transition-colors"

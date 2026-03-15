@@ -25,11 +25,13 @@ export default function Home() {
   };
 
   const handleNodeClick = (node: FlowNode) => {
+    setSelectedNode(node);
+  };
+
+  const handleNodeDrillDown = (node: FlowNode) => {
     if (node.hasDetail) {
       setDrillStack((prev) => [...prev, { id: node.id, label: node.funcName }]);
       setSelectedNode(null);
-    } else {
-      setSelectedNode(node);
     }
   };
 
@@ -70,6 +72,7 @@ export default function Home() {
             path={activePath}
             drillStack={drillStack}
             onNodeClick={handleNodeClick}
+            onNodeDrillDown={handleNodeDrillDown}
             onBackTo={handleBackTo}
           />
         ) : (
@@ -79,7 +82,7 @@ export default function Home() {
         )}
       </main>
 
-      <IntelSidebar node={selectedNode} onClose={() => setSelectedNode(null)} />
+      <IntelSidebar node={selectedNode} onClose={() => setSelectedNode(null)} onDrillDown={handleNodeDrillDown} />
     </div>
   );
 }

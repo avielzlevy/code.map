@@ -37,3 +37,7 @@ export const EXCLUDED_DIRS = ['node_modules', 'dist', '.git', 'coverage', '__tes
 
 /** Maximum depth of the ordered DFS when building execution paths. */
 export const MAX_EXECUTION_DEPTH = 4;
+
+/** How many levels deep each drill-down detail layer expands.
+ *  1 = only direct children of the clicked node — true progressive disclosure. */
+export const DETAIL_EXPANSION_DEPTH = 1;

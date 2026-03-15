@@ -66,3 +66,22 @@ body {
 .react-flow__attribution {
   display: none !important;
 }
+
+/* Raise edges above nodes */
+.react-flow__edges {
+  z-index: 1000 !important;
+}
+
+.react-flow__nodes {
+  z-index: 1 !important;
+}
+
+/* Handles are hidden by default; connected ones are shown via data attribute */
+.react-flow__handle {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.react-flow__handle[data-connected="true"] {
+  opacity: 1 !important;
+}

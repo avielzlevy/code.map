@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useState } from "react";
 import {
   ReactFlow,
   Background,
   Controls,
+  Panel,
   useNodesState,
   useEdgesState,
   useReactFlow,
@@ -16,7 +17,7 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import dagre from "dagre";
-import { ChevronRight, Home } from "lucide-react";
+import { ChevronRight, Home, Copy, Check } from "lucide-react";
 
 import { ExecutionPath, FlowNode, FlowEdge } from "@/lib/mockData";
 import { StandardNode, EnhancedNode } from "./nodes/CustomNodes";
@@ -28,6 +29,7 @@ interface FlowCanvasProps {
   path: ExecutionPath;
   drillStack: DrillEntry[];
   onNodeClick: (node: FlowNode) => void;
+  onNodeDrillDown: (node: FlowNode) => void;
   onBackTo: (index: number) => void;
 }
 
@@ -41,24 +43,25 @@ function buildDagreLayout(nodes: FlowNode[], edges: FlowEdge[]) {
   return g;
 }
 
-function buildReactFlowEdge(e: FlowEdge, activeNodes: FlowNode[]): Edge {
-  const isStep = e.edgeType === "step";
-  const isTargetEnhanced = activeNodes.find((n) => n.id === e.target)?.type === "enhanced";
-  const color = isStep ? "#374151" : isTargetEnhanced ? "#10b981" : "#3b82f6";
+function buildReactFlowEdge(e: FlowEdge): Edge {
+  const color = "#10b981";
   return {
     id: e.id,
     source: e.source,
     target: e.target,
-    animated: !isStep,
+    animated: true,
     type: "smoothstep",
     style: {
       stroke: color,
-      strokeWidth: isStep ? 1 : 2,
-      strokeDasharray: isStep ? "5 4" : undefined,
-      opacity: isStep ? 0.45 : 1,
-      filter: isStep ? undefined : `drop-shadow(0 0 4px ${color}80)`,
+      strokeWidth: 2,
+      filter: `drop-shadow(0 0 4px ${color}60)`,
     },
-    markerEnd: { type: MarkerType.ArrowClosed, color, width: isStep ? 12 : 18, height: isStep ? 12 : 18 },
+    markerEnd: {
+      type: MarkerType.ArrowClosed,
+      color,
+      width: 16,
+      height: 16,
+    },
   };
 }
 
@@ -68,34 +71,53 @@ function Canvas({
   activeEdges,
   drillStack,
   onNodeClick,
+  onNodeDrillDown,
   onBackTo,
 }: {
   activeNodes: FlowNode[];
   activeEdges: FlowEdge[];
   drillStack: DrillEntry[];
   onNodeClick: (node: FlowNode) => void;
+  onNodeDrillDown: (node: FlowNode) => void;
   onBackTo: (index: number) => void;
 }) {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const { fitView } = useReactFlow();
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = useCallback(() => {
+    const text = activeNodes
+      .map((n) => `${n.funcName}(${n.fileName.split("/").pop()})`)
+      .join(" -> ");
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    });
+  }, [activeNodes]);
 
   useEffect(() => {
     const g = buildDagreLayout(activeNodes, activeEdges);
+    // Filter out any degenerate edges first
+    const nodeIds = new Set(activeNodes.map((n) => n.id));
+    const validEdges = activeEdges.filter(
+      (e) => e.source !== e.target && nodeIds.has(e.source) && nodeIds.has(e.target),
+    );
+    const targets = new Set(validEdges.map((e) => e.target));
+    const sources = new Set(validEdges.map((e) => e.source));
     setNodes(
       activeNodes.map((n) => {
         const pos = g.node(n.id);
         return {
           id: n.id,
           type: n.type,
-          data: { ...n },
+          data: { ...n, hasIncoming: targets.has(n.id), hasOutgoing: sources.has(n.id) },
           position: { x: pos.x - 130, y: pos.y - (n.intentTag ? 55 : 40) },
         };
       }),
     );
-    setEdges(activeEdges.map((e) => buildReactFlowEdge(e, activeNodes)));
+    setEdges(validEdges.map((e) => buildReactFlowEdge(e)));
 
-    // Auto-fit after nodes are painted
     const t = setTimeout(() => fitView({ padding: 0.25, duration: 350 }), 60);
     return () => clearTimeout(t);
   }, [activeNodes, activeEdges, setNodes, setEdges, fitView]);
@@ -103,6 +125,14 @@ function Canvas({
   const handleNodeClick = useCallback(
     (_: React.MouseEvent, node: Node) => onNodeClick(node.data as FlowNode),
     [onNodeClick],
+  );
+
+  const handleNodeDoubleClick = useCallback(
+    (_: React.MouseEvent, node: Node) => {
+      const flowNode = node.data as FlowNode;
+      if (flowNode.hasDetail) onNodeDrillDown(flowNode);
+    },
+    [onNodeDrillDown],
   );
 
   const isDetail = drillStack.length > 0;
@@ -142,7 +172,7 @@ function Canvas({
       </div>
 
       {/* Flow canvas */}
-      <div className="flex-1">
+      <div className="flex-1 relative z-10">
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -150,10 +180,24 @@ function Canvas({
           onEdgesChange={onEdgesChange}
           nodeTypes={nodeTypes}
           onNodeClick={handleNodeClick}
+          onNodeDoubleClick={handleNodeDoubleClick}
           fitView
           fitViewOptions={{ padding: 0.25 }}
           proOptions={{ hideAttribution: true }}
+          nodesDraggable={false}
+          nodesConnectable={false}
+          connectOnClick={false}
+          zoomOnDoubleClick={false}
         >
+          <Panel position="top-right" style={{ margin: "8px" }}>
+            <button
+              onClick={handleCopy}
+              title="Copy flow as text"
+              style={{ background: "transparent", border: "none", cursor: "pointer", padding: "6px", color: copied ? "#4ade80" : "#6b7280" }}
+            >
+              {copied ? <Check size={16} /> : <Copy size={16} />}
+            </button>
+          </Panel>
           <Background variant={BackgroundVariant.Dots} gap={24} size={1} color="#1f242e" />
           <Controls
             showInteractive={false}
@@ -165,8 +209,7 @@ function Canvas({
   );
 }
 
-export function FlowCanvas({ path, drillStack, onNodeClick, onBackTo }: FlowCanvasProps) {
-  // Resolve which nodes/edges to display based on the drill stack
+export function FlowCanvas({ path, drillStack, onNodeClick, onNodeDrillDown, onBackTo }: FlowCanvasProps) {
   const currentNodeId = drillStack.length > 0 ? drillStack[drillStack.length - 1].id : null;
   const currentDetail = currentNodeId ? path.nodeDetails[currentNodeId] ?? null : null;
 
@@ -180,6 +223,7 @@ export function FlowCanvas({ path, drillStack, onNodeClick, onBackTo }: FlowCanv
         activeEdges={activeEdges}
         drillStack={drillStack}
         onNodeClick={onNodeClick}
+        onNodeDrillDown={onNodeDrillDown}
         onBackTo={onBackTo}
       />
     </ReactFlowProvider>

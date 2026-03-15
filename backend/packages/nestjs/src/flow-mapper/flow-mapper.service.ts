@@ -12,7 +12,7 @@ import { AstParserService } from '../ast/ast-parser.service';
 import { CacheService } from '../cache/cache.service';
 import { NanoAgentService } from '../nano-agent/nano-agent.service';
 import { SidecarService } from '../sidecar/sidecar.service';
-import { MAX_EXECUTION_DEPTH } from '../constants';
+import { MAX_EXECUTION_DEPTH, DETAIL_EXPANSION_DEPTH } from '../constants';
 
 type OrderedAdj = Map<string, string[]>;
 
@@ -215,9 +215,13 @@ export class FlowMapperService {
   }
 
   /**
-   * Build the full internal call graph for a node (the detail / drill-down layer).
-   * Recursively builds details for every drillable child, enabling infinite layers.
-   * Cycle detection: a sentinel empty entry is set before expanding to prevent re-entrant calls.
+   * Build the drill-down layer for a node.
+   *
+   * Uses the same progressive-disclosure strategy as the root layer:
+   *   1. Look for @FlowStep-annotated descendants → show as a clean numbered chain.
+   *   2. If none found → fall back to depth-1 direct children (still drillable).
+   *
+   * This keeps every layer at roughly the same cognitive complexity regardless of depth.
    */
   private buildDetail(
     startId: string,
@@ -225,7 +229,6 @@ export class FlowMapperService {
     nodeMap: Map<string, FlowNode>,
     nodeDetails: Record<string, NodeDetail>,
   ): NodeDetail {
-    // Return cached or sentinel (cycle guard)
     if (startId in nodeDetails) return nodeDetails[startId];
 
     const startNode = nodeMap.get(startId);
@@ -234,57 +237,69 @@ export class FlowMapperService {
       return nodeDetails[startId];
     }
 
-    // Set sentinel before expanding to prevent cycles
+    // Sentinel before any recursive calls
     nodeDetails[startId] = { nodes: [], edges: [] };
 
-    const detailNodeMap = new Map<string, FlowNode>([[startId, startNode]]);
-    const detailEdges: FrontendEdge[] = [];
+    const resultNodes: FrontendNode[] = [];
+    const resultEdges: FrontendEdge[] = [];
+    const visited = new Set<string>([startId]);
 
-    const expandChildren = (parentId: string, depth: number): void => {
-      if (depth >= MAX_EXECUTION_DEPTH) return;
+    const flowSteps = this.collectFlowSteps(startId, orderedAdj, nodeMap, new Set(visited));
 
-      const children = orderedAdj.get(parentId) ?? [];
-      let prevInChain = parentId;
+    if (flowSteps.length > 0) {
+      // --- Annotated path: show @FlowStep chain ---
+      resultNodes.push(this.toFrontendNode(startNode, { hasDetail: false }));
 
-      for (let i = 0; i < children.length; i++) {
-        const childId = children[i];
+      let prevId = startId;
+      flowSteps.forEach((step, idx) => {
+        const hasChildren = (orderedAdj.get(step.id) ?? []).length > 0;
+        const alreadyExpanded = step.id in nodeDetails;
+        const stepHasDetail = hasChildren && !alreadyExpanded;
+        resultNodes.push(this.toFrontendNode(step, { hasDetail: stepHasDetail, stepNumber: idx + 1 }));
+        resultEdges.push({
+          id: `${prevId}→${step.id}`,
+          source: prevId,
+          target: step.id,
+          callOrder: idx,
+          edgeType: idx === 0 ? 'call' : 'step',
+        });
+        prevId = step.id;
+
+        if (stepHasDetail) {
+          this.buildDetail(step.id, orderedAdj, nodeMap, nodeDetails);
+        }
+      });
+    } else {
+      // --- Unannotated fallback: direct children only (depth 1) ---
+      const directChildren = orderedAdj.get(startId) ?? [];
+      resultNodes.push(this.toFrontendNode(startNode, { hasDetail: false }));
+
+      let prevId = startId;
+      directChildren.forEach((childId, i) => {
         const child = nodeMap.get(childId);
-        if (!child) continue;
+        if (!child || visited.has(childId)) return;
+        visited.add(childId);
 
-        const alreadyExpanded = detailNodeMap.has(childId);
-        detailNodeMap.set(childId, child);
-
-        detailEdges.push({
-          id: `${prevInChain}→${childId}`,
-          source: prevInChain,
+        const hasChildren = (orderedAdj.get(childId) ?? []).length > 0;
+        const alreadyExpanded = childId in nodeDetails;
+        const childHasDetail = hasChildren && !alreadyExpanded;
+        resultNodes.push(this.toFrontendNode(child, { hasDetail: childHasDetail }));
+        resultEdges.push({
+          id: `${prevId}→${childId}`,
+          source: prevId,
           target: childId,
           callOrder: i,
           edgeType: i === 0 ? 'call' : 'step',
         });
+        prevId = childId;
 
-        if (!alreadyExpanded) expandChildren(childId, depth + 1);
-        prevInChain = childId;
-      }
-    };
-
-    expandChildren(startId, 0);
-
-    // Recursively build details for every drillable child we included
-    for (const [id] of detailNodeMap) {
-      if (id !== startId && (orderedAdj.get(id) ?? []).length > 0 && !(id in nodeDetails)) {
-        this.buildDetail(id, orderedAdj, nodeMap, nodeDetails);
-      }
+        if (childHasDetail) {
+          this.buildDetail(childId, orderedAdj, nodeMap, nodeDetails);
+        }
+      });
     }
 
-    const detail: NodeDetail = {
-      nodes: [...detailNodeMap.values()].map((n) =>
-        this.toFrontendNode(n, {
-          hasDetail: n.id !== startId && (orderedAdj.get(n.id) ?? []).length > 0,
-        }),
-      ),
-      edges: detailEdges,
-    };
-
+    const detail: NodeDetail = { nodes: resultNodes, edges: resultEdges };
     nodeDetails[startId] = detail;
     return detail;
   }
