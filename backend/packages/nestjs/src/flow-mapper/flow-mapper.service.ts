@@ -66,11 +66,10 @@ export class FlowMapperService {
     const entryPoints = graph.nodes.filter((n) => n.type === 'controller');
     if (entryPoints.length === 0) return this.fallbackSinglePath(graph);
 
-    // Single shared nodeDetails map across all paths — details are built lazily
-    // (on first access for each nodeId) with cycle detection via sentinel values.
-    const nodeDetails: Record<string, NodeDetail> = {};
-
     return entryPoints.map((controller) => {
+      // Per-path nodeDetails: only contains details for nodes reachable from this controller.
+      // Keeping it isolated avoids duplicating the entire graph across 40+ paths in the JSON response.
+      const nodeDetails: Record<string, NodeDetail> = {};
       const { nodes, edges } = this.buildRootLayer(controller, orderedAdj, nodeMap, nodeDetails);
       return {
         endpoint: this.resolveEndpoint(controller),
