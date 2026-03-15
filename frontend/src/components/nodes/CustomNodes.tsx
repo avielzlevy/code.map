@@ -65,9 +65,9 @@ export function EnhancedNode({ data }: any) {
         <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-400 to-transparent opacity-60" />
       </div>
 
-      {data.stepNumber != null && (
-        <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-[10px] font-bold text-emerald-400 z-20 shadow-[0_0_10px_rgba(16,185,129,0.3)]">
-          {data.stepNumber}
+      {data.hasDetail && (
+        <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center z-20 shadow-[0_0_10px_rgba(16,185,129,0.3)]">
+          <Layers className="w-3 h-3 text-emerald-400" />
         </div>
       )}
 

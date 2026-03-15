@@ -13,14 +13,17 @@ interface SwitchboardProps {
 export function Switchboard({ paths, selectedPath, onSelectPath }: SwitchboardProps) {
   return (
     <div className="w-80 h-screen border-r border-white/10 bg-black/80 backdrop-blur-3xl flex flex-col pt-6 shrink-0 relative z-20 shadow-[4px_0_30px_rgba(0,0,0,0.8)]">
-      <div className="px-6 pb-6 border-b border-white/10">
-        <div className="flex items-center gap-2 mb-2">
-          <div className="p-1.5 bg-white/5 rounded-md border border-white/20 shadow-[0_0_15px_rgba(255,255,255,0.1)]">
-            <Activity className="w-5 h-5 text-white" />
+      <div className="px-5 py-6 border-b border-white/5 relative overflow-hidden flex flex-col items-center justify-center">
+        {/* Subtle glow effect behind logo */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-white/5 blur-3xl rounded-full pointer-events-none" />
+        
+        <div className="flex items-center gap-3 relative z-10 text-center">
+          <div className="relative flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-b from-white/10 to-transparent border border-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]">
+            <div className="absolute inset-0 bg-white/5 rounded-xl blur-[2px]" />
+            <Activity className="w-5 h-5 text-white relative z-10 drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]" />
           </div>
-          <h1 className="text-xl font-bold tracking-tight text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.4)]">code-map</h1>
+          <h1 className="text-xl font-bold tracking-tight text-white leading-none drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">code-map</h1>
         </div>
-        <p className="text-sm text-gray-400">Developer Execution Map</p>
       </div>
 
       <div className="flex-1 overflow-y-auto py-5">
