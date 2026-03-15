@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useCallback, useState } from "react";
+import { useEffect, useCallback, useState, useRef } from "react";
 import {
   ReactFlow,
   Background,
@@ -28,6 +28,7 @@ const nodeTypes = { standard: StandardNode, enhanced: EnhancedNode };
 interface FlowCanvasProps {
   path: ExecutionPath;
   drillStack: DrillEntry[];
+  sidebarOpen: boolean;
   onNodeClick: (node: FlowNode) => void;
   onNodeDrillDown: (node: FlowNode) => void;
   onBackTo: (index: number) => void;
@@ -72,6 +73,7 @@ function Canvas({
   activeNodes,
   activeEdges,
   drillStack,
+  sidebarOpen,
   onNodeClick,
   onNodeDrillDown,
   onBackTo,
@@ -79,13 +81,14 @@ function Canvas({
   activeNodes: FlowNode[];
   activeEdges: FlowEdge[];
   drillStack: DrillEntry[];
+  sidebarOpen: boolean;
   onNodeClick: (node: FlowNode) => void;
   onNodeDrillDown: (node: FlowNode) => void;
   onBackTo: (index: number) => void;
 }) {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
-  const { fitView } = useReactFlow();
+  const { fitView, getViewport, setViewport } = useReactFlow();
   const [copied, setCopied] = useState(false);
   const [copiedBreadcrumb, setCopiedBreadcrumb] = useState(false);
 
@@ -132,6 +135,16 @@ function Canvas({
     const t = setTimeout(() => fitView({ padding: 0.25, duration: 350 }), 60);
     return () => clearTimeout(t);
   }, [activeNodes, activeEdges, setNodes, setEdges, fitView]);
+
+  // Pan viewport left/right as the sidebar opens/closes (sidebar is 384px wide)
+  const prevSidebarOpen = useRef(sidebarOpen);
+  useEffect(() => {
+    if (prevSidebarOpen.current === sidebarOpen) return;
+    prevSidebarOpen.current = sidebarOpen;
+    const vp = getViewport();
+    const shift = 192; // half of sidebar width so the canvas re-centers
+    setViewport({ ...vp, x: vp.x + (sidebarOpen ? -shift : shift) }, { duration: 350 });
+  }, [sidebarOpen, getViewport, setViewport]);
 
   const handleNodeClick = useCallback(
     (_: React.MouseEvent, node: Node) => onNodeClick(node.data as FlowNode),
@@ -228,7 +241,7 @@ function Canvas({
   );
 }
 
-export function FlowCanvas({ path, drillStack, onNodeClick, onNodeDrillDown, onBackTo }: FlowCanvasProps) {
+export function FlowCanvas({ path, drillStack, sidebarOpen, onNodeClick, onNodeDrillDown, onBackTo }: FlowCanvasProps) {
   const currentNodeId = drillStack.length > 0 ? drillStack[drillStack.length - 1].id : null;
   const currentDetail = currentNodeId ? path.nodeDetails[currentNodeId] ?? null : null;
 
@@ -241,6 +254,7 @@ export function FlowCanvas({ path, drillStack, onNodeClick, onNodeDrillDown, onB
         activeNodes={activeNodes}
         activeEdges={activeEdges}
         drillStack={drillStack}
+        sidebarOpen={sidebarOpen}
         onNodeClick={onNodeClick}
         onNodeDrillDown={onNodeDrillDown}
         onBackTo={onBackTo}

@@ -93,6 +93,7 @@ export default function Home() {
           <FlowCanvas
             path={activePath}
             drillStack={drillStack}
+            sidebarOpen={selectedNode !== null}
             onNodeClick={handleNodeClick}
             onNodeDrillDown={handleNodeDrillDown}
             onBackTo={handleBackTo}

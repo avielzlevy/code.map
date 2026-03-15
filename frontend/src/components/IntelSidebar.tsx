@@ -30,12 +30,13 @@ export function IntelSidebar({ node, onClose, onDrillDown }: IntelSidebarProps) 
     <AnimatePresence>
       {node && (
         <motion.div
-          initial={{ x: "100%", opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          exit={{ x: "100%", opacity: 0 }}
-          transition={{ type: "spring", damping: 25, stiffness: 200 }}
-          className="absolute top-0 right-0 w-96 h-full bg-black/60 backdrop-blur-2xl border-l border-white/10 shadow-[-10px_0_30px_rgba(0,0,0,0.8)] flex flex-col z-50 text-gray-200"
+          initial={{ width: 0 }}
+          animate={{ width: 384 }}
+          exit={{ width: 0 }}
+          transition={{ type: "spring", damping: 28, stiffness: 220 }}
+          className="h-full shrink-0 overflow-hidden"
         >
+        <div className="w-96 h-full bg-black/60 backdrop-blur-2xl border-l border-white/10 shadow-[-10px_0_30px_rgba(0,0,0,0.8)] flex flex-col z-50 text-gray-200">
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-white/10">
             <h2 className="text-lg font-bold flex items-center gap-2 text-white">
@@ -140,6 +141,7 @@ export function IntelSidebar({ node, onClose, onDrillDown }: IntelSidebarProps) 
               View Code in VS Code
             </a>
           </div>
+        </div>
         </motion.div>
       )}
     </AnimatePresence>
