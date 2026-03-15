@@ -10,6 +10,7 @@ const mockedAxios = axios as jest.Mocked<typeof axios>;
 const makeNode = (overrides: Partial<FlowNode> = {}): FlowNode => ({
   id: 'src/user.service.ts:UserService#create:10',
   label: 'create',
+  methodName: 'create',
   type: 'service',
   filePath: 'src/user.service.ts',
   lineNumber: 10,

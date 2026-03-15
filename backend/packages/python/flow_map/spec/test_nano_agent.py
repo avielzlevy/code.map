@@ -11,6 +11,7 @@ def make_node(**overrides) -> FlowNode:
     defaults = dict(
         id="src/user_service.py:UserService#create:10",
         label="create",
+        method_name="create",
         type="service",
         file_path="src/user_service.py",
         line_number=10,
