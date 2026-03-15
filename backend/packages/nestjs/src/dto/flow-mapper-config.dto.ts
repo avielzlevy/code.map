@@ -45,6 +45,8 @@ export interface FrontendEdge {
   source: string;
   target: string;
   callOrder: number;
+  /** 'call' = parent invokes child; 'step' = sequential next call in same function body */
+  edgeType: 'call' | 'step';
 }
 
 export interface FrontendExecutionPath {

@@ -59,7 +59,7 @@ export class FlowMapperService {
   buildExecutionPaths(graph: FlowGraph): FrontendExecutionPath[] {
     const nodeMap = new Map(graph.nodes.map((n) => [n.id, n]));
 
-    // Build ordered adjacency: from → children sorted by their callOrder in source
+    // Build ordered adjacency: from → children sorted by callOrder (source position)
     const orderedAdj = new Map<string, string[]>();
     const edgesByFrom = new Map<string, { to: string; callOrder: number }[]>();
     for (const edge of graph.edges) {
@@ -80,26 +80,49 @@ export class FlowMapperService {
       const pathNodeMap = new Map<string, FlowNode>();
       const pathEdges: FrontendEdge[] = [];
 
-      // Ordered DFS: walk calls in source order, depth-limited, no re-expansion of already-visited nodes
-      const dfs = (id: string, depth: number, callOrder: number, parentId: string | null): void => {
-        const node = nodeMap.get(id);
-        if (!node) return;
+      pathNodeMap.set(controller.id, controller);
 
-        const alreadyExpanded = pathNodeMap.has(id);
-        pathNodeMap.set(id, node);
+      /**
+       * Expand a node's calls as a sequential chain.
+       *
+       * Instead of parent → [child0, child1, child2] (wide fan-out), we build:
+       *   parent →(call) child0 →(step) child1 →(step) child2
+       *
+       * 'call' edges go into a sub-function; 'step' edges represent sequential
+       * continuation — "after child0 returns, child1 is called next."
+       * This lets dagre rank siblings vertically rather than side-by-side.
+       */
+      const expandChildren = (parentId: string, depth: number): void => {
+        if (depth >= MAX_EXECUTION_DEPTH) return;
 
-        if (parentId !== null) {
-          pathEdges.push({ id: `${parentId}→${id}`, source: parentId, target: id, callOrder });
+        const children = orderedAdj.get(parentId) ?? [];
+        let prevInChain = parentId;
+
+        for (let i = 0; i < children.length; i++) {
+          const childId = children[i];
+          const child = nodeMap.get(childId);
+          if (!child) continue;
+
+          const alreadyExpanded = pathNodeMap.has(childId);
+          pathNodeMap.set(childId, child);
+
+          pathEdges.push({
+            id: `${prevInChain}→${childId}`,
+            source: prevInChain,
+            target: childId,
+            callOrder: i,
+            edgeType: i === 0 ? 'call' : 'step',
+          });
+
+          if (!alreadyExpanded) {
+            expandChildren(childId, depth + 1);
+          }
+
+          prevInChain = childId;
         }
-
-        // Don't re-expand already-seen nodes or go past max depth — avoids spaghetti & cycles
-        if (alreadyExpanded || depth >= MAX_EXECUTION_DEPTH) return;
-
-        const children = orderedAdj.get(id) ?? [];
-        children.forEach((childId, idx) => dfs(childId, depth + 1, idx, id));
       };
 
-      dfs(controller.id, 0, 0, null);
+      expandChildren(controller.id, 0);
 
       return {
         endpoint: this.resolveEndpoint(controller),
@@ -141,6 +164,7 @@ export class FlowMapperService {
           source: e.from,
           target: e.to,
           callOrder: e.callOrder,
+          edgeType: 'call' as const,
         })),
       },
     ];

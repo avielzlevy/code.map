@@ -14,6 +14,7 @@ export type FlowEdge = {
   source: string;
   target: string;
   callOrder: number;
+  edgeType: 'call' | 'step';
 };
 
 export type ExecutionPath = {
@@ -67,9 +68,9 @@ export const MOCK_PATHS: ExecutionPath[] = [
       },
     ],
     edges: [
-      { id: "e1", source: "ctrl-register", target: "svc-create", callOrder: 0 },
-      { id: "e2", source: "svc-create", target: "repo-save", callOrder: 0 },
-      { id: "e3", source: "svc-create", target: "svc-email", callOrder: 1 },
+      { id: "e1", source: "ctrl-register", target: "svc-create", callOrder: 0, edgeType: "call" },
+      { id: "e2", source: "svc-create", target: "repo-save", callOrder: 0, edgeType: "call" },
+      { id: "e3", source: "repo-save", target: "svc-email", callOrder: 1, edgeType: "step" },
     ],
   },
   {
@@ -97,7 +98,7 @@ export const MOCK_PATHS: ExecutionPath[] = [
       }
     ],
     edges: [
-      { id: "e4", source: "ctrl-checkout", target: "svc-payment", callOrder: 0 }
+      { id: "e4", source: "ctrl-checkout", target: "svc-payment", callOrder: 0, edgeType: "call" }
     ]
   }
 ];

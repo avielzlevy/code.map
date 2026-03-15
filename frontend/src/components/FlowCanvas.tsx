@@ -66,23 +66,33 @@ export function FlowCanvas({ path, onNodeClick }: FlowCanvasProps) {
     });
 
     const newEdges = path.edges.map((e) => {
-      // Find source/target types to color edges conditionally if desired. Using a default premium blue.
-      // E.g., if target is enhanced, show a green line? Let's keep it uniform but high contrast.
+      const isStep = e.edgeType === "step";
       const isTargetEnhanced = path.nodes.find(n => n.id === e.target)?.type === "enhanced";
-      const edgeColor = isTargetEnhanced ? "#10b981" : "#3b82f6";
-      
+
+      // 'call' edges: blue/green animated — entering a sub-function
+      // 'step' edges: gray dashed — sequential continuation in the same function body
+      const edgeColor = isStep ? "#4b5563" : isTargetEnhanced ? "#10b981" : "#3b82f6";
+
       return {
         id: e.id,
         source: e.source,
         target: e.target,
-        animated: true,
+        animated: !isStep,
         type: "smoothstep",
-        style: { stroke: edgeColor, strokeWidth: 2, filter: `drop-shadow(0 0 4px ${edgeColor}80)` },
+        label: isStep ? "then" : undefined,
+        labelStyle: { fill: "#6b7280", fontSize: 10 },
+        labelBgStyle: { fill: "transparent" },
+        style: {
+          stroke: edgeColor,
+          strokeWidth: isStep ? 1 : 2,
+          strokeDasharray: isStep ? "5 4" : undefined,
+          filter: isStep ? undefined : `drop-shadow(0 0 4px ${edgeColor}80)`,
+        },
         markerEnd: {
           type: MarkerType.ArrowClosed,
           color: edgeColor,
-          width: 20,
-          height: 20,
+          width: isStep ? 14 : 20,
+          height: isStep ? 14 : 20,
         },
       };
     });
