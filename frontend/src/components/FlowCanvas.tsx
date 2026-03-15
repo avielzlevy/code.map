@@ -44,10 +44,10 @@ export function FlowCanvas({ path, onNodeClick }: FlowCanvasProps) {
       g.setNode(n.id, { width: 260, height: 100 });
     });
 
-    // Add edges to dagre
-    path.edges.forEach((e) => {
-      g.setEdge(e.source, e.target);
-    });
+    // Add edges to dagre sorted by callOrder so siblings are ranked left-to-right in source sequence
+    [...path.edges]
+      .sort((a, b) => a.callOrder - b.callOrder)
+      .forEach((e) => g.setEdge(e.source, e.target));
 
     dagre.layout(g);
 

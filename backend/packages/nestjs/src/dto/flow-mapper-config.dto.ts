@@ -44,6 +44,7 @@ export interface FrontendEdge {
   id: string;
   source: string;
   target: string;
+  callOrder: number;
 }
 
 export interface FrontendExecutionPath {
@@ -56,6 +57,7 @@ export interface FrontendExecutionPath {
 export interface FlowEdge {
   from: string;
   to: string;
+  callOrder: number;
 }
 
 export interface FlowGraph {

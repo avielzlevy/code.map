@@ -11,6 +11,7 @@ import { AstParserService } from '../ast/ast-parser.service';
 import { CacheService } from '../cache/cache.service';
 import { NanoAgentService } from '../nano-agent/nano-agent.service';
 import { SidecarService } from '../sidecar/sidecar.service';
+import { MAX_EXECUTION_DEPTH } from '../constants';
 
 const LOGGER_CONTEXT = 'FlowMapperService';
 
@@ -57,49 +58,56 @@ export class FlowMapperService {
 
   buildExecutionPaths(graph: FlowGraph): FrontendExecutionPath[] {
     const nodeMap = new Map(graph.nodes.map((n) => [n.id, n]));
-    const adjacency = new Map<string, string[]>();
 
+    // Build ordered adjacency: from → children sorted by their callOrder in source
+    const orderedAdj = new Map<string, string[]>();
+    const edgesByFrom = new Map<string, { to: string; callOrder: number }[]>();
     for (const edge of graph.edges) {
-      if (!adjacency.has(edge.from)) adjacency.set(edge.from, []);
-      adjacency.get(edge.from)!.push(edge.to);
+      if (!edgesByFrom.has(edge.from)) edgesByFrom.set(edge.from, []);
+      edgesByFrom.get(edge.from)!.push({ to: edge.to, callOrder: edge.callOrder });
+    }
+    for (const [from, children] of edgesByFrom) {
+      orderedAdj.set(
+        from,
+        children.sort((a, b) => a.callOrder - b.callOrder).map((c) => c.to),
+      );
     }
 
     const entryPoints = graph.nodes.filter((n) => n.type === 'controller');
-
-    if (entryPoints.length === 0) {
-      return this.fallbackSinglePath(graph);
-    }
+    if (entryPoints.length === 0) return this.fallbackSinglePath(graph);
 
     return entryPoints.map((controller) => {
-      const visited = this.bfsReachable(controller.id, adjacency);
-      const pathNodes = [...visited].map((id) => nodeMap.get(id)!).filter(Boolean);
-      const pathEdges: FrontendEdge[] = graph.edges
-        .filter((e) => visited.has(e.from) && visited.has(e.to))
-        .map((e) => ({ id: `${e.from}→${e.to}`, source: e.from, target: e.to }));
+      const pathNodeMap = new Map<string, FlowNode>();
+      const pathEdges: FrontendEdge[] = [];
+
+      // Ordered DFS: walk calls in source order, depth-limited, no re-expansion of already-visited nodes
+      const dfs = (id: string, depth: number, callOrder: number, parentId: string | null): void => {
+        const node = nodeMap.get(id);
+        if (!node) return;
+
+        const alreadyExpanded = pathNodeMap.has(id);
+        pathNodeMap.set(id, node);
+
+        if (parentId !== null) {
+          pathEdges.push({ id: `${parentId}→${id}`, source: parentId, target: id, callOrder });
+        }
+
+        // Don't re-expand already-seen nodes or go past max depth — avoids spaghetti & cycles
+        if (alreadyExpanded || depth >= MAX_EXECUTION_DEPTH) return;
+
+        const children = orderedAdj.get(id) ?? [];
+        children.forEach((childId, idx) => dfs(childId, depth + 1, idx, id));
+      };
+
+      dfs(controller.id, 0, 0, null);
 
       return {
         endpoint: this.resolveEndpoint(controller),
         method: controller.httpMethod ?? 'GET',
-        nodes: pathNodes.map((n) => this.toFrontendNode(n)),
+        nodes: [...pathNodeMap.values()].map((n) => this.toFrontendNode(n)),
         edges: pathEdges,
       };
     });
-  }
-
-  private bfsReachable(startId: string, adjacency: Map<string, string[]>): Set<string> {
-    const visited = new Set<string>();
-    const queue = [startId];
-
-    while (queue.length > 0) {
-      const id = queue.shift()!;
-      if (visited.has(id)) continue;
-      visited.add(id);
-      for (const next of adjacency.get(id) ?? []) {
-        queue.push(next);
-      }
-    }
-
-    return visited;
   }
 
   private resolveEndpoint(controller: FlowNode): string {
@@ -132,6 +140,7 @@ export class FlowMapperService {
           id: `${e.from}→${e.to}`,
           source: e.from,
           target: e.to,
+          callOrder: e.callOrder,
         })),
       },
     ];

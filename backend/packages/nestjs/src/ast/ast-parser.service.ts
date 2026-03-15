@@ -273,10 +273,10 @@ export class AstParserService {
     for (const method of methods) {
       const fromId = `${method.filePath}:${method.className}#${method.methodName}:${method.lineNumber}`;
 
-      for (const call of method.calls) {
-        const toId = methodIndex.get(call);
+      for (let i = 0; i < method.calls.length; i++) {
+        const toId = methodIndex.get(method.calls[i]);
         if (toId && toId !== fromId) {
-          edges.push({ from: fromId, to: toId });
+          edges.push({ from: fromId, to: toId, callOrder: i });
         }
       }
     }
