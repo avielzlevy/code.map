@@ -23,6 +23,6 @@ FASTAPI_ROUTE_DECORATORS: frozenset[str] = frozenset(
     {"get", "post", "put", "delete", "patch", "options", "head", "route", "api_route"}
 )
 EXCLUDED_DIRS: frozenset[str] = frozenset(
-    {"__pycache__", ".git", "node_modules", ".venv", "venv", "dist", "build", ".pytest_cache"}
+    {"__pycache__", ".git", "node_modules", ".venv", "venv", "dist", "build", ".pytest_cache", "spec"}
 )
 SUPPORTED_EXTENSIONS: frozenset[str] = frozenset({".py"})

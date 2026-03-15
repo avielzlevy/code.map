@@ -33,4 +33,4 @@ export const HTTP_METHOD_MAP: Record<string, string> = {
 };
 
 export const SUPPORTED_EXTENSIONS = ['.ts', '.js'];
-export const EXCLUDED_DIRS = ['node_modules', 'dist', '.git', 'coverage', '__tests__', 'spec'];
+export const EXCLUDED_DIRS = ['node_modules', 'dist', '.git', 'coverage', '__tests__'];
