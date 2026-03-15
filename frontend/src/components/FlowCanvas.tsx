@@ -14,8 +14,9 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import dagre from "dagre";
+import { ArrowLeft } from "lucide-react";
 
-import { ExecutionPath, FlowNode } from "@/lib/mockData";
+import { ExecutionPath, FlowNode, NodeDetail } from "@/lib/mockData";
 import { StandardNode, EnhancedNode } from "./nodes/CustomNodes";
 
 const nodeTypes = {
@@ -25,53 +26,56 @@ const nodeTypes = {
 
 interface FlowCanvasProps {
   path: ExecutionPath;
+  detail: NodeDetail | null;
   onNodeClick: (node: FlowNode) => void;
+  onBack: () => void;
 }
 
-export function FlowCanvas({ path, onNodeClick }: FlowCanvasProps) {
+function layoutNodes(nodes: FlowNode[], edges: { source: string; target: string; edgeType: "call" | "step" }[]) {
+  const g = new dagre.graphlib.Graph();
+  g.setGraph({ rankdir: "TB", nodesep: 80, ranksep: 120 });
+  g.setDefaultEdgeLabel(() => ({}));
+
+  nodes.forEach((n) => g.setNode(n.id, { width: 260, height: n.intentTag ? 110 : 80 }));
+
+  // Feed edges sorted by callOrder so dagre respects source sequence for sibling ordering
+  [...edges]
+    .sort((a, b) => {
+      const ae = edges.find(e => e.source === a.source && e.target === a.target);
+      const be = edges.find(e => e.source === b.source && e.target === b.target);
+      return (ae ? 0 : 0) - (be ? 0 : 0);
+    })
+    .forEach((e) => g.setEdge(e.source, e.target));
+
+  dagre.layout(g);
+  return g;
+}
+
+export function FlowCanvas({ path, detail, onNodeClick, onBack }: FlowCanvasProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
 
+  const isDetail = detail !== null;
+  const activeNodes = isDetail ? detail.nodes : path.nodes;
+  const activeEdges = isDetail ? detail.edges : path.edges;
+
   useEffect(() => {
-    // Layout with dagre
-    const g = new dagre.graphlib.Graph();
-    g.setGraph({ rankdir: "TB", nodesep: 150, ranksep: 180 });
-    g.setDefaultEdgeLabel(() => ({}));
+    const g = layoutNodes(activeNodes, activeEdges);
 
-    // Add nodes to dagre
-    path.nodes.forEach((n) => {
-      // increased dimensions slightly to match new node sizes
-      g.setNode(n.id, { width: 260, height: 100 });
-    });
-
-    // Add edges to dagre sorted by callOrder so siblings are ranked left-to-right in source sequence
-    [...path.edges]
-      .sort((a, b) => a.callOrder - b.callOrder)
-      .forEach((e) => g.setEdge(e.source, e.target));
-
-    dagre.layout(g);
-
-    // Map to React Flow format
-    const newNodes = path.nodes.map((n) => {
-      const nodeWithPosition = g.node(n.id);
+    const newNodes: Node[] = activeNodes.map((n) => {
+      const pos = g.node(n.id);
       return {
         id: n.id,
         type: n.type,
         data: { ...n },
-        position: {
-          x: nodeWithPosition.x - 130, // center offset for new width
-          y: nodeWithPosition.y - 50,
-        },
+        position: { x: pos.x - 130, y: pos.y - (n.intentTag ? 55 : 40) },
       };
     });
 
-    const newEdges = path.edges.map((e) => {
+    const newEdges: Edge[] = activeEdges.map((e) => {
       const isStep = e.edgeType === "step";
-      const isTargetEnhanced = path.nodes.find(n => n.id === e.target)?.type === "enhanced";
-
-      // 'call' edges: blue/green animated — entering a sub-function
-      // 'step' edges: gray dashed — sequential continuation in the same function body
-      const edgeColor = isStep ? "#4b5563" : isTargetEnhanced ? "#10b981" : "#3b82f6";
+      const isTargetEnhanced = activeNodes.find((n) => n.id === e.target)?.type === "enhanced";
+      const edgeColor = isStep ? "#374151" : isTargetEnhanced ? "#10b981" : "#3b82f6";
 
       return {
         id: e.id,
@@ -79,46 +83,52 @@ export function FlowCanvas({ path, onNodeClick }: FlowCanvasProps) {
         target: e.target,
         animated: !isStep,
         type: "smoothstep",
-        label: isStep ? "then" : undefined,
-        labelStyle: { fill: "#6b7280", fontSize: 10 },
-        labelBgStyle: { fill: "transparent" },
         style: {
           stroke: edgeColor,
           strokeWidth: isStep ? 1 : 2,
           strokeDasharray: isStep ? "5 4" : undefined,
+          opacity: isStep ? 0.5 : 1,
           filter: isStep ? undefined : `drop-shadow(0 0 4px ${edgeColor}80)`,
         },
         markerEnd: {
           type: MarkerType.ArrowClosed,
           color: edgeColor,
-          width: isStep ? 14 : 20,
-          height: isStep ? 14 : 20,
+          width: isStep ? 12 : 20,
+          height: isStep ? 12 : 20,
         },
       };
     });
 
     setNodes(newNodes);
     setEdges(newEdges);
-  }, [path, setNodes, setEdges]);
+  }, [activeNodes, activeEdges, setNodes, setEdges]);
 
   return (
-    <div className="w-full h-full bg-[#0a0c10]">
+    <div className="w-full h-full bg-[#0a0c10] relative">
+      {isDetail && (
+        <button
+          onClick={onBack}
+          className="absolute top-4 left-4 z-10 flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#13151a] border border-[#2a2f3a] text-gray-400 hover:text-gray-200 hover:border-[#3b82f6]/50 transition-all text-sm"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to overview
+        </button>
+      )}
+
       <ReactFlow
         nodes={nodes}
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         nodeTypes={nodeTypes}
-        onNodeClick={(event: ReactMouseEvent, node: Node) => onNodeClick(node.data as FlowNode)}
+        onNodeClick={(_event: ReactMouseEvent, node: Node) => onNodeClick(node.data as FlowNode)}
         fitView
-        fitViewOptions={{ padding: 0.2 }}
+        fitViewOptions={{ padding: 0.25 }}
         proOptions={{ hideAttribution: true }}
-        className="flow-canvas-premium"
       >
-        {/* Changed background from Dots to subtle Grid/Lines */}
         <Background variant={BackgroundVariant.Dots} gap={24} size={1} color="#1f242e" />
-        <Controls 
-          showInteractive={false} 
+        <Controls
+          showInteractive={false}
           className="bg-[#13151a] border-[#2a2f3a] fill-gray-400 stroke-gray-400 text-gray-400 [&>button]:!bg-[#13151a] [&>button]:!border-b-[#2a2f3a] [&>button:hover]:!bg-[#1e222a]"
         />
       </ReactFlow>

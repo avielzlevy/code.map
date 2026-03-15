@@ -38,6 +38,10 @@ export interface FrontendNode {
   intentTag?: string;
   docstring?: string;
   aiSummary?: string;
+  /** True when this node has an expanded detail graph available. */
+  hasDetail: boolean;
+  /** Sequential position within a step chain (1-based), shown as a badge. */
+  stepNumber?: number;
 }
 
 export interface FrontendEdge {
@@ -49,11 +53,19 @@ export interface FrontendEdge {
   edgeType: 'call' | 'step';
 }
 
+export interface NodeDetail {
+  nodes: FrontendNode[];
+  edges: FrontendEdge[];
+}
+
 export interface FrontendExecutionPath {
   endpoint: string;
   method: string;
+  /** Root layer: controller → service → @FlowStep nodes only. */
   nodes: FrontendNode[];
   edges: FrontendEdge[];
+  /** Full internal call graph for each drillable node, keyed by node id. */
+  nodeDetails: Record<string, NodeDetail>;
 }
 
 export interface FlowEdge {

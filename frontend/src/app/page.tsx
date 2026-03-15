@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 import { useExecutionPaths } from "@/hooks/useExecutionPaths";
-import { ExecutionPath, FlowNode } from "@/lib/mockData";
+import { ExecutionPath, FlowNode, NodeDetail } from "@/lib/mockData";
 import { Switchboard } from "@/components/Switchboard";
 import { FlowCanvas } from "@/components/FlowCanvas";
 import { IntelSidebar } from "@/components/IntelSidebar";
@@ -12,16 +12,34 @@ export default function Home() {
   const { paths, status, usingMockData } = useExecutionPaths();
   const [selectedPath, setSelectedPath] = useState<ExecutionPath | null>(null);
   const [selectedNode, setSelectedNode] = useState<FlowNode | null>(null);
+  const [drillNodeId, setDrillNodeId] = useState<string | null>(null);
 
   const activePath = selectedPath ?? paths[0] ?? null;
+
+  // When drilling into a node, synthesize a temporary "path" from its detail graph
+  const activeDetail: NodeDetail | null =
+    drillNodeId && activePath ? (activePath.nodeDetails[drillNodeId] ?? null) : null;
 
   const handleSelectPath = (path: ExecutionPath) => {
     setSelectedPath(path);
     setSelectedNode(null);
+    setDrillNodeId(null);
   };
 
-  const handleSelectNode = (node: FlowNode | null) => {
-    setSelectedNode(node);
+  const handleNodeClick = (node: FlowNode) => {
+    if (!drillNodeId && node.hasDetail) {
+      // Root layer: drill into this node's internal graph
+      setDrillNodeId(node.id);
+      setSelectedNode(null);
+    } else {
+      // Detail layer (or node without detail): open intel sidebar
+      setSelectedNode(node);
+    }
+  };
+
+  const handleBack = () => {
+    setDrillNodeId(null);
+    setSelectedNode(null);
   };
 
   if (status === "loading") {
@@ -53,7 +71,9 @@ export default function Home() {
         {activePath ? (
           <FlowCanvas
             path={activePath}
-            onNodeClick={handleSelectNode}
+            detail={activeDetail}
+            onNodeClick={handleNodeClick}
+            onBack={handleBack}
           />
         ) : (
           <div className="flex h-full items-center justify-center text-gray-500">
