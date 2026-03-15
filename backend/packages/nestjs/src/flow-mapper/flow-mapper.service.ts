@@ -244,37 +244,53 @@ export class FlowMapperService {
     const resultEdges: FrontendEdge[] = [];
     const visited = new Set<string>([startId]);
 
-    // Always show all direct children (depth 1), @FlowStep nodes get stepNumber highlight
+    // Show all direct children in source order.
+    // If a child has exactly 1 sub-child it is a pass-through — inline its
+    // single descendant into the same layer instead of creating a drill layer.
     const directChildren = orderedAdj.get(startId) ?? [];
     resultNodes.push(this.toFrontendNode(startNode, { hasDetail: false }));
 
     let stepCounter = 0;
     let prevId = startId;
-    directChildren.forEach((childId, i) => {
-      const child = nodeMap.get(childId);
-      if (!child || visited.has(childId)) return;
-      visited.add(childId);
+    let callOrder = 0;
 
-      const childHasDetail = (orderedAdj.get(childId) ?? []).length > 0;
+    const addToChain = (nodeId: string) => {
+      if (visited.has(nodeId)) return;
+      const node = nodeMap.get(nodeId);
+      if (!node) return;
+      visited.add(nodeId);
+
+      const children = orderedAdj.get(nodeId) ?? [];
+      const isPassThrough = children.length === 1;
+      // Drillable only when it has multiple children (pass-throughs are inlined)
+      const hasDetail = !isPassThrough && children.length > 0;
+
       resultNodes.push(
-        this.toFrontendNode(child, {
-          hasDetail: childHasDetail,
-          stepNumber: child.customTag ? ++stepCounter : undefined,
+        this.toFrontendNode(node, {
+          hasDetail,
+          stepNumber: node.customTag ? ++stepCounter : undefined,
         }),
       );
       resultEdges.push({
-        id: `${prevId}→${childId}`,
+        id: `${prevId}→${nodeId}`,
         source: prevId,
-        target: childId,
-        callOrder: i,
-        edgeType: i === 0 ? 'call' : 'step',
+        target: nodeId,
+        callOrder: callOrder++,
+        edgeType: callOrder === 1 ? 'call' : 'step',
       });
-      prevId = childId;
+      prevId = nodeId;
 
-      if (childHasDetail && !(childId in nodeDetails)) {
-        this.buildDetail(childId, orderedAdj, nodeMap, nodeDetails);
+      if (hasDetail && !(nodeId in nodeDetails)) {
+        this.buildDetail(nodeId, orderedAdj, nodeMap, nodeDetails);
       }
-    });
+
+      // Inline the single child transparently
+      if (isPassThrough) {
+        addToChain(children[0]);
+      }
+    };
+
+    directChildren.forEach((childId) => addToChain(childId));
 
     const detail: NodeDetail = { nodes: resultNodes, edges: resultEdges };
     nodeDetails[startId] = detail;

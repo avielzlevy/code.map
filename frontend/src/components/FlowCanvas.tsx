@@ -37,7 +37,8 @@ function buildDagreLayout(nodes: FlowNode[], edges: FlowEdge[]) {
   const g = new dagre.graphlib.Graph();
   g.setGraph({ rankdir: "TB", nodesep: 80, ranksep: 120 });
   g.setDefaultEdgeLabel(() => ({}));
-  nodes.forEach((n) => g.setNode(n.id, { width: 260, height: n.intentTag ? 110 : 80 }));
+  const NODE_W = 450;
+  nodes.forEach((n) => g.setNode(n.id, { width: NODE_W, height: (n.intentTag || n.docstring) ? 110 : 80 }));
   [...edges].sort((a, b) => a.callOrder - b.callOrder).forEach((e) => g.setEdge(e.source, e.target));
   dagre.layout(g);
   return g;
@@ -85,6 +86,7 @@ function Canvas({
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const { fitView } = useReactFlow();
   const [copied, setCopied] = useState(false);
+  const [copiedBreadcrumb, setCopiedBreadcrumb] = useState(false);
 
   const handleCopy = useCallback(() => {
     const text = activeNodes
@@ -95,6 +97,14 @@ function Canvas({
       setTimeout(() => setCopied(false), 1500);
     });
   }, [activeNodes]);
+
+  const handleCopyBreadcrumb = useCallback(() => {
+    const parts = ["Overview", ...drillStack.map((e) => e.label)];
+    navigator.clipboard.writeText(parts.join(" > ")).then(() => {
+      setCopiedBreadcrumb(true);
+      setTimeout(() => setCopiedBreadcrumb(false), 1500);
+    });
+  }, [drillStack]);
 
   useEffect(() => {
     const g = buildDagreLayout(activeNodes, activeEdges);
@@ -112,7 +122,7 @@ function Canvas({
           id: n.id,
           type: n.type,
           data: { ...n, hasIncoming: targets.has(n.id), hasOutgoing: sources.has(n.id) },
-          position: { x: pos.x - 130, y: pos.y - (n.intentTag ? 55 : 40) },
+          position: { x: pos.x - 225, y: pos.y - ((n.intentTag || n.docstring) ? 55 : 40) },
         };
       }),
     );
@@ -140,7 +150,7 @@ function Canvas({
   return (
     <div className="w-full h-full bg-[#0a0c10] relative flex flex-col">
       {/* Breadcrumb bar */}
-      <div className="flex items-center gap-1 px-4 py-2 border-b border-[#1e222a] bg-[#0d0f14] shrink-0 min-h-[40px]">
+      <div className="flex items-center gap-1 px-4 py-2 border-b border-[#1e222a] bg-[#0d0f14] shrink-0 min-h-[40px] justify-between">
         <button
           onClick={() => onBackTo(-1)}
           className={`flex items-center gap-1.5 text-xs transition-colors ${
@@ -169,6 +179,14 @@ function Canvas({
             </div>
           );
         })}
+
+        <button
+          onClick={handleCopyBreadcrumb}
+          title="Copy breadcrumb path"
+          className="ml-auto text-gray-600 hover:text-gray-400 transition-colors p-1"
+        >
+          {copiedBreadcrumb ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3" />}
+        </button>
       </div>
 
       {/* Flow canvas */}
