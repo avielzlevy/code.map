@@ -3,10 +3,16 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Github, ArrowRight, FunctionSquare } from "lucide-react";
-import { SPRING_DEFAULT, SPRING_SNAPPY, SPRING_STANDARD } from "@/lib/spring";
+import { SPRING_DEFAULT, SPRING_GENTLE, SPRING_SNAPPY, SPRING_STANDARD } from "@/lib/spring";
 import { apiClient } from "@/lib/api-client";
 
 // ─── Static graph preview ─────────────────────────────────────────────────────
+
+/** Stagger variants for individual elements inside GraphPreview */
+const previewItemVariants = {
+  hidden: { opacity: 0, y: 8 },
+  visible: { opacity: 1, y: 0, transition: SPRING_GENTLE },
+};
 
 function DemoNode({
   funcName,
@@ -20,12 +26,14 @@ function DemoNode({
   intentTag?: string;
 }) {
   return (
-    <div
-      className={`relative w-full px-4 py-3 rounded-xl border bg-zinc-950 ${
+    <motion.div
+      variants={previewItemVariants}
+      whileHover={{ y: -2, transition: SPRING_STANDARD }}
+      className={`relative w-full px-4 py-3 rounded-xl border bg-zinc-950 cursor-default ${
         enhanced
-          ? "border-amber-500/50 shadow-[0_0_24px_rgba(245,158,11,0.08)]"
-          : "border-white/20"
-      }`}
+          ? "border-amber-500/50 shadow-[0_0_24px_rgba(245,158,11,0.08)] hover:border-amber-400/70"
+          : "border-white/20 hover:border-white/35"
+      } transition-[border-color]`}
     >
       {enhanced && (
         <div className="absolute inset-0 rounded-xl overflow-hidden pointer-events-none">
@@ -61,13 +69,13 @@ function DemoNode({
           {intentTag}
         </div>
       )}
-    </div>
+    </motion.div>
   );
 }
 
 function GraphConnector() {
   return (
-    <div className="flex flex-col items-center py-0.5">
+    <motion.div variants={previewItemVariants} className="flex flex-col items-center py-0.5">
       <div className="w-px h-7 bg-white/15" />
       <div
         className="w-0 h-0"
@@ -77,23 +85,32 @@ function GraphConnector() {
           borderTop: "6px solid rgba(255,255,255,0.2)",
         }}
       />
-    </div>
+    </motion.div>
   );
 }
 
 function GraphPreview() {
   return (
-    <div className="relative rounded-xl border border-white/8 bg-black px-6 py-7 flex flex-col items-stretch gap-0">
+    <motion.div
+      variants={{
+        hidden: {},
+        visible: { transition: { staggerChildren: 0.11, delayChildren: 0.45 } },
+      }}
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true }}
+      className="relative rounded-xl border border-white/8 bg-black px-6 py-7 flex flex-col items-stretch gap-0"
+    >
       <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-white/10 to-transparent rounded-t-xl" />
 
       {/* Switchboard chrome hint */}
-      <div className="mb-5 flex items-center gap-2">
+      <motion.div variants={previewItemVariants} className="mb-5 flex items-center gap-2">
         <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-white/15 bg-white/5 text-[10px] font-mono text-white/70">
           <span className="w-1.5 h-1.5 rounded-full bg-blue-400/80" />
           GET
           <span className="text-white/40 ml-0.5">/api/users/profile</span>
         </div>
-      </div>
+      </motion.div>
 
       <DemoNode funcName="AuthGuard.canActivate" file="auth.guard.ts:24" />
       <GraphConnector />
@@ -107,7 +124,7 @@ function GraphPreview() {
       />
       <GraphConnector />
       <DemoNode funcName="db.user.findUnique" file="prisma.service.ts:15" />
-    </div>
+    </motion.div>
   );
 }
 

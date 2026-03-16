@@ -58,7 +58,7 @@ function ExpandedPanel({ data, amber }: { data: NodeProps; amber?: boolean }) {
       animate={{ opacity: 1, x: 0, scale: 1 }}
       exit={{ opacity: 0, x: -4, scale: 0.98 }}
       transition={SPRING_DEFAULT}
-      className={`absolute left-full ml-3 top-0 w-72 z-50 rounded-xl bg-black/95 backdrop-blur-md border shadow-[0_12px_48px_rgba(0,0,0,0.95)] overflow-hidden ${
+      className={`absolute left-full ml-3 top-0 w-72 z-50 rounded-xl bg-black/98 border shadow-[0_12px_48px_rgba(0,0,0,0.95)] overflow-hidden ${
         amber ? "border-amber-500/20" : "border-white/15"
       }`}
       onClick={(e) => e.stopPropagation()}

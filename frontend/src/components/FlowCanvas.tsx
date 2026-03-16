@@ -296,7 +296,7 @@ function Canvas({
             animate={{ height: 40, opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={SPRING_DEFAULT}
-            className="flex items-center gap-2 px-4 border-b border-white/10 bg-black/85 backdrop-blur-sm shrink-0 overflow-hidden z-20"
+            className="flex items-center gap-2 px-4 border-b border-white/10 bg-black/95 shrink-0 overflow-hidden z-20"
           >
             {/* Scrollable breadcrumb trail — constrained so the copy button never gets pushed off */}
             <div className="flex-1 flex items-center gap-1 min-w-0 overflow-x-auto scrollbar-hide">
