@@ -46,15 +46,17 @@ export function StandardNode({ data }: { data: NodeProps }) {
     <motion.div
       className={`px-5 py-4 rounded-xl bg-zinc-950 border w-112.5 group relative
         ${data.hasDetail
-          ? "border-white/20 hover:border-white/40 cursor-pointer transition-[border-color,box-shadow] duration-200 shadow-[0_4px_24px_rgba(0,0,0,0.6)] hover:shadow-[0_4px_24px_rgba(0,0,0,0.6),3px_4px_0_-1px_rgba(255,255,255,0.04),6px_8px_0_-2px_rgba(255,255,255,0.02)]"
+          ? "border-white/20 hover:border-white/40 cursor-pointer transition-colors"
           : "border-white/10 transition-colors shadow-[0_4px_24px_rgba(0,0,0,0.6)]"
         }`}
       initial="rest"
       whileHover={data.hasDetail ? "hover" : undefined}
       animate="rest"
-      variants={{
+      variants={data.hasDetail ? {
+        rest: { y: 0, boxShadow: "0 4px 24px rgba(0,0,0,0.6), 2px 4px 0 -1px rgba(255,255,255,0.07), 5px 8px 0 -2px rgba(255,255,255,0.035)" },
+        hover: { y: -3, boxShadow: "0 4px 24px rgba(0,0,0,0.6), 3px 5px 0 -1px rgba(255,255,255,0.11), 6px 10px 0 -2px rgba(255,255,255,0.055)" },
+      } : {
         rest: { y: 0 },
-        hover: { y: -3 },
       }}
       transition={SPRING_STANDARD}
     >
@@ -123,15 +125,17 @@ export function EnhancedNode({ data }: { data: NodeProps }) {
     <motion.div
       className={`px-5 py-4 rounded-xl bg-zinc-950 border w-112.5 relative group
         ${data.hasDetail
-          ? "border-amber-500/50 hover:border-amber-400 cursor-pointer transition-[border-color,box-shadow] duration-200 shadow-[0_4px_30px_rgba(245,158,11,0.12)] hover:shadow-[0_4px_30px_rgba(245,158,11,0.18),3px_4px_0_-1px_rgba(245,158,11,0.05),6px_8px_0_-2px_rgba(245,158,11,0.025)]"
+          ? "border-amber-500/50 hover:border-amber-400 cursor-pointer transition-colors"
           : "border-amber-500/30 hover:border-amber-500/40 transition-colors shadow-[0_4px_24px_rgba(0,0,0,0.6)]"
         }`}
       initial="rest"
       whileHover={data.hasDetail ? "hover" : undefined}
       animate="rest"
-      variants={{
+      variants={data.hasDetail ? {
+        rest: { y: 0, boxShadow: "0 4px 30px rgba(245,158,11,0.12), 2px 4px 0 -1px rgba(245,158,11,0.10), 5px 8px 0 -2px rgba(245,158,11,0.05)" },
+        hover: { y: -3, boxShadow: "0 4px 30px rgba(245,158,11,0.18), 3px 5px 0 -1px rgba(245,158,11,0.15), 6px 10px 0 -2px rgba(245,158,11,0.07)" },
+      } : {
         rest: { y: 0 },
-        hover: { y: -3 },
       }}
       transition={SPRING_STANDARD}
     >
