@@ -1,9 +1,4 @@
-<!-- TODO: Add a logo file (e.g., public/logo.svg or logo.png) and update the src below -->
-<p align="center">
-  <img src="frontend/public/code.map_demo.mov" alt="" style="display:none" />
-</p>
-
-<h1 align="center">code-map</h1>
+<h1 align="center">code.map</h1>
 
 <p align="center">
   <em>Interactive API execution graph for backend developers — see your full call chain in seconds</em>
@@ -25,13 +20,7 @@
 
 ---
 
-<!-- TODO: Replace with a static screenshot or GIF exported from the demo video (frontend/public/code.map_demo.mov) -->
-<p align="center">
-  <img src="frontend/public/placeholder-screenshot.png" alt="code-map visualizing an API execution path" width="95%">
-</p>
-
-> [!NOTE]
-> A demo video is available at `frontend/public/code.map_demo.mov`. Export a GIF or screenshot and place it above.
+<!-- TODO: Add a GIF/screenshot here once you have a good demo video -->
 
 ---
 
