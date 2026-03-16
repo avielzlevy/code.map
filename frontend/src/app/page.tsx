@@ -26,6 +26,7 @@ export default function Home() {
   const [panelAnchor, setPanelAnchor] = useState({ x: 0, y: 0 });
   const [drillStack, setDrillStack] = useState<DrillEntry[]>([]);
   const [loadingMsgIdx, setLoadingMsgIdx] = useState(0);
+  const [isDrilling, setIsDrilling] = useState(false);
 
   // Rotate loading messages while connecting
   useEffect(() => {
@@ -73,11 +74,13 @@ export default function Home() {
 
   const handleNodeDrillDown = (node: FlowNode) => {
     if (node.hasDetail) {
+      setIsDrilling(true);
       setDrillStack((prev) => {
         if (prev.some((e) => e.id === node.id)) return prev; // already in stack, prevent cycle
         return [...prev, { id: node.id, label: node.funcName }];
       });
       setSelectedNode(null);
+      setTimeout(() => setIsDrilling(false), 400);
     }
   };
 
@@ -186,6 +189,7 @@ export default function Home() {
         anchorY={panelAnchor.y}
         onClose={() => setSelectedNode(null)}
         onDrillDown={handleNodeDrillDown}
+        instantClose={isDrilling}
       />
 
       <CommandPalette

@@ -26,9 +26,12 @@ interface IntelSidebarProps {
   anchorY: number;
   onClose: () => void;
   onDrillDown: (node: FlowNode) => void;
+  /** Skip exit animation — used when drilling so the sidebar vanishes instantly
+   *  instead of animating out while the drill entrance is already playing. */
+  instantClose?: boolean;
 }
 
-export function IntelSidebar({ node, anchorX, anchorY, onClose, onDrillDown }: IntelSidebarProps) {
+export function IntelSidebar({ node, anchorX, anchorY, onClose, onDrillDown, instantClose }: IntelSidebarProps) {
   const [pos, setPos] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
@@ -50,8 +53,8 @@ export function IntelSidebar({ node, anchorX, anchorY, onClose, onDrillDown }: I
           style={{ position: "fixed", left: pos.x, top: pos.y, width: PANEL_W, zIndex: 50 }}
           initial={{ opacity: 0, scale: 0.93, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.93, y: 8 }}
-          transition={{ type: "spring", damping: 28, stiffness: 260 }}
+          exit={instantClose ? { opacity: 0 } : { opacity: 0, scale: 0.93, y: 8 }}
+          transition={instantClose ? { duration: 0 } : { type: "spring", damping: 28, stiffness: 260 }}
           className="rounded-xl bg-black/90 backdrop-blur-md border border-white/12 shadow-[0_8px_40px_rgba(0,0,0,0.9)] flex flex-col text-gray-200 overflow-hidden"
         >
           {/* Header */}

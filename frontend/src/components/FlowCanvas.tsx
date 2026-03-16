@@ -179,19 +179,19 @@ function Canvas({
     (event: React.MouseEvent, node: Node) => {
       if (node.id === "__ghost_entry_pin__") return;
       setHasInteracted(true);
-      // Delay single-click so a following double-click can cancel it
+      // 150ms delay: short enough to feel instant, long enough to cancel if a
+      // double-click follows — prevents the sidebar flash on double-click.
       if (clickTimerRef.current) clearTimeout(clickTimerRef.current);
       const { clientX, clientY } = event;
       clickTimerRef.current = setTimeout(() => {
         onNodeClick(node.data as FlowNode, clientX, clientY);
-      }, 220);
+      }, 150);
     },
     [onNodeClick],
   );
 
   const handleNodeDoubleClick = useCallback(
     (_: React.MouseEvent, node: Node) => {
-      // Cancel the pending single-click so the sidebar never flashes open
       if (clickTimerRef.current) {
         clearTimeout(clickTimerRef.current);
         clickTimerRef.current = null;
