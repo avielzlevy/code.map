@@ -40,17 +40,24 @@ export function Switchboard({ paths, selectedPath, onSelectPath, usingMockData }
               onClick={() => onSelectPath(path)}
               aria-current={isSelected ? "true" : undefined}
               className={clsx(
-                "flex items-center gap-2 px-3 h-8 rounded-md text-xs shrink-0 transition-colors border font-mono",
+                "relative flex items-center gap-2 px-3 h-8 rounded-md text-xs shrink-0 border font-mono overflow-hidden",
                 isSelected
-                  ? "bg-white/8 border-white/15 text-white shadow-[inset_0_-1px_0_0_rgba(255,255,255,0.3)]"
-                  : "border-transparent text-gray-500 hover:bg-white/5 hover:text-gray-300"
+                  ? "border-white/15 text-white"
+                  : "border-transparent text-gray-500 hover:text-gray-300"
               )}
-              whileHover={isSelected ? {} : { scale: 1.01 }}
+              whileHover={isSelected ? {} : { backgroundColor: "rgba(255,255,255,0.05)" }}
               transition={{ type: "spring", damping: 28, stiffness: 300 }}
             >
+              {isSelected && (
+                <motion.div
+                  layoutId="active-tab-bg"
+                  className="absolute inset-0 rounded-md bg-white/8 shadow-[inset_0_-1px_0_0_rgba(255,255,255,0.3)]"
+                  transition={{ type: "spring", damping: 28, stiffness: 280 }}
+                />
+              )}
               <span
                 className={clsx(
-                  "text-[10px] font-mono px-1.5 py-0.5 rounded font-bold shrink-0",
+                  "relative z-10 text-[10px] font-mono px-1.5 py-0.5 rounded font-bold shrink-0",
                   path.method === "POST" ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" :
                   path.method === "GET"  ? "bg-blue-500/20 text-blue-400 border border-blue-500/30" :
                   path.method === "PUT"  ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30" :
@@ -59,7 +66,7 @@ export function Switchboard({ paths, selectedPath, onSelectPath, usingMockData }
               >
                 {path.method}
               </span>
-              <span className={clsx("truncate max-w-[180px]", isSelected ? "text-white" : "")} title={path.endpoint}>
+              <span className={clsx("relative z-10 truncate max-w-[180px]", isSelected ? "text-white" : "")} title={path.endpoint}>
                 {path.endpoint}
               </span>
             </motion.button>

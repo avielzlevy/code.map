@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Handle, Position } from "@xyflow/react";
 import { motion } from "framer-motion";
 import { FunctionSquare, Layers, CornerLeftUp } from "lucide-react";
@@ -5,57 +6,48 @@ import { FunctionSquare, Layers, CornerLeftUp } from "lucide-react";
 const ghostSpring = { type: "spring" as const, damping: 25, stiffness: 280 };
 
 export function GhostEntryPin({ data }: any) {
+  const [hovered, setHovered] = useState(false);
+
   return (
-    <motion.div
+    // Plain div — keeps ReactFlow's handle position measurements untransformed
+    <div
       className="flex flex-col items-center select-none cursor-pointer"
       style={{ width: 450 }}
-      initial="idle"
-      whileHover="hover"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       onClick={(e) => { e.stopPropagation(); data.onBack?.(); }}
     >
       {/* Dashed line going up off-screen */}
       <motion.div
         className="w-px h-12 border-l-2 border-dashed"
-        variants={{
-          idle: { borderColor: "rgba(255,255,255,0.15)" },
-          hover: { borderColor: "rgba(255,255,255,0.40)" },
-        }}
+        animate={{ borderColor: hovered ? "rgba(255,255,255,0.40)" : "rgba(255,255,255,0.15)" }}
         transition={ghostSpring}
       />
 
       {/* The chip */}
       <motion.div
         className="flex items-center gap-2 px-3 py-1.5 rounded-full border"
-        variants={{
-          idle: { borderColor: "rgba(255,255,255,0.10)", backgroundColor: "rgb(9,9,11)" },
-          hover: { borderColor: "rgba(255,255,255,0.30)", backgroundColor: "rgba(255,255,255,0.06)" },
+        animate={{
+          borderColor: hovered ? "rgba(255,255,255,0.30)" : "rgba(255,255,255,0.10)",
+          backgroundColor: hovered ? "rgba(255,255,255,0.06)" : "rgb(9,9,11)",
         }}
         transition={ghostSpring}
       >
         <motion.div
-          variants={{
-            idle: { color: "rgba(255,255,255,0.30)" },
-            hover: { color: "rgba(255,255,255,0.70)" },
-          }}
+          animate={{ color: hovered ? "rgba(255,255,255,0.70)" : "rgba(255,255,255,0.30)" }}
           transition={ghostSpring}
         >
           <CornerLeftUp className="w-3 h-3 -scale-x-100" />
         </motion.div>
         <span className="font-mono text-[11px] tracking-wide">
           <motion.span
-            variants={{
-              idle: { color: "rgba(255,255,255,0.35)" },
-              hover: { color: "rgba(255,255,255,0.70)" },
-            }}
+            animate={{ color: hovered ? "rgba(255,255,255,0.70)" : "rgba(255,255,255,0.35)" }}
             transition={ghostSpring}
           >
             called by:{" "}
           </motion.span>
           <motion.span
-            variants={{
-              idle: { color: "rgba(255,255,255,0.55)" },
-              hover: { color: "rgba(255,255,255,0.90)" },
-            }}
+            animate={{ color: hovered ? "rgba(255,255,255,0.90)" : "rgba(255,255,255,0.55)" }}
             transition={ghostSpring}
           >
             {data.callerLabel}
@@ -66,15 +58,12 @@ export function GhostEntryPin({ data }: any) {
       {/* Connector down to the root node */}
       <motion.div
         className="w-px h-6 border-l-2 border-dashed"
-        variants={{
-          idle: { borderColor: "rgba(255,255,255,0.15)" },
-          hover: { borderColor: "rgba(255,255,255,0.40)" },
-        }}
+        animate={{ borderColor: hovered ? "rgba(255,255,255,0.40)" : "rgba(255,255,255,0.15)" }}
         transition={ghostSpring}
       />
 
       <Handle type="source" position={Position.Bottom} style={{ opacity: 0, pointerEvents: "none" }} />
-    </motion.div>
+    </div>
   );
 }
 
@@ -136,7 +125,7 @@ export function EnhancedNode({ data }: any) {
     >
       {/* Gradient tint — distinguishes enhanced nodes from standard */}
       <div className="absolute inset-0 rounded-xl overflow-hidden pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-br from-amber-500/8 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-br from-amber-500/8 to-transparent" />
       </div>
 
       {data.hasDetail && (

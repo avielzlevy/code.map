@@ -39,7 +39,7 @@ function buildDagreLayout(nodes: FlowNode[], edges: FlowEdge[]) {
   g.setGraph({ rankdir: "TB", nodesep: 80, ranksep: 120 });
   g.setDefaultEdgeLabel(() => ({}));
   const NODE_W = 450;
-  nodes.forEach((n) => g.setNode(n.id, { width: NODE_W, height: (n.intentTag || n.docstring) ? 110 : 80 }));
+  nodes.forEach((n) => g.setNode(n.id, { width: NODE_W, height: (n.intentTag || n.docstring) ? 116 : 80 }));
   [...edges].sort((a, b) => a.callOrder - b.callOrder).forEach((e) => g.setEdge(e.source, e.target));
   dagre.layout(g);
   return g;
@@ -134,7 +134,7 @@ function Canvas({
         id: n.id,
         type: n.type,
         data: { ...n, hasIncoming: targets.has(n.id), hasOutgoing: sources.has(n.id) },
-        position: { x: pos.x - 225, y: pos.y - ((n.intentTag || n.docstring) ? 55 : 40) },
+        position: { x: pos.x - 225, y: pos.y - ((n.intentTag || n.docstring) ? 58 : 40) },
       };
     });
 
@@ -223,7 +223,13 @@ function Canvas({
             {drillStack.map((entry, idx) => {
               const isLast = idx === drillStack.length - 1;
               return (
-                <div key={entry.id} className="flex items-center gap-1">
+                <motion.div
+                  key={entry.id}
+                  className="flex items-center gap-1"
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ type: "spring", damping: 28, stiffness: 280 }}
+                >
                   <ChevronRight className="w-3 h-3 text-gray-700" />
                   <button
                     onClick={() => !isLast && onBackTo(idx)}
@@ -235,7 +241,7 @@ function Canvas({
                   >
                     {entry.label}
                   </button>
-                </div>
+                </motion.div>
               );
             })}
 

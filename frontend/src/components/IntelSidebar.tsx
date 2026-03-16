@@ -123,22 +123,28 @@ export function IntelSidebar({ node, anchorX, anchorY, onClose, onDrillDown }: I
           {/* Footer actions */}
           <div className="p-4 border-t border-white/10 bg-black/40 flex flex-col gap-2">
             {node.hasDetail && (
-              <button
+              <motion.button
                 onClick={() => { onDrillDown(node); onClose(); }}
-                className="w-full flex items-center justify-center gap-2 bg-white hover:bg-white/90 active:bg-white/80 active:scale-[0.98] text-black py-2.5 px-4 rounded-md font-semibold transition-colors"
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.97 }}
+                transition={{ type: "spring", damping: 22, stiffness: 320 }}
+                className="w-full flex items-center justify-center gap-2 bg-white hover:bg-white/90 text-black py-2.5 px-4 rounded-md font-semibold transition-colors"
               >
                 <Layers className="w-4 h-4" />
                 Drill into calls
-              </button>
+              </motion.button>
             )}
-            <a
+            <motion.a
               href={getVSCodeUrl(node.fileName, node.line)}
               rel="noopener"
-              className="w-full flex items-center justify-center gap-2 bg-transparent hover:bg-white/5 active:bg-white/10 border border-white/15 hover:border-white/40 text-gray-400 hover:text-white py-2.5 px-4 rounded-md font-medium transition-colors"
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.97 }}
+              transition={{ type: "spring", damping: 22, stiffness: 320 }}
+              className="w-full flex items-center justify-center gap-2 bg-transparent hover:bg-white/5 border border-white/15 hover:border-white/40 text-gray-400 hover:text-white py-2.5 px-4 rounded-md font-medium transition-colors"
             >
               <ExternalLink className="w-4 h-4" />
               Open in VS Code
-            </a>
+            </motion.a>
           </div>
         </motion.div>
       )}

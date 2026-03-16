@@ -172,11 +172,18 @@ export function CommandPalette({ paths, onSelectEndpoint, onSelectNode }: Comman
                       key={index}
                       onClick={() => handleSelect(index)}
                       className={clsx(
-                        "w-full flex items-center justify-between px-3 py-3 rounded-lg transition-colors text-left",
-                        active ? "bg-white/8 shadow-[inset_2px_0_0_0_rgba(255,255,255,0.3)]" : "hover:bg-white/5"
+                        "relative w-full flex items-center justify-between px-3 py-3 rounded-lg text-left overflow-hidden",
+                        !active && "hover:bg-white/5"
                       )}
                     >
-                      <div className="flex items-center gap-3">
+                      {active && (
+                        <motion.div
+                          layoutId="active-palette-result"
+                          className="absolute inset-0 rounded-lg bg-white/8 shadow-[inset_2px_0_0_0_rgba(255,255,255,0.3)]"
+                          transition={{ type: "spring", damping: 30, stiffness: 320 }}
+                        />
+                      )}
+                      <div className="relative z-10 flex items-center gap-3">
                         <div
                           className={clsx(
                             "p-1.5 rounded-md border",
@@ -195,7 +202,7 @@ export function CommandPalette({ paths, onSelectEndpoint, onSelectNode }: Comman
                         </div>
                       </div>
                       {active && (
-                        <div className="flex items-center gap-1 text-gray-400 text-xs">
+                        <div className="relative z-10 flex items-center gap-1 text-gray-400 text-xs">
                           ↵
                         </div>
                       )}

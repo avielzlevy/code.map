@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 
 import { useExecutionPaths } from "@/hooks/useExecutionPaths";
 import { ExecutionPath, FlowNode } from "@/lib/mockData";
@@ -135,30 +136,45 @@ export default function Home() {
               onBackTo={handleBackTo}
             />
           ) : (
-            <div className="flex h-full flex-col items-center justify-center gap-7">
+            <motion.div
+              className="flex h-full flex-col items-center justify-center gap-7"
+              initial="hidden"
+              animate="visible"
+              variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.1, delayChildren: 0.05 } } }}
+            >
               {/* Mini flow illustration */}
-              <div className="flex flex-col items-center select-none" aria-hidden="true">
+              <motion.div
+                className="flex flex-col items-center select-none"
+                aria-hidden="true"
+                variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0, transition: { type: "spring", damping: 28, stiffness: 260 } } }}
+              >
                 {[0, 1, 2].map((i) => (
                   <div key={i} className="flex flex-col items-center">
                     <div className="w-28 h-7 rounded-lg border border-white/5 bg-white/[2.5]" />
                     {i < 2 && <div className="w-px h-4 border-l border-dashed border-white/8" />}
                   </div>
                 ))}
-              </div>
+              </motion.div>
               {/* Copy + CTA */}
-              <div className="flex flex-col items-center gap-3">
+              <motion.div
+                className="flex flex-col items-center gap-3"
+                variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0, transition: { type: "spring", damping: 28, stiffness: 260 } } }}
+              >
                 <p className="text-[11px] font-mono text-gray-500 text-center max-w-[190px] leading-relaxed">
                   Select an endpoint to visualize its execution path.
                 </p>
-                <button
+                <motion.button
                   onClick={() => window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true, bubbles: true }))}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.97 }}
+                  transition={{ type: "spring", damping: 22, stiffness: 320 }}
                   className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/8 bg-white/5 hover:bg-white/8 hover:border-white/15 active:bg-white/10 transition-colors text-gray-400 hover:text-gray-200 text-[11px] font-mono"
                 >
                   Search endpoints
                   <kbd className="text-[11px] bg-white/5 border border-white/10 px-1.5 py-0.5 rounded text-gray-600">⌘K</kbd>
-                </button>
-              </div>
-            </div>
+                </motion.button>
+              </motion.div>
+            </motion.div>
           )}
         </main>
 
