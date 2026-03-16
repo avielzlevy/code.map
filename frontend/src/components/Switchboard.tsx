@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { ExecutionPath } from "@/lib/mockData";
 import { Search } from "lucide-react";
 import clsx from "clsx";
+import { SPRING_DEFAULT, SPRING_STANDARD } from "@/lib/spring";
 
 interface SwitchboardProps {
   paths: ExecutionPath[];
@@ -20,7 +21,7 @@ export function Switchboard({ paths, selectedPath, onSelectPath, usingMockData }
         <motion.div
           className="w-7 h-7 rounded-md flex items-center justify-center shrink-0 border border-white/12 bg-white/5"
           whileHover={{ borderColor: "rgba(255,255,255,0.3)", backgroundColor: "rgba(255,255,255,0.09)" }}
-          transition={{ type: "spring", damping: 25, stiffness: 300 }}
+          transition={SPRING_STANDARD}
         >
           <span className="font-mono text-[10px] font-bold text-white/70 tracking-tighter">fn</span>
         </motion.div>
@@ -45,13 +46,13 @@ export function Switchboard({ paths, selectedPath, onSelectPath, usingMockData }
                   : "border-transparent text-gray-500 hover:text-gray-300"
               )}
               whileHover={isSelected ? {} : { backgroundColor: "rgba(255,255,255,0.05)" }}
-              transition={{ type: "spring", damping: 28, stiffness: 300 }}
+              transition={SPRING_STANDARD}
             >
               {isSelected && (
                 <motion.div
                   layoutId="active-tab-bg"
                   className="absolute inset-0 rounded-md bg-white/8 shadow-[inset_0_-1px_0_0_rgba(255,255,255,0.3)]"
-                  transition={{ type: "spring", damping: 28, stiffness: 280 }}
+                  transition={SPRING_DEFAULT}
                 />
               )}
               <span

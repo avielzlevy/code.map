@@ -2,6 +2,7 @@ import { Handle, Position } from "@xyflow/react";
 import { motion } from "framer-motion";
 import { FunctionSquare, Layers, CornerLeftUp } from "lucide-react";
 import type { FlowNode } from "@/lib/mockData";
+import { SPRING_STANDARD, SPRING_BADGE } from "@/lib/spring";
 
 type NodeProps = FlowNode & { hasIncoming: boolean; hasOutgoing: boolean };
 type GhostPinData = { callerLabel: string; onBack?: () => void };
@@ -55,7 +56,7 @@ export function StandardNode({ data }: { data: NodeProps }) {
         rest: { y: 0 },
         hover: { y: -3 },
       }}
-      transition={{ type: "spring", damping: 25, stiffness: 300 }}
+      transition={SPRING_STANDARD}
     >
       {data.hasDetail && (
         <motion.div
@@ -63,7 +64,7 @@ export function StandardNode({ data }: { data: NodeProps }) {
             rest: { scale: 1, opacity: 0.65 },
             hover: { scale: 1.2, opacity: 1 },
           }}
-          transition={{ type: "spring", damping: 20, stiffness: 350 }}
+          transition={SPRING_BADGE}
           className="absolute top-3 right-3 w-5 h-5 rounded-full bg-white/10 border border-white/20 flex items-center justify-center z-20"
         >
           <Layers className="w-3 h-3 text-white/80" />
@@ -117,7 +118,7 @@ export function EnhancedNode({ data }: { data: NodeProps }) {
         rest: { y: 0 },
         hover: { y: -3 },
       }}
-      transition={{ type: "spring", damping: 25, stiffness: 300 }}
+      transition={SPRING_STANDARD}
     >
       {/* Gradient tint — distinguishes enhanced nodes from standard */}
       <div className="absolute inset-0 rounded-xl overflow-hidden pointer-events-none">
@@ -130,7 +131,7 @@ export function EnhancedNode({ data }: { data: NodeProps }) {
             rest: { scale: 1, opacity: 0.65 },
             hover: { scale: 1.2, opacity: 1 },
           }}
-          transition={{ type: "spring", damping: 20, stiffness: 350 }}
+          transition={SPRING_BADGE}
           className="absolute top-3 right-3 w-5 h-5 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center z-20"
         >
           <Layers className="w-3 h-3 text-amber-400" />

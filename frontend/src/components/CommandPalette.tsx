@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Search, Command, Network, FunctionSquare } from "lucide-react";
 import { ExecutionPath, FlowNode } from "@/lib/mockData";
 import clsx from "clsx";
+import { SPRING_STANDARD, SPRING_SNAPPY } from "@/lib/spring";
 
 interface CommandPaletteProps {
   paths: ExecutionPath[];
@@ -139,7 +140,7 @@ export function CommandPalette({ paths, onSelectEndpoint, onSelectNode }: Comman
             initial={{ opacity: 0, scale: 0.95, y: -20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -10 }}
-            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            transition={SPRING_STANDARD}
             className="relative w-full max-w-2xl bg-black/90 backdrop-blur-xl border border-white/15 rounded-xl shadow-[0_20px_60px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col"
           >
             {/* Search Input */}
@@ -180,7 +181,7 @@ export function CommandPalette({ paths, onSelectEndpoint, onSelectNode }: Comman
                         <motion.div
                           layoutId="active-palette-result"
                           className="absolute inset-0 rounded-lg bg-white/8 shadow-[inset_2px_0_0_0_rgba(255,255,255,0.3)]"
-                          transition={{ type: "spring", damping: 30, stiffness: 320 }}
+                          transition={SPRING_SNAPPY}
                         />
                       )}
                       <div className="relative z-10 flex items-center gap-3">

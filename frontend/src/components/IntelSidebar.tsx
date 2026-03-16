@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Tag, FileText, Sparkles, ExternalLink, Layers } from "lucide-react";
 import { FlowNode } from "@/lib/mockData";
 import { getVSCodeUrl } from "@/lib/deep-link";
+import { SPRING_DEFAULT, SPRING_STANDARD, SPRING_SNAPPY, SPRING_GENTLE } from "@/lib/spring";
 
 const PANEL_W = 320;
 const GAP = 20;
@@ -16,7 +17,7 @@ const contentVariants = {
 
 const itemVariants = {
   hidden: { opacity: 0, y: 8 },
-  visible: { opacity: 1, y: 0, transition: { type: "spring" as const, damping: 28, stiffness: 300 } },
+  visible: { opacity: 1, y: 0, transition: SPRING_STANDARD },
 };
 
 interface IntelSidebarProps {
@@ -60,7 +61,7 @@ export function IntelSidebar({ node, anchorX, anchorY, onClose, onDrillDown, ins
           initial={{ opacity: 0, scale: 0.93, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={instantClose ? { opacity: 0 } : { opacity: 0, scale: 0.93, y: 8 }}
-          transition={instantClose ? { duration: 0 } : { type: "spring", damping: 28, stiffness: 260 }}
+          transition={instantClose ? { duration: 0 } : SPRING_DEFAULT}
           onAnimationStart={reposition}
           className="rounded-xl bg-black/90 backdrop-blur-md border border-white/12 shadow-[0_8px_40px_rgba(0,0,0,0.9)] flex flex-col text-gray-200 overflow-hidden"
         >
@@ -116,7 +117,7 @@ export function IntelSidebar({ node, anchorX, anchorY, onClose, onDrillDown, ins
                   initial={{ opacity: 0, y: 8, height: 0 }}
                   animate={{ opacity: 1, y: 0, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
-                  transition={{ type: "spring", damping: 28, stiffness: 220 }}
+                  transition={SPRING_GENTLE}
                   className="overflow-hidden"
                 >
                   <h3 className="text-[11px] uppercase tracking-wider text-gray-500 font-semibold mb-2 flex items-center gap-1.5">
@@ -137,7 +138,7 @@ export function IntelSidebar({ node, anchorX, anchorY, onClose, onDrillDown, ins
                 onClick={() => { onDrillDown(node); onClose(); }}
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.97 }}
-                transition={{ type: "spring", damping: 22, stiffness: 320 }}
+                transition={SPRING_SNAPPY}
                 className="w-full flex items-center justify-center gap-2 bg-white hover:bg-white/90 text-black py-2.5 px-4 rounded-md font-semibold transition-colors"
               >
                 <Layers className="w-4 h-4" />
@@ -149,7 +150,7 @@ export function IntelSidebar({ node, anchorX, anchorY, onClose, onDrillDown, ins
               rel="noopener"
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.97 }}
-              transition={{ type: "spring", damping: 22, stiffness: 320 }}
+              transition={SPRING_SNAPPY}
               className="w-full flex items-center justify-center gap-2 bg-transparent hover:bg-white/5 border border-white/15 hover:border-white/40 text-gray-400 hover:text-white py-2.5 px-4 rounded-md font-medium transition-colors"
             >
               <ExternalLink className="w-4 h-4" />

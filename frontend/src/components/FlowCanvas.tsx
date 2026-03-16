@@ -22,6 +22,7 @@ import { ChevronRight, Home, Copy, Check } from "lucide-react";
 import { ExecutionPath, FlowNode, FlowEdge } from "@/lib/mockData";
 import { StandardNode, EnhancedNode, GhostEntryPin } from "./nodes/CustomNodes";
 import { DrillEntry } from "@/app/page";
+import { SPRING_DEFAULT, SPRING_BOUNCE, SPRING_GENTLE } from "@/lib/spring";
 
 const nodeTypes = { standard: StandardNode, enhanced: EnhancedNode, ghostEntryPin: GhostEntryPin };
 
@@ -239,7 +240,7 @@ function Canvas({
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 40, opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ type: "spring", damping: 28, stiffness: 260 }}
+            transition={SPRING_DEFAULT}
             className="flex items-center gap-2 px-4 border-b border-white/10 bg-black/85 backdrop-blur-sm shrink-0 overflow-hidden z-20"
           >
             {/* Scrollable breadcrumb trail — constrained so the copy button never gets pushed off */}
@@ -260,7 +261,7 @@ function Canvas({
                     className="flex items-center gap-1 shrink-0"
                     initial={{ opacity: 0, x: 10 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ type: "spring", damping: 28, stiffness: 280 }}
+                    transition={SPRING_DEFAULT}
                   >
                     <ChevronRight className="w-3 h-3 text-gray-600" />
                     <button
@@ -295,7 +296,7 @@ function Canvas({
         className="flex-1 relative z-10"
         initial={{ opacity: 0, y: drillEnterY }}
         animate={{ opacity: isDrilling ? 0.6 : 1, y: 0 }}
-        transition={{ type: "spring", damping: 28, stiffness: 260 }}
+        transition={SPRING_DEFAULT}
       >
         <ReactFlow
           nodes={nodes}
@@ -320,7 +321,7 @@ function Canvas({
               onClick={handleCopy}
               aria-label="Copy flow as text"
               animate={copied ? { scale: [1, 1.3, 1] } : { scale: 1 }}
-              transition={{ type: "spring", damping: 14, stiffness: 400 }}
+              transition={SPRING_BOUNCE}
               className={`p-1.5 rounded-md border transition-colors ${copied ? "text-white border-white/20 bg-white/8" : "text-gray-500 border-white/10 bg-black/40 hover:text-gray-300 hover:border-white/20 active:bg-white/5"}`}
             >
               {copied ? <Check size={14} /> : <Copy size={14} />}
@@ -334,7 +335,7 @@ function Canvas({
                   initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 3 }}
-                  transition={{ type: "spring", damping: 28, stiffness: 220, delay: 0.5 }}
+                  transition={{ ...SPRING_GENTLE, delay: 0.5 }}
                   className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-black/85 border border-white/8 text-[11px] text-white/50 font-mono select-none"
                 >
                   <span>click to inspect</span>

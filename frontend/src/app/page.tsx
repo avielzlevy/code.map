@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { SPRING_DEFAULT, SPRING_SNAPPY } from "@/lib/spring";
 
 import { useExecutionPaths } from "@/hooks/useExecutionPaths";
 import { ExecutionPath, FlowNode } from "@/lib/mockData";
@@ -149,7 +150,7 @@ export default function Home() {
               <motion.div
                 className="flex flex-col items-center select-none"
                 aria-hidden="true"
-                variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0, transition: { type: "spring", damping: 28, stiffness: 260 } } }}
+                variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0, transition: SPRING_DEFAULT } }}
               >
                 {[0, 1, 2].map((i) => (
                   <div key={i} className="flex flex-col items-center">
@@ -161,7 +162,7 @@ export default function Home() {
               {/* Copy + CTA */}
               <motion.div
                 className="flex flex-col items-center gap-3"
-                variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0, transition: { type: "spring", damping: 28, stiffness: 260 } } }}
+                variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0, transition: SPRING_DEFAULT } }}
               >
                 <p className="text-[11px] font-mono text-gray-500 text-center max-w-[190px] leading-relaxed">
                   Select an endpoint above to trace its call flow.
@@ -170,7 +171,7 @@ export default function Home() {
                   onClick={() => window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true, bubbles: true }))}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.97 }}
-                  transition={{ type: "spring", damping: 22, stiffness: 320 }}
+                  transition={SPRING_SNAPPY}
                   className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/8 bg-white/5 hover:bg-white/8 hover:border-white/15 active:bg-white/10 transition-colors text-gray-400 hover:text-gray-200 text-[11px] font-mono"
                 >
                   Search endpoints
