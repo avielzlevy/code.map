@@ -39,7 +39,7 @@ function buildDagreLayout(nodes: FlowNode[], edges: FlowEdge[]) {
   g.setGraph({ rankdir: "TB", nodesep: 80, ranksep: 120 });
   g.setDefaultEdgeLabel(() => ({}));
   const NODE_W = 450;
-  nodes.forEach((n) => g.setNode(n.id, { width: NODE_W, height: (n.intentTag || n.docstring) ? 116 : 80 }));
+  nodes.forEach((n) => g.setNode(n.id, { width: NODE_W, height: (n.intentTag || n.docstring) ? 110 : 80 }));
   [...edges].sort((a, b) => a.callOrder - b.callOrder).forEach((e) => g.setEdge(e.source, e.target));
   dagre.layout(g);
   return g;
@@ -134,7 +134,7 @@ function Canvas({
         id: n.id,
         type: n.type,
         data: { ...n, hasIncoming: targets.has(n.id), hasOutgoing: sources.has(n.id) },
-        position: { x: pos.x - 225, y: pos.y - ((n.intentTag || n.docstring) ? 58 : 40) },
+        position: { x: pos.x - 225, y: pos.y - ((n.intentTag || n.docstring) ? 55 : 40) },
       };
     });
 
@@ -260,8 +260,8 @@ function Canvas({
       <motion.div
         key={drillStack.length}
         className="flex-1 relative z-10"
-        initial={{ opacity: 0, scale: 0.94 }}
-        animate={{ opacity: 1, scale: 1 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
         transition={{ type: "spring", damping: 26, stiffness: 240 }}
       >
         <ReactFlow
