@@ -196,11 +196,6 @@ function InstallBlock() {
             {CODE[f].label}
           </button>
         ))}
-        <div className="ml-auto flex items-center gap-1.5">
-          <div className="w-2 h-2 rounded-full bg-white/10" />
-          <div className="w-2 h-2 rounded-full bg-white/8" />
-          <div className="w-2 h-2 rounded-full bg-white/6" />
-        </div>
       </div>
       <motion.div
         key={fw}
@@ -316,7 +311,7 @@ export default function LandingPage() {
 
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
       <section className="min-h-screen flex items-center pt-12">
-        <div className="max-w-6xl mx-auto w-full px-6 py-24 grid grid-cols-1 lg:grid-cols-[1fr_1.05fr] gap-14 items-center">
+        <div className="max-w-6xl mx-auto w-full px-6 py-24 grid grid-cols-1 lg:grid-cols-[1fr_1.4fr] gap-14 items-center">
           {/* Copy */}
           <div className="flex flex-col gap-7">
             <motion.div
@@ -324,9 +319,8 @@ export default function LandingPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ ...SPRING_DEFAULT, delay: 0.05 }}
             >
-              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/4 text-[11px] font-mono text-gray-500">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400/80" />
-                Open source &nbsp;·&nbsp; NestJS, FastAPI &amp; Next.js
+              <span className="font-mono text-[11px] text-white/25 tracking-[0.22em] uppercase select-none">
+                API execution graph
               </span>
             </motion.div>
 
@@ -334,9 +328,11 @@ export default function LandingPage() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ ...SPRING_DEFAULT, delay: 0.1 }}
-              className="text-[clamp(2.75rem,6vw,4.5rem)] font-bold tracking-tight leading-[1.04]"
+              className="text-[clamp(3.25rem,7.5vw,6rem)] font-black tracking-[-0.04em] leading-[0.96]"
             >
-              See what your endpoint actually does.
+              See what your endpoint{" "}
+              <br className="hidden lg:block" />
+              actually does.
             </motion.h1>
 
             <motion.p
@@ -354,14 +350,14 @@ export default function LandingPage() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ ...SPRING_DEFAULT, delay: 0.2 }}
-              className="flex flex-wrap items-center gap-3"
+              className="flex flex-col gap-2"
             >
+              <div className="flex flex-wrap items-center gap-3">
               <motion.a
                 href={appHref}
                 whileHover={appDisabled ? {} : { scale: 1.02 }}
                 whileTap={appDisabled ? {} : { scale: 0.97 }}
                 transition={SPRING_SNAPPY}
-                title={appDisabled ? "Sidecar unreachable — start your backend first" : undefined}
                 className={`flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-[15px] transition-colors ${
                   appDisabled
                     ? "bg-white/10 text-white/30 cursor-not-allowed"
@@ -383,6 +379,19 @@ export default function LandingPage() {
                 <Github className="w-4 h-4" />
                 Star on GitHub
               </motion.a>
+              </div>
+              {appDisabled && sidecarReachable !== null && (
+                <p className="text-[13px] text-gray-600 leading-snug">
+                  Backend not detected — start your server with the plugin, then{" "}
+                  <button
+                    onClick={() => window.location.reload()}
+                    className="text-gray-400 underline underline-offset-2 hover:text-white transition-colors cursor-pointer"
+                  >
+                    refresh
+                  </button>
+                  .
+                </p>
+              )}
             </motion.div>
           </div>
 
@@ -407,14 +416,14 @@ export default function LandingPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-60px" }}
               transition={{ ...SPRING_DEFAULT, delay: i * 0.04 }}
-              className={`grid grid-cols-1 md:grid-cols-[80px_1fr_1.4fr] gap-6 md:gap-10 py-10 items-start ${
+              className={`grid grid-cols-1 md:grid-cols-[72px_1fr_1.4fr] gap-6 md:gap-10 py-12 items-start ${
                 i < FEATURES.length - 1 ? "border-b border-white/8" : ""
               }`}
             >
-              <span className="font-mono text-[11px] text-gray-700 font-bold tracking-wider pt-0.5">
+              <span className="font-mono text-[42px] font-black text-white/7 leading-none tabular-nums select-none -mt-1.5">
                 {f.n}
               </span>
-              <h3 className="text-[18px] font-semibold tracking-tight text-white leading-snug">
+              <h3 className="text-[21px] font-semibold tracking-tight text-white leading-snug">
                 {f.title}
               </h3>
               <p className="text-[15px] text-gray-500 leading-relaxed">
@@ -434,7 +443,7 @@ export default function LandingPage() {
             viewport={{ once: true, margin: "-60px" }}
             transition={SPRING_DEFAULT}
           >
-            <h2 className="text-[clamp(2rem,4vw,3rem)] font-bold tracking-tight mb-4">
+            <h2 className="text-[clamp(2.25rem,5vw,3.75rem)] font-black tracking-[-0.03em] leading-[0.97] mb-4">
               Running in two minutes.
             </h2>
             <p className="text-gray-500 text-[15px]">

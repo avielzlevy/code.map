@@ -86,7 +86,7 @@ function NodeExpansion({ data, amber }: { data: NodeProps; amber?: boolean }) {
                 amber ? "text-amber-400/30" : "text-white/20"
               }`}
             />
-            <p className="text-[12px] text-gray-400 leading-relaxed pr-5">{data.aiSummary}</p>
+            <p className="text-[12px] text-gray-400 leading-relaxed pr-5 break-words">{data.aiSummary}</p>
           </div>
         </div>
       )}

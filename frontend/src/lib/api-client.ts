@@ -14,22 +14,30 @@ interface ApiResponse<T> {
   data: T;
 }
 
-async function request<T>(path: string): Promise<T> {
-  const res = await fetch(`${BASE_URL}${path}`, {
-    headers: { Accept: "application/json" },
-  });
+async function request<T>(path: string, timeoutMs = 6000): Promise<T> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
 
-  if (!res.ok) {
-    throw new Error(`[api-client] ${path} → HTTP ${res.status}`);
+  try {
+    const res = await fetch(`${BASE_URL}${path}`, {
+      headers: { Accept: "application/json" },
+      signal: controller.signal,
+    });
+
+    if (!res.ok) {
+      throw new Error(`[api-client] ${path} → HTTP ${res.status}`);
+    }
+
+    const body: ApiResponse<T> = await res.json();
+
+    if (body.status === "error") {
+      throw new Error(`[api-client] ${path} → server returned error`);
+    }
+
+    return body.data;
+  } finally {
+    clearTimeout(timer);
   }
-
-  const body: ApiResponse<T> = await res.json();
-
-  if (body.status === "error") {
-    throw new Error(`[api-client] ${path} → server returned error`);
-  }
-
-  return body.data;
 }
 
 export const apiClient = {

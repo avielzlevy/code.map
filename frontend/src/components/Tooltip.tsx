@@ -48,7 +48,7 @@ export function Tooltip({ content, children, side = "top", className }: TooltipP
           exit={{ opacity: 0, scale: 0.94 }}
           transition={SPRING_SNAPPY}
           className={`
-            pointer-events-none absolute z-[999] left-1/2 -translate-x-1/2
+            pointer-events-none absolute z-999 left-1/2 -translate-x-1/2
             whitespace-nowrap px-2 py-1 rounded-md
             bg-zinc-950 border border-white/10
             text-[11px] font-mono text-white/65

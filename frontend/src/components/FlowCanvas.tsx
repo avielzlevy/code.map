@@ -17,7 +17,7 @@ import {
 
 import "@xyflow/react/dist/style.css";
 import dagre from "dagre";
-import { ChevronRight, Home, Copy, Check } from "lucide-react";
+import { ChevronRight, Home, Copy, Check, Layers } from "lucide-react";
 import { Tooltip } from "./Tooltip";
 
 import { ExecutionPath, FlowNode, FlowEdge } from "@/lib/mockData";
@@ -91,13 +91,16 @@ function Canvas({
   const { fitView } = useReactFlow();
   const [copied, setCopied] = useState(false);
   const [copiedBreadcrumb, setCopiedBreadcrumb] = useState(false);
-  const [hasInteracted, setHasInteracted] = useState(() => {
-    try { return sessionStorage.getItem("code-map:hint-dismissed") === "1"; } catch { return false; }
+  const [hasExpanded, setHasExpanded] = useState(() => {
+    try { return sessionStorage.getItem("code-map:hint-expanded") === "1"; } catch { return false; }
+  });
+  const [hasDrilled, setHasDrilled] = useState(() => {
+    try { return sessionStorage.getItem("code-map:hint-drilled") === "1"; } catch { return false; }
   });
   const [isDrilling, setIsDrilling] = useState(false);
-  const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Track drill direction: +1 = going deeper, -1 = going back
   const prevDrillDepthRef = useRef(drillStack.length);
+  const hasDrillableNode = activeNodes.some((n) => n.hasDetail);
   const drillEnterX = drillStack.length >= prevDrillDepthRef.current ? 30 : -30;
   prevDrillDepthRef.current = drillStack.length;
 
@@ -216,32 +219,32 @@ function Canvas({
     setEdges(layoutEdges);
 
     const t = setTimeout(() => fitView({ padding: 0.25 }), 60);
-    return () => {
-      clearTimeout(t);
-      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
-    };
+    return () => clearTimeout(t);
   }, [activeNodes, activeEdges, drillStack, setNodes, setEdges, fitView]);
 
   const handleNodeClick = useCallback(
     (_event: React.MouseEvent, node: Node) => {
       if (node.id === "__ghost_entry_pin__") return;
-      // Dismiss hint on first interaction
-      if (!hasInteracted) {
-        setHasInteracted(true);
-        try { sessionStorage.setItem("code-map:hint-dismissed", "1"); } catch { /* ignore */ }
+      // Advance expand hint on first node click
+      if (!hasExpanded) {
+        setHasExpanded(true);
+        try { sessionStorage.setItem("code-map:hint-expanded", "1"); } catch { /* ignore */ }
       }
-      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
-      idleTimerRef.current = setTimeout(() => setHasInteracted(false), 30_000);
       // Single click toggles inline expansion
       setExpandedNodeId((prev) => (prev === node.id ? null : node.id));
     },
-    [hasInteracted],
+    [hasExpanded],
   );
 
   const handleNodeDoubleClick = useCallback(
     (_: React.MouseEvent, node: Node) => {
       const flowNode = node.data as FlowNode;
       if (!flowNode.hasDetail) return;
+      // Dismiss drill hint on first drill
+      if (!hasDrilled) {
+        setHasDrilled(true);
+        try { sessionStorage.setItem("code-map:hint-drilled", "1"); } catch { /* ignore */ }
+      }
       // Brief dim confirms the action, then drill
       setIsDrilling(true);
       setTimeout(() => {
@@ -249,7 +252,7 @@ function Canvas({
         onNodeDrillDown(flowNode);
       }, 130);
     },
-    [onNodeDrillDown],
+    [hasDrilled, onNodeDrillDown],
   );
 
   const handleNodeMouseEnter = useCallback(
@@ -317,7 +320,8 @@ function Canvas({
                     <ChevronRight className="w-3 h-3 text-gray-600" />
                     <button
                       onClick={() => !isLast && onBackTo(idx)}
-                      className={`text-xs transition-colors ${
+                      title={entry.label}
+                      className={`text-xs transition-colors truncate max-w-36 ${
                         isLast
                           ? "text-gray-200 cursor-default font-medium"
                           : "text-gray-400 hover:text-gray-200 cursor-pointer"
@@ -383,20 +387,33 @@ function Canvas({
               </motion.button>
             </Tooltip>
           </Panel>
-          {/* Interaction hint — teaches click/double-click, dismisses on first node interaction */}
+          {/* Interaction hint — two-stage: teaches expand first, then drill */}
           <Panel position="bottom-center" style={{ marginBottom: "20px", pointerEvents: "none" }}>
-            <AnimatePresence>
-              {activeNodes.length > 0 && !hasInteracted && (
+            <AnimatePresence mode="wait">
+              {!hasExpanded && activeNodes.length > 0 && (
                 <motion.div
+                  key="hint-expand"
                   initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 3 }}
                   transition={{ ...SPRING_GENTLE, delay: 0.5 }}
-                  className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-black/85 border border-white/8 text-[11px] text-white/50 font-sans select-none"
+                  className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/85 border border-white/8 text-[11px] text-white/50 font-sans select-none"
                 >
-                  <span>↓ expand</span>
-                  <span className="w-px h-3 bg-white/15" />
-                  <span>double-click ⊕ to drill</span>
+                  <span>click any node to expand</span>
+                </motion.div>
+              )}
+              {hasExpanded && !hasDrilled && hasDrillableNode && (
+                <motion.div
+                  key="hint-drill"
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 3 }}
+                  transition={{ ...SPRING_GENTLE, delay: 0.2 }}
+                  className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/85 border border-white/8 text-[11px] text-white/50 font-sans select-none"
+                >
+                  <span>double-click</span>
+                  <Layers className="w-3 h-3 text-white/40 shrink-0" />
+                  <span>to drill into calls</span>
                 </motion.div>
               )}
             </AnimatePresence>
