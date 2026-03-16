@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useLayoutEffect, useRef, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Tag, FileText, Sparkles, ExternalLink, Layers } from "lucide-react";
 import { FlowNode } from "@/lib/mockData";
@@ -32,22 +32,27 @@ interface IntelSidebarProps {
 }
 
 export function IntelSidebar({ node, anchorX, anchorY, onClose, onDrillDown, instantClose }: IntelSidebarProps) {
-  const [pos, setPos] = useState({ x: 0, y: 0 });
+  // maxH starts large so offsetHeight is never artificially capped on first measure
+  const [pos, setPos] = useState({ x: 0, y: 0, maxH: 1200 });
   const panelRef = useRef<HTMLDivElement>(null);
 
   const reposition = useCallback(() => {
     const winW = window.innerWidth;
     const winH = window.innerHeight;
-    const panelH = panelRef.current?.offsetHeight ?? 400;
     // Prefer right of click; flip left if near right edge
     const fitsRight = anchorX + GAP + PANEL_W + 12 <= winW;
     const rawX = fitsRight ? anchorX + GAP : anchorX - PANEL_W - GAP;
     const x = Math.max(12, Math.min(rawX, winW - PANEL_W - 12));
+    // Use measured height (accurate because initial maxH is large enough to never cap it)
+    const panelH = panelRef.current?.offsetHeight ?? winH - 72;
+    // Slide panel up as needed so it fits fully in the viewport
     const y = Math.max(60, Math.min(anchorY - 100, winH - panelH - 12));
-    setPos({ x, y });
+    // Constrain maxH to remaining space — prevents panel growing past viewport bottom
+    const maxH = winH - y - 12;
+    setPos({ x, y, maxH });
   }, [anchorX, anchorY]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!node) return;
     reposition();
   }, [node, anchorX, anchorY, reposition]);
@@ -57,7 +62,7 @@ export function IntelSidebar({ node, anchorX, anchorY, onClose, onDrillDown, ins
       {node && (
         <motion.div
           ref={panelRef}
-          style={{ position: "fixed", left: pos.x, top: pos.y, width: PANEL_W, zIndex: 50 }}
+          style={{ position: "fixed", left: pos.x, top: pos.y, width: PANEL_W, maxHeight: pos.maxH, zIndex: 50 }}
           initial={{ opacity: 0, scale: 0.93, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={instantClose ? { opacity: 0 } : { opacity: 0, scale: 0.93, y: 8 }}
@@ -84,7 +89,7 @@ export function IntelSidebar({ node, anchorX, anchorY, onClose, onDrillDown, ins
 
           <motion.div
             key={node.id}
-            className="overflow-y-auto p-4 space-y-5 max-h-[55vh]"
+            className="overflow-y-auto p-4 space-y-5 flex-1 min-h-0"
             variants={contentVariants}
             initial="hidden"
             animate="visible"
@@ -114,8 +119,8 @@ export function IntelSidebar({ node, anchorX, anchorY, onClose, onDrillDown, ins
             <AnimatePresence>
               {node.aiSummary && (
                 <motion.div
-                  initial={{ opacity: 0, y: 8, height: 0 }}
-                  animate={{ opacity: 1, y: 0, height: "auto" }}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, height: 0 }}
                   transition={SPRING_GENTLE}
                   className="overflow-hidden"
