@@ -320,6 +320,7 @@ function Canvas({
             <motion.button
               onClick={handleCopy}
               aria-label="Copy flow as text"
+              title="Copy call chain as text"
               animate={copied ? { scale: [1, 1.3, 1] } : { scale: 1 }}
               transition={SPRING_BOUNCE}
               className={`p-1.5 rounded-md border transition-colors ${copied ? "text-white border-white/20 bg-white/8" : "text-gray-500 border-white/10 bg-black/40 hover:text-gray-300 hover:border-white/20 active:bg-white/5"}`}
@@ -336,7 +337,7 @@ function Canvas({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 3 }}
                   transition={{ ...SPRING_GENTLE, delay: 0.5 }}
-                  className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-black/85 border border-white/8 text-[11px] text-white/50 font-mono select-none"
+                  className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-black/85 border border-white/8 text-[11px] text-white/50 font-sans select-none"
                 >
                   <span>click to inspect</span>
                   <span className="w-px h-3 bg-white/15" />

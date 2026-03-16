@@ -61,11 +61,11 @@ export function StandardNode({ data }: { data: NodeProps }) {
       {data.hasDetail && (
         <motion.div
           variants={{
-            rest: { scale: 1, opacity: 0.65 },
-            hover: { scale: 1.2, opacity: 1 },
+            rest: { scale: 1, opacity: 1 },
+            hover: { scale: 1.15, opacity: 1 },
           }}
           transition={SPRING_BADGE}
-          className="absolute top-3 right-3 w-5 h-5 rounded-full bg-white/10 border border-white/20 flex items-center justify-center z-20"
+          className="absolute top-3 right-3 w-5 h-5 rounded-full bg-white/15 border border-white/30 flex items-center justify-center z-20"
         >
           <Layers className="w-3 h-3 text-white/80" />
         </motion.div>
@@ -81,7 +81,7 @@ export function StandardNode({ data }: { data: NodeProps }) {
           <FunctionSquare className="w-5 h-5 text-gray-300" />
         </div>
         <div className="flex flex-col flex-1 min-w-0">
-          <span className="text-base font-semibold text-white truncate pr-6" title={data.funcName}>{data.funcName}</span>
+          <span className="text-base font-semibold text-white truncate pr-7" title={data.funcName}>{data.funcName}</span>
           <span className="text-[11px] text-gray-400 font-mono truncate mt-0.5" title={data.fileName}>
             {data.fileName.split("/").pop()}
           </span>
@@ -128,11 +128,11 @@ export function EnhancedNode({ data }: { data: NodeProps }) {
       {data.hasDetail && (
         <motion.div
           variants={{
-            rest: { scale: 1, opacity: 0.65 },
-            hover: { scale: 1.2, opacity: 1 },
+            rest: { scale: 1, opacity: 1 },
+            hover: { scale: 1.15, opacity: 1 },
           }}
           transition={SPRING_BADGE}
-          className="absolute top-3 right-3 w-5 h-5 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center z-20"
+          className="absolute top-3 right-3 w-5 h-5 rounded-full bg-amber-500/25 border border-amber-500/50 flex items-center justify-center z-20"
         >
           <Layers className="w-3 h-3 text-amber-400" />
         </motion.div>
@@ -149,7 +149,7 @@ export function EnhancedNode({ data }: { data: NodeProps }) {
           <FunctionSquare className="w-5 h-5" />
         </div>
         <div className="flex flex-col flex-1">
-          <span className="text-base font-semibold text-amber-300">{data.funcName}</span>
+          <span className="text-base font-semibold text-amber-300 truncate pr-7" title={data.funcName}>{data.funcName}</span>
           <span className="text-[11px] text-gray-400 font-mono truncate mt-0.5">
             {data.fileName.split("/").pop()}
           </span>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, Fragment } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Command, Network, FunctionSquare } from "lucide-react";
 import { ExecutionPath, FlowNode } from "@/lib/mockData";
@@ -168,9 +168,19 @@ export function CommandPalette({ paths, onSelectEndpoint, onSelectNode }: Comman
               ) : (
                 filteredItems.map((item, index) => {
                   const active = index === selectedIndex;
+                  const itemKey = item.type === "endpoint"
+                    ? `endpoint-${item.path.method}-${item.path.endpoint}`
+                    : `node-${item.path.endpoint}-${item.node.id}`;
+                  const prevItem = index > 0 ? filteredItems[index - 1] : null;
+                  const showGroupLabel = !prevItem || prevItem.type !== item.type;
                   return (
+                    <Fragment key={itemKey}>
+                      {showGroupLabel && (
+                        <div className="px-3 pt-2 pb-1 text-[10px] text-gray-600 font-medium select-none">
+                          {item.type === "endpoint" ? "Endpoints" : "Functions"}
+                        </div>
+                      )}
                     <button
-                      key={index}
                       onClick={() => handleSelect(index)}
                       className={clsx(
                         "relative w-full flex items-center justify-between px-3 py-3 rounded-lg text-left overflow-hidden",
@@ -208,6 +218,7 @@ export function CommandPalette({ paths, onSelectEndpoint, onSelectNode }: Comman
                         </div>
                       )}
                     </button>
+                    </Fragment>
                   );
                 })
               )}

@@ -154,7 +154,7 @@ export default function Home() {
               >
                 {[0, 1, 2].map((i) => (
                   <div key={i} className="flex flex-col items-center">
-                    <div className="w-28 h-7 rounded-lg border border-white/5 bg-white/[2.5]" />
+                    <div className="w-28 h-7 rounded-lg border border-white/12 bg-white/[0.04]" />
                     {i < 2 && <div className="w-px h-4 border-l border-dashed border-white/8" />}
                   </div>
                 ))}
@@ -164,8 +164,8 @@ export default function Home() {
                 className="flex flex-col items-center gap-3"
                 variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0, transition: SPRING_DEFAULT } }}
               >
-                <p className="text-[11px] font-mono text-gray-500 text-center max-w-[190px] leading-relaxed">
-                  Select an endpoint above to trace its call flow.
+                <p className="text-[11px] font-mono text-gray-500 text-center max-w-[200px] leading-relaxed">
+                  Pick an endpoint to trace its call chain.
                 </p>
                 <motion.button
                   onClick={() => window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true, bubbles: true }))}
