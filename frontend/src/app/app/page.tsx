@@ -24,7 +24,6 @@ export default function Home() {
   const [selectedPath, setSelectedPath] = useState<ExecutionPath | null>(null);
   const [drillStack, setDrillStack] = useState<DrillEntry[]>([]);
   const [loadingMsgIdx, setLoadingMsgIdx] = useState(0);
-  const [promptCopied, setPromptCopied] = useState(false);
 
   // Rotate loading messages while connecting
   useEffect(() => {
@@ -83,19 +82,7 @@ export default function Home() {
     setDrillStack([]);
   };
 
-  const handleCopyLLMPrompt = () => {
-    const prompt =
-      "I'm using code-map to visualize API execution paths. " +
-      "My project has no routes yet and code-map can't detect anything. " +
-      "Help me write a minimal REST endpoint — in NestJS or FastAPI — " +
-      "so code-map has something to trace. Show only what's needed to define " +
-      "one route handler and start the server.";
-    navigator.clipboard.writeText(prompt).catch(() => {});
-    setPromptCopied(true);
-    setTimeout(() => setPromptCopied(false), 2000);
-  };
-
-  const handleSelectNodeFromSearch = (path: ExecutionPath, _node: FlowNode, parentId: string | null) => {
+const handleSelectNodeFromSearch = (path: ExecutionPath, _node: FlowNode, parentId: string | null) => {
     setSelectedPath(path);
     if (parentId) {
       const parentNode = path.nodes.find(n => n.id === parentId);
@@ -202,12 +189,6 @@ export default function Home() {
                 >
                   Refresh
                 </motion.button>
-                <button
-                  onClick={handleCopyLLMPrompt}
-                  className={`text-[11px] font-mono transition-colors ${promptCopied ? "text-green-500" : "text-gray-500 hover:text-gray-300"}`}
-                >
-                  {promptCopied ? "✓ copied" : "copy a prompt for your LLM →"}
-                </button>
               </motion.div>
             </motion.div>
           )}
