@@ -13,7 +13,7 @@ interface SwitchboardProps {
   usingMockData?: boolean;
 }
 
-export function Switchboard({ paths, selectedPath, onSelectPath, usingMockData }: SwitchboardProps) {
+export function Switchboard({ paths, selectedPath, onSelectPath }: SwitchboardProps) {
   return (
     <div className="w-full h-12 border-b border-white/10 bg-black flex items-center shrink-0 z-20 shadow-[0_4px_24px_rgba(0,0,0,0.6)]">
       {/* Logo */}
@@ -76,12 +76,6 @@ export function Switchboard({ paths, selectedPath, onSelectPath, usingMockData }
 
       {/* Right controls */}
       <div className="flex items-center gap-2 px-3 h-full border-l border-white/10 shrink-0">
-        {usingMockData && (
-          <span
-            className="w-1.5 h-1.5 rounded-full bg-white/25 shrink-0"
-            title="Using demo data — backend not connected"
-          />
-        )}
         <button
           onClick={() => window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true, bubbles: true }))}
           aria-label="Search (⌘K)"
