@@ -8,7 +8,6 @@ import { useExecutionPaths } from "@/hooks/useExecutionPaths";
 import { ExecutionPath, FlowNode } from "@/lib/mockData";
 import { Switchboard } from "@/components/Switchboard";
 import { FlowCanvas } from "@/components/FlowCanvas";
-import { IntelSidebar } from "@/components/IntelSidebar";
 import { CommandPalette } from "@/components/CommandPalette";
 
 export type DrillEntry = { id: string; label: string };
@@ -23,11 +22,8 @@ const LOADING_MESSAGES = [
 export default function Home() {
   const { paths, status, usingMockData } = useExecutionPaths();
   const [selectedPath, setSelectedPath] = useState<ExecutionPath | null>(null);
-  const [selectedNode, setSelectedNode] = useState<FlowNode | null>(null);
-  const [panelAnchor, setPanelAnchor] = useState({ x: 0, y: 0 });
   const [drillStack, setDrillStack] = useState<DrillEntry[]>([]);
   const [loadingMsgIdx, setLoadingMsgIdx] = useState(0);
-  const [isDrilling, setIsDrilling] = useState(false);
   const [promptCopied, setPromptCopied] = useState(false);
 
   // Rotate loading messages while connecting
@@ -65,36 +61,25 @@ export default function Home() {
 
   const handleSelectPath = (path: ExecutionPath) => {
     setSelectedPath(path);
-    setSelectedNode(null);
     setDrillStack([]);
-  };
-
-  const handleNodeClick = (node: FlowNode, screenX: number, screenY: number) => {
-    setSelectedNode(node);
-    setPanelAnchor({ x: screenX, y: screenY });
   };
 
   const handleNodeDrillDown = (node: FlowNode) => {
     if (node.hasDetail) {
-      setIsDrilling(true);
       setDrillStack((prev) => {
-        if (prev.some((e) => e.id === node.id)) return prev; // already in stack, prevent cycle
+        if (prev.some((e) => e.id === node.id)) return prev;
         return [...prev, { id: node.id, label: node.funcName }];
       });
-      setSelectedNode(null);
-      setTimeout(() => setIsDrilling(false), 400);
     }
   };
 
   const handleBackTo = (index: number) => {
     // index === -1 means back to root
     setDrillStack((prev) => prev.slice(0, index + 1));
-    setSelectedNode(null);
   };
 
   const handleSelectEndpoint = (path: ExecutionPath) => {
     setSelectedPath(path);
-    setSelectedNode(null);
     setDrillStack([]);
   };
 
@@ -110,10 +95,8 @@ export default function Home() {
     setTimeout(() => setPromptCopied(false), 2000);
   };
 
-  const handleSelectNodeFromSearch = (path: ExecutionPath, node: FlowNode, parentId: string | null) => {
+  const handleSelectNodeFromSearch = (path: ExecutionPath, _node: FlowNode, parentId: string | null) => {
     setSelectedPath(path);
-    setSelectedNode(node);
-    
     if (parentId) {
       const parentNode = path.nodes.find(n => n.id === parentId);
       setDrillStack([{ id: parentId, label: parentNode ? parentNode.funcName : parentId }]);
@@ -167,8 +150,6 @@ export default function Home() {
             <FlowCanvas
               path={activePath}
               drillStack={drillStack}
-              sidebarOpen={selectedNode !== null}
-              onNodeClick={handleNodeClick}
               onNodeDrillDown={handleNodeDrillDown}
               onBackTo={handleBackTo}
             />
@@ -233,15 +214,6 @@ export default function Home() {
         </main>
 
       </div>
-
-      <IntelSidebar
-        node={selectedNode}
-        anchorX={panelAnchor.x}
-        anchorY={panelAnchor.y}
-        onClose={() => setSelectedNode(null)}
-        onDrillDown={handleNodeDrillDown}
-        instantClose={isDrilling}
-      />
 
       <CommandPalette
         paths={paths}

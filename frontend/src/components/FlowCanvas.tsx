@@ -26,15 +26,9 @@ import { SPRING_DEFAULT, SPRING_BOUNCE, SPRING_GENTLE } from "@/lib/spring";
 
 const nodeTypes = { standard: StandardNode, enhanced: EnhancedNode, ghostEntryPin: GhostEntryPin };
 
-// Half the sidebar's total footprint (320px panel + 16px margin).
-// Panning by this amount re-centres the graph in the remaining visible area.
-const SIDEBAR_OFFSET = 168;
-
 interface FlowCanvasProps {
   path: ExecutionPath;
   drillStack: DrillEntry[];
-  sidebarOpen: boolean;
-  onNodeClick: (node: FlowNode, screenX: number, screenY: number) => void;
   onNodeDrillDown: (node: FlowNode) => void;
   onBackTo: (index: number) => void;
 }
@@ -80,8 +74,6 @@ function Canvas({
   drillStack,
   endpointLabel,
   containerRef,
-  sidebarOpen,
-  onNodeClick,
   onNodeDrillDown,
   onBackTo,
 }: {
@@ -90,14 +82,12 @@ function Canvas({
   drillStack: DrillEntry[];
   endpointLabel: string;
   containerRef: RefObject<HTMLDivElement | null>;
-  sidebarOpen: boolean;
-  onNodeClick: (node: FlowNode, screenX: number, screenY: number) => void;
   onNodeDrillDown: (node: FlowNode) => void;
   onBackTo: (index: number) => void;
 }) {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
-  const { fitView, getViewport, setViewport } = useReactFlow();
+  const { fitView } = useReactFlow();
   const [copied, setCopied] = useState(false);
   const [copiedBreadcrumb, setCopiedBreadcrumb] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(() => {
@@ -106,25 +96,33 @@ function Canvas({
   const [isDrilling, setIsDrilling] = useState(false);
   const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const prevSidebarOpenRef = useRef(sidebarOpen);
   // Track drill direction: +1 = going deeper, -1 = going back
   const prevDrillDepthRef = useRef(drillStack.length);
   const drillEnterY = drillStack.length >= prevDrillDepthRef.current ? 10 : -10;
   prevDrillDepthRef.current = drillStack.length;
 
-  // Shift the viewport left when the sidebar opens so nodes stay visible,
-  // and restore it when the sidebar closes.
+  // Which node is currently expanded (in-place detail panel)
+  const [expandedNodeId, setExpandedNodeId] = useState<string | null>(null);
+  const closeExpanded = useCallback(() => setExpandedNodeId(null), []);
+  // Stable ref so layout effect can capture latest onNodeDrillDown without re-running
+  const onNodeDrillDownRef = useRef(onNodeDrillDown);
+  onNodeDrillDownRef.current = onNodeDrillDown;
+
+  // Sync isExpanded flag + dimming style whenever expandedNodeId changes
   useEffect(() => {
-    const wasOpen = prevSidebarOpenRef.current;
-    prevSidebarOpenRef.current = sidebarOpen;
-    if (sidebarOpen && !wasOpen) {
-      const { x, y, zoom } = getViewport();
-      setViewport({ x: x - SIDEBAR_OFFSET, y, zoom }, { duration: 300 });
-    } else if (!sidebarOpen && wasOpen) {
-      const { x, y, zoom } = getViewport();
-      setViewport({ x: x + SIDEBAR_OFFSET, y, zoom }, { duration: 300 });
-    }
-  }, [sidebarOpen, getViewport, setViewport]);
+    setNodes((prev) =>
+      prev.map((n) => ({
+        ...n,
+        data: { ...n.data, isExpanded: n.id === expandedNodeId },
+        style: {
+          overflow: "visible" as const,
+          opacity: expandedNodeId && n.id !== expandedNodeId ? 0.3 : 1,
+          transition: "opacity 200ms ease",
+          zIndex: n.id === expandedNodeId ? 10 : 0,
+        },
+      })),
+    );
+  }, [expandedNodeId, setNodes]);
 
   const writeToClipboard = useCallback((text: string, onSuccess: () => void) => {
     navigator.clipboard.writeText(text).then(onSuccess).catch(() => {
@@ -172,13 +170,23 @@ function Canvas({
     const targets = new Set(validEdges.map((e) => e.target));
     const sources = new Set(validEdges.map((e) => e.source));
 
+    setExpandedNodeId(null); // reset expansion on path/drill change
+
     const layoutNodes: Node[] = activeNodes.map((n) => {
       const pos = g.node(n.id);
       return {
         id: n.id,
         type: n.type,
-        data: { ...n, hasIncoming: targets.has(n.id), hasOutgoing: sources.has(n.id) },
+        data: {
+          ...n,
+          hasIncoming: targets.has(n.id),
+          hasOutgoing: sources.has(n.id),
+          isExpanded: false,
+          onClose: closeExpanded,
+          onDrillDown: () => onNodeDrillDownRef.current(n),
+        },
         position: { x: pos.x - 225, y: pos.y - ((n.intentTag || n.docstring) ? 55 : 40) },
+        style: { overflow: "visible" as const },
       };
     });
 
@@ -216,22 +224,20 @@ function Canvas({
   }, [activeNodes, activeEdges, drillStack, setNodes, setEdges, fitView]);
 
   const handleNodeClick = useCallback(
-    (event: React.MouseEvent, node: Node) => {
+    (_event: React.MouseEvent, node: Node) => {
       if (node.id === "__ghost_entry_pin__") return;
       setHasInteracted(true);
       try { sessionStorage.setItem("code-map:hint-dismissed", "1"); } catch { /* ignore */ }
       // Resurface the hint after 30s of no interaction
       if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
       idleTimerRef.current = setTimeout(() => setHasInteracted(false), 30_000);
-      // 150ms delay: short enough to feel instant, long enough to cancel if a
-      // double-click follows — prevents the sidebar flash on double-click.
+      // 150ms delay to cancel if a double-click follows (prevents expansion flash)
       if (clickTimerRef.current) clearTimeout(clickTimerRef.current);
-      const { clientX, clientY } = event;
       clickTimerRef.current = setTimeout(() => {
-        onNodeClick(node.data as FlowNode, clientX, clientY);
+        setExpandedNodeId((prev) => (prev === node.id ? null : node.id));
       }, 150);
     },
-    [onNodeClick],
+    [],
   );
 
   const handleNodeDoubleClick = useCallback(
@@ -273,6 +279,10 @@ function Canvas({
       eds.map((e) => ({ ...e, style: { ...e.style, stroke: EDGE_COLOR_REST } })) as Edge[],
     );
   }, [setEdges]);
+
+  const handlePaneClick = useCallback(() => {
+    setExpandedNodeId(null);
+  }, []);
 
   const isDetail = drillStack.length > 0;
 
@@ -354,6 +364,7 @@ function Canvas({
           onNodeDoubleClick={handleNodeDoubleClick}
           onNodeMouseEnter={handleNodeMouseEnter}
           onNodeMouseLeave={handleNodeMouseLeave}
+          onPaneClick={handlePaneClick}
           fitView
           fitViewOptions={{ padding: 0.25 }}
           proOptions={{ hideAttribution: true }}
@@ -399,7 +410,7 @@ function Canvas({
   );
 }
 
-export function FlowCanvas({ path, drillStack, sidebarOpen, onNodeClick, onNodeDrillDown, onBackTo }: FlowCanvasProps) {
+export function FlowCanvas({ path, drillStack, onNodeDrillDown, onBackTo }: FlowCanvasProps) {
   const currentNodeId = drillStack.length > 0 ? drillStack[drillStack.length - 1].id : null;
   const currentDetail = currentNodeId ? path.nodeDetails[currentNodeId] ?? null : null;
 
@@ -417,8 +428,6 @@ export function FlowCanvas({ path, drillStack, sidebarOpen, onNodeClick, onNodeD
         drillStack={drillStack}
         endpointLabel={endpointLabel}
         containerRef={containerRef}
-        sidebarOpen={sidebarOpen}
-        onNodeClick={onNodeClick}
         onNodeDrillDown={onNodeDrillDown}
         onBackTo={onBackTo}
       />

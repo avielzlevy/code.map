@@ -1,10 +1,17 @@
 import { Handle, Position } from "@xyflow/react";
-import { motion } from "framer-motion";
-import { FunctionSquare, Layers, CornerLeftUp, ChevronsDown } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { FunctionSquare, Layers, CornerLeftUp, ChevronsDown, Sparkles, ExternalLink } from "lucide-react";
 import type { FlowNode } from "@/lib/mockData";
-import { SPRING_STANDARD, SPRING_BADGE } from "@/lib/spring";
+import { getVSCodeUrl } from "@/lib/deep-link";
+import { SPRING_STANDARD, SPRING_BADGE, SPRING_DEFAULT } from "@/lib/spring";
 
-type NodeProps = FlowNode & { hasIncoming: boolean; hasOutgoing: boolean };
+type NodeProps = FlowNode & {
+  hasIncoming: boolean;
+  hasOutgoing: boolean;
+  isExpanded: boolean;
+  onClose: () => void;
+  onDrillDown: () => void;
+};
 type GhostPinData = { callerLabel: string; onBack?: () => void };
 
 export function GhostEntryPin({ data }: { data: GhostPinData }) {
@@ -41,6 +48,90 @@ export function GhostEntryPin({ data }: { data: GhostPinData }) {
   );
 }
 
+/** Detail panel that opens to the right of a node when it's expanded.
+ *  Positioned to the right so it never overlaps the vertical edges (TB layout). */
+function ExpandedPanel({ data, amber }: { data: NodeProps; amber?: boolean }) {
+  return (
+    <motion.div
+      key="panel"
+      initial={{ opacity: 0, x: -8, scale: 0.98 }}
+      animate={{ opacity: 1, x: 0, scale: 1 }}
+      exit={{ opacity: 0, x: -4, scale: 0.98 }}
+      transition={SPRING_DEFAULT}
+      className={`absolute left-full ml-3 top-0 w-72 z-50 rounded-xl bg-black/95 backdrop-blur-md border shadow-[0_12px_48px_rgba(0,0,0,0.95)] overflow-hidden ${
+        amber ? "border-amber-500/20" : "border-white/15"
+      }`}
+      onClick={(e) => e.stopPropagation()}
+      onDoubleClick={(e) => e.stopPropagation()}
+    >
+      {/* Always-visible metadata — full path + line */}
+      <div className="px-4 pt-4 pb-3 flex flex-col gap-1">
+        <span className={`font-mono text-[13px] font-semibold ${amber ? "text-amber-300" : "text-white"}`}>
+          {data.funcName}()
+        </span>
+        <span className="font-mono text-[10px] text-gray-500 break-all leading-snug">
+          {data.fileName}:{data.line}
+        </span>
+      </div>
+
+      {/* Docstring — present when backend extracts JSDoc/docstrings */}
+      {data.docstring && (
+        <div className="px-4 pb-3">
+          <pre
+            className={`text-[11px] font-mono whitespace-pre-wrap leading-relaxed border-l-2 pl-3 ${
+              amber ? "text-amber-300/70 border-amber-500/30" : "text-gray-400 border-white/15"
+            }`}
+          >
+            {data.docstring}
+          </pre>
+        </div>
+      )}
+
+      {/* AI summary — present when enableAI: true in config */}
+      {data.aiSummary && (
+        <div className="px-4 pb-3">
+          <div
+            className={`relative p-3 rounded-lg border ${
+              amber ? "bg-amber-500/5 border-amber-500/15" : "bg-white/3 border-white/8"
+            }`}
+          >
+            <Sparkles
+              className={`absolute top-2.5 right-2.5 w-3 h-3 ${
+                amber ? "text-amber-400/30" : "text-white/20"
+              }`}
+            />
+            <p className="text-[12px] text-gray-300 leading-relaxed pr-5">{data.aiSummary}</p>
+          </div>
+        </div>
+      )}
+
+      <div className="flex gap-2 p-3 border-t border-white/8 bg-black/40">
+        {data.hasDetail && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              data.onDrillDown();
+            }}
+            className="flex-1 flex items-center justify-center gap-1.5 bg-white text-black py-2 px-3 rounded-md text-[12px] font-semibold hover:bg-white/90 transition-colors"
+          >
+            <Layers className="w-3.5 h-3.5" />
+            Drill into calls
+          </button>
+        )}
+        <a
+          href={getVSCodeUrl(data.fileName, data.line)}
+          rel="noopener"
+          onClick={(e) => e.stopPropagation()}
+          className="flex-1 flex items-center justify-center gap-1.5 border border-white/15 hover:border-white/40 text-gray-400 hover:text-white py-2 px-3 rounded-md text-[12px] font-medium hover:bg-white/5 transition-colors"
+        >
+          <ExternalLink className="w-3.5 h-3.5" />
+          Open in VS Code
+        </a>
+      </div>
+    </motion.div>
+  );
+}
+
 export function StandardNode({ data }: { data: NodeProps }) {
   return (
     <motion.div
@@ -72,7 +163,7 @@ export function StandardNode({ data }: { data: NodeProps }) {
           <Layers className="w-3.5 h-3.5 text-white/80" />
         </motion.div>
       )}
-      {data.hasDetail && (
+      {data.hasDetail && !data.isExpanded && (
         <motion.div
           variants={{
             rest: { opacity: 0, y: 6 },
@@ -116,6 +207,11 @@ export function StandardNode({ data }: { data: NodeProps }) {
         data-connected={data.hasOutgoing ? "true" : "false"}
         className="w-2.5! h-2.5! border-2! border-black! bg-white! shadow-[0_0_6px_rgba(255,255,255,0.3)]"
       />
+
+      {/* In-place expansion panel */}
+      <AnimatePresence>
+        {data.isExpanded && <ExpandedPanel data={data} />}
+      </AnimatePresence>
     </motion.div>
   );
 }
@@ -156,7 +252,7 @@ export function EnhancedNode({ data }: { data: NodeProps }) {
           <Layers className="w-3.5 h-3.5 text-amber-400" />
         </motion.div>
       )}
-      {data.hasDetail && (
+      {data.hasDetail && !data.isExpanded && (
         <motion.div
           variants={{
             rest: { opacity: 0, y: 6 },
@@ -201,6 +297,11 @@ export function EnhancedNode({ data }: { data: NodeProps }) {
         data-connected={data.hasOutgoing ? "true" : "false"}
         className="w-2.5! h-2.5! border-2! border-black! bg-amber-400! shadow-[0_0_8px_rgba(245,158,11,0.5)] z-20"
       />
+
+      {/* In-place expansion panel */}
+      <AnimatePresence>
+        {data.isExpanded && <ExpandedPanel data={data} amber />}
+      </AnimatePresence>
     </motion.div>
   );
 }
