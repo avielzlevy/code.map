@@ -1,13 +1,24 @@
 import { Handle, Position } from "@xyflow/react";
 import { motion } from "framer-motion";
 import { FunctionSquare, Layers, CornerLeftUp } from "lucide-react";
+import type { FlowNode } from "@/lib/mockData";
 
-export function GhostEntryPin({ data }: any) {
+type NodeProps = FlowNode & { hasIncoming: boolean; hasOutgoing: boolean };
+type GhostPinData = { callerLabel: string; onBack?: () => void };
+
+export function GhostEntryPin({ data }: { data: GhostPinData }) {
+  const handleActivate = (e: React.MouseEvent | React.KeyboardEvent) => {
+    e.stopPropagation();
+    data.onBack?.();
+  };
   return (
     <div
-      className="flex flex-col items-center select-none cursor-pointer group"
+      role="button"
+      tabIndex={0}
+      className="flex flex-col items-center select-none cursor-pointer group outline-none"
       style={{ width: 450 }}
-      onClick={(e) => { e.stopPropagation(); data.onBack?.(); }}
+      onClick={handleActivate}
+      onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && handleActivate(e)}
     >
       {/* Dashed line going up off-screen */}
       <div className="w-px h-12 border-l-2 border-dashed border-white/15 group-hover:border-white/40 transition-colors duration-150" />
@@ -29,7 +40,7 @@ export function GhostEntryPin({ data }: any) {
   );
 }
 
-export function StandardNode({ data }: any) {
+export function StandardNode({ data }: { data: NodeProps }) {
   return (
     <motion.div
       className={`px-5 py-4 rounded-xl bg-zinc-950 border w-112.5 group relative
@@ -91,7 +102,7 @@ export function StandardNode({ data }: any) {
   );
 }
 
-export function EnhancedNode({ data }: any) {
+export function EnhancedNode({ data }: { data: NodeProps }) {
   return (
     <motion.div
       className={`px-5 py-4 rounded-xl bg-zinc-950 border w-112.5 relative group

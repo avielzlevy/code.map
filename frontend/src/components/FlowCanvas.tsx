@@ -240,45 +240,48 @@ function Canvas({
             animate={{ height: 40, opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ type: "spring", damping: 28, stiffness: 260 }}
-            className="flex items-center gap-1 px-4 border-b border-white/10 bg-black/85 backdrop-blur-sm shrink-0 overflow-hidden z-20 justify-between"
+            className="flex items-center gap-2 px-4 border-b border-white/10 bg-black/85 backdrop-blur-sm shrink-0 overflow-hidden z-20"
           >
-            <button
-              onClick={() => onBackTo(-1)}
-              className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-200 cursor-pointer transition-colors"
-            >
-              <Home className="w-3 h-3" />
-              <span className="font-mono">{endpointLabel}</span>
-            </button>
+            {/* Scrollable breadcrumb trail — constrained so the copy button never gets pushed off */}
+            <div className="flex-1 flex items-center gap-1 min-w-0 overflow-x-auto scrollbar-hide">
+              <button
+                onClick={() => onBackTo(-1)}
+                className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-200 cursor-pointer transition-colors shrink-0"
+              >
+                <Home className="w-3 h-3" />
+                <span className="font-mono">{endpointLabel}</span>
+              </button>
 
-            {drillStack.map((entry, idx) => {
-              const isLast = idx === drillStack.length - 1;
-              return (
-                <motion.div
-                  key={entry.id}
-                  className="flex items-center gap-1"
-                  initial={{ opacity: 0, x: 10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ type: "spring", damping: 28, stiffness: 280 }}
-                >
-                  <ChevronRight className="w-3 h-3 text-gray-600" />
-                  <button
-                    onClick={() => !isLast && onBackTo(idx)}
-                    className={`text-xs transition-colors ${
-                      isLast
-                        ? "text-gray-200 cursor-default font-medium"
-                        : "text-gray-400 hover:text-gray-200 cursor-pointer"
-                    }`}
+              {drillStack.map((entry, idx) => {
+                const isLast = idx === drillStack.length - 1;
+                return (
+                  <motion.div
+                    key={entry.id}
+                    className="flex items-center gap-1 shrink-0"
+                    initial={{ opacity: 0, x: 10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ type: "spring", damping: 28, stiffness: 280 }}
                   >
-                    {entry.label}
-                  </button>
-                </motion.div>
-              );
-            })}
+                    <ChevronRight className="w-3 h-3 text-gray-600" />
+                    <button
+                      onClick={() => !isLast && onBackTo(idx)}
+                      className={`text-xs transition-colors ${
+                        isLast
+                          ? "text-gray-200 cursor-default font-medium"
+                          : "text-gray-400 hover:text-gray-200 cursor-pointer"
+                      }`}
+                    >
+                      {entry.label}
+                    </button>
+                  </motion.div>
+                );
+              })}
+            </div>
 
             <button
               onClick={handleCopyBreadcrumb}
               aria-label="Copy breadcrumb path"
-              className="ml-auto text-gray-400 hover:text-gray-200 active:text-gray-100 transition-colors p-1 rounded border border-transparent hover:border-white/10 hover:bg-white/5"
+              className="shrink-0 text-gray-400 hover:text-gray-200 active:text-gray-100 transition-colors p-1 rounded border border-transparent hover:border-white/10 hover:bg-white/5"
             >
               {copiedBreadcrumb ? <Check className="w-3 h-3 text-white" /> : <Copy className="w-3 h-3" />}
             </button>
@@ -286,9 +289,9 @@ function Canvas({
         )}
       </AnimatePresence>
 
-      {/* Flow canvas — keyed on drill depth; direction-aware spring entrance */}
+      {/* Flow canvas — keyed on current node id so re-visiting a depth always remounts */}
       <motion.div
-        key={drillStack.length}
+        key={drillStack.at(-1)?.id ?? "root"}
         className="flex-1 relative z-10"
         initial={{ opacity: 0, y: drillEnterY }}
         animate={{ opacity: isDrilling ? 0.6 : 1, y: 0 }}
