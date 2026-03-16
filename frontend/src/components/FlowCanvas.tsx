@@ -98,6 +98,7 @@ function Canvas({
   });
   const [isDrilling, setIsDrilling] = useState(false);
   const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Track drill direction: +1 = going deeper, -1 = going back
   const prevDrillDepthRef = useRef(drillStack.length);
   const drillEnterY = drillStack.length >= prevDrillDepthRef.current ? 10 : -10;
@@ -186,7 +187,10 @@ function Canvas({
     setEdges(layoutEdges);
 
     const t = setTimeout(() => fitView({ padding: 0.25, duration: 350 }), 60);
-    return () => clearTimeout(t);
+    return () => {
+      clearTimeout(t);
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+    };
   }, [activeNodes, activeEdges, drillStack, setNodes, setEdges, fitView]);
 
   const handleNodeClick = useCallback(
@@ -194,6 +198,9 @@ function Canvas({
       if (node.id === "__ghost_entry_pin__") return;
       setHasInteracted(true);
       try { sessionStorage.setItem("code-map:hint-dismissed", "1"); } catch { /* ignore */ }
+      // Resurface the hint after 30s of no interaction
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+      idleTimerRef.current = setTimeout(() => setHasInteracted(false), 30_000);
       // 150ms delay: short enough to feel instant, long enough to cancel if a
       // double-click follows — prevents the sidebar flash on double-click.
       if (clickTimerRef.current) clearTimeout(clickTimerRef.current);
@@ -264,7 +271,7 @@ function Canvas({
               <button
                 onClick={() => onBackTo(-1)}
                 title={endpointLabel}
-                className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-200 cursor-pointer transition-colors shrink-0 max-w-[160px]"
+                className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-200 cursor-pointer transition-colors shrink-0 max-w-40"
               >
                 <Home className="w-3 h-3 shrink-0" />
                 <span className="font-mono truncate">{endpointLabel}</span>

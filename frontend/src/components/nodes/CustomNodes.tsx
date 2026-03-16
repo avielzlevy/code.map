@@ -1,6 +1,6 @@
 import { Handle, Position } from "@xyflow/react";
 import { motion } from "framer-motion";
-import { FunctionSquare, Layers, CornerLeftUp } from "lucide-react";
+import { FunctionSquare, Layers, CornerLeftUp, ChevronsDown } from "lucide-react";
 import type { FlowNode } from "@/lib/mockData";
 import { SPRING_STANDARD, SPRING_BADGE } from "@/lib/spring";
 
@@ -65,9 +65,24 @@ export function StandardNode({ data }: { data: NodeProps }) {
             hover: { scale: 1.15, opacity: 1 },
           }}
           transition={SPRING_BADGE}
-          className="absolute top-3 right-3 w-5 h-5 rounded-full bg-white/15 border border-white/30 flex items-center justify-center z-20"
+          className="absolute top-3 right-3 w-6 h-6 rounded-full bg-white/15 border border-white/30 flex items-center justify-center z-20"
         >
-          <Layers className="w-3 h-3 text-white/80" />
+          <Layers className="w-3.5 h-3.5 text-white/80" />
+        </motion.div>
+      )}
+      {data.hasDetail && (
+        <motion.div
+          variants={{
+            rest: { opacity: 0, y: 6 },
+            hover: { opacity: 1, y: 0 },
+          }}
+          transition={SPRING_BADGE}
+          className="absolute -bottom-7 left-0 right-0 flex items-center justify-center pointer-events-none z-10"
+        >
+          <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/6 border border-white/12">
+            <ChevronsDown className="w-2.5 h-2.5 text-white/50" />
+            <span className="text-[9px] font-mono text-white/45 tracking-wide">double-click to drill</span>
+          </div>
         </motion.div>
       )}
       <Handle
@@ -132,9 +147,24 @@ export function EnhancedNode({ data }: { data: NodeProps }) {
             hover: { scale: 1.15, opacity: 1 },
           }}
           transition={SPRING_BADGE}
-          className="absolute top-3 right-3 w-5 h-5 rounded-full bg-amber-500/25 border border-amber-500/50 flex items-center justify-center z-20"
+          className="absolute top-3 right-3 w-6 h-6 rounded-full bg-amber-500/25 border border-amber-500/50 flex items-center justify-center z-20"
         >
-          <Layers className="w-3 h-3 text-amber-400" />
+          <Layers className="w-3.5 h-3.5 text-amber-400" />
+        </motion.div>
+      )}
+      {data.hasDetail && (
+        <motion.div
+          variants={{
+            rest: { opacity: 0, y: 6 },
+            hover: { opacity: 1, y: 0 },
+          }}
+          transition={SPRING_BADGE}
+          className="absolute -bottom-7 left-0 right-0 flex items-center justify-center pointer-events-none z-10"
+        >
+          <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/8 border border-amber-500/20">
+            <ChevronsDown className="w-2.5 h-2.5 text-amber-400/60" />
+            <span className="text-[9px] font-mono text-amber-300/50 tracking-wide">double-click to drill</span>
+          </div>
         </motion.div>
       )}
 
