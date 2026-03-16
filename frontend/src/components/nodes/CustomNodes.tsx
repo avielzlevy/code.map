@@ -172,8 +172,8 @@ export function StandardNode({ data }: { data: NodeProps }) {
         </div>
         {data.docstring && (
           <div className={`mt-3 text-[11px] font-mono font-medium bg-white/5 border border-white/10 text-gray-300 px-2 py-1 rounded-md flex items-start gap-1.5 ${data.isExpanded ? "" : "overflow-hidden"}`}>
-            <span className="w-1.5 h-1.5 shrink-0 rounded-full bg-white/60 mt-[3px]" />
-            <span className={data.isExpanded ? "whitespace-pre-wrap break-words" : "truncate"} title={data.isExpanded ? undefined : data.docstring}>
+            <span className="w-1.5 h-1.5 shrink-0 rounded-full bg-white/60 mt-0.75" />
+            <span className={data.isExpanded ? "whitespace-pre-wrap wrap-break-word" : "truncate"} title={data.isExpanded ? undefined : data.docstring}>
               {data.isExpanded ? data.docstring : data.docstring.split("\n")[0].replace(/^\s*\/?\*+\s*/, "").trim()}
             </span>
           </div>
@@ -266,8 +266,8 @@ export function EnhancedNode({ data }: { data: NodeProps }) {
         </div>
         {data.intentTag && (
           <div className={`mt-3 text-[11px] font-mono font-medium bg-amber-500/10 border border-amber-500/20 text-amber-300 px-2 py-1 rounded-md flex items-start gap-1.5 ${data.isExpanded ? "" : "overflow-hidden"}`}>
-            <span className="w-1.5 h-1.5 shrink-0 rounded-full bg-amber-400 shadow-[0_0_4px_rgba(245,158,11,0.4)] mt-[3px]" />
-            <span className={data.isExpanded ? "break-words" : "truncate"} title={data.isExpanded ? undefined : data.intentTag}>{data.intentTag}</span>
+            <span className="w-1.5 h-1.5 shrink-0 rounded-full bg-amber-400 shadow-[0_0_4px_rgba(245,158,11,0.4)] mt-0.75" />
+            <span className={data.isExpanded ? "wrap-break-word" : "truncate"} title={data.isExpanded ? undefined : data.intentTag}>{data.intentTag}</span>
           </div>
         )}
       </div>

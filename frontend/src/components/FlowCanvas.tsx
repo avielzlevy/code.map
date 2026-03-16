@@ -224,13 +224,17 @@ function Canvas({
   const handleNodeClick = useCallback(
     (_event: React.MouseEvent, node: Node) => {
       if (node.id === "__ghost_entry_pin__") return;
-      setHasInteracted(true);
-      try { sessionStorage.setItem("code-map:hint-dismissed", "1"); } catch { /* ignore */ }
-      // Resurface the hint after 30s of no interaction
+      // Dismiss hint on first interaction
+      if (!hasInteracted) {
+        setHasInteracted(true);
+        try { sessionStorage.setItem("code-map:hint-dismissed", "1"); } catch { /* ignore */ }
+      }
       if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
       idleTimerRef.current = setTimeout(() => setHasInteracted(false), 30_000);
+      // Single click toggles inline expansion
+      setExpandedNodeId((prev) => (prev === node.id ? null : node.id));
     },
-    [],
+    [hasInteracted],
   );
 
   const handleNodeDoubleClick = useCallback(
