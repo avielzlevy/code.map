@@ -130,7 +130,7 @@ function GraphPreview() {
 
 // ─── Install block ────────────────────────────────────────────────────────────
 
-type Framework = "nestjs" | "fastapi";
+type Framework = "nestjs" | "fastapi" | "nextjs";
 
 const CODE: Record<Framework, { label: string; lines: string[] }> = {
   nestjs: {
@@ -159,6 +159,19 @@ const CODE: Record<Framework, { label: string; lines: string[] }> = {
       "CodeMapPlugin(app, port=7070)",
       "",
       "# That's it.",
+    ],
+  },
+  nextjs: {
+    label: "Next.js",
+    lines: [
+      "// next.config.ts",
+      "import { withCodeMap } from '@code-map/nextjs';",
+      "",
+      "const nextConfig = {",
+      "  // ... your existing config",
+      "};",
+      "",
+      "export default withCodeMap(nextConfig);",
     ],
   },
 };
@@ -313,7 +326,7 @@ export default function LandingPage() {
             >
               <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/4 text-[11px] font-mono text-gray-500">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400/80" />
-                Open source &nbsp;·&nbsp; NestJS &amp; FastAPI
+                Open source &nbsp;·&nbsp; NestJS, FastAPI &amp; Next.js
               </span>
             </motion.div>
 
