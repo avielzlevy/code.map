@@ -18,7 +18,7 @@ export function Switchboard({ paths, selectedPath, onSelectPath, usingMockData }
       {/* Logo */}
       <div className="flex items-center gap-2.5 px-4 h-full border-r border-white/10 shrink-0">
         <motion.div
-          className="w-7 h-7 rounded-md flex items-center justify-center shrink-0 border border-white/[0.12] bg-white/[0.05]"
+          className="w-7 h-7 rounded-md flex items-center justify-center shrink-0 border border-white/12 bg-white/5"
           whileHover={{ borderColor: "rgba(255,255,255,0.3)", backgroundColor: "rgba(255,255,255,0.09)" }}
           transition={{ type: "spring", damping: 25, stiffness: 300 }}
         >
@@ -78,7 +78,7 @@ export function Switchboard({ paths, selectedPath, onSelectPath, usingMockData }
         {usingMockData && (
           <span
             className="w-1.5 h-1.5 rounded-full bg-white/25 shrink-0"
-            title="demo data · backend offline"
+            title="Using demo data — backend not connected"
           />
         )}
         <button

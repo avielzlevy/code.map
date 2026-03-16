@@ -53,7 +53,7 @@ export function CommandPalette({ paths, onSelectEndpoint, onSelectNode }: Comman
         type: "endpoint",
         path,
         label: path.endpoint,
-        sublabel: `${path.method} endpoint`,
+        sublabel: path.method,
       });
 
       // Root nodes
@@ -64,7 +64,7 @@ export function CommandPalette({ paths, onSelectEndpoint, onSelectNode }: Comman
           node,
           parentId: null,
           label: node.funcName,
-          sublabel: `in ${path.endpoint} • ${node.fileName.split("/").pop()}`,
+          sublabel: `${path.endpoint} · ${node.fileName.split("/").pop()}`,
         });
       });
 
@@ -77,7 +77,7 @@ export function CommandPalette({ paths, onSelectEndpoint, onSelectNode }: Comman
             node,
             parentId,
             label: node.funcName,
-            sublabel: `in ${path.endpoint} • ${node.fileName.split("/").pop()}`,
+            sublabel: `${path.endpoint} · ${node.fileName.split("/").pop()}`,
           });
         });
       });
@@ -150,8 +150,8 @@ export function CommandPalette({ paths, onSelectEndpoint, onSelectNode }: Comman
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Search endpoints and functions..."
-                aria-label="Search endpoints and functions"
+                placeholder="Jump to endpoint or function..."
+                aria-label="Jump to endpoint or function"
                 className="flex-1 bg-transparent border-none outline-none text-white px-3 text-lg placeholder:text-gray-500"
               />
               <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-white/5 border border-white/10 text-gray-400 text-xs font-mono">
@@ -163,7 +163,7 @@ export function CommandPalette({ paths, onSelectEndpoint, onSelectNode }: Comman
             {/* Results List */}
             <div className="max-h-[60vh] overflow-y-auto p-2">
               {filteredItems.length === 0 ? (
-                <div className="px-4 py-8 text-center text-gray-500">No results found.</div>
+                <div className="px-4 py-8 text-center text-gray-500">No matches — try a function name or endpoint path.</div>
               ) : (
                 filteredItems.map((item, index) => {
                   const active = index === selectedIndex;
@@ -212,10 +212,10 @@ export function CommandPalette({ paths, onSelectEndpoint, onSelectNode }: Comman
               )}
             </div>
             {/* Footer */}
-            <div className="px-4 py-2 bg-white/5 border-t border-white/10 text-xs text-gray-500 flex items-center gap-4">
-              <span>↑↓ navigate</span>
-              <span>↵ select</span>
-              <span>esc close</span>
+            <div className="px-4 py-2 bg-white/5 border-t border-white/10 text-[11px] text-gray-500 flex items-center gap-4 font-mono">
+              <span className="flex items-center gap-1.5"><kbd className="px-1 py-0.5 rounded border border-white/10 bg-white/5 text-gray-500">↑↓</kbd>navigate</span>
+              <span className="flex items-center gap-1.5"><kbd className="px-1 py-0.5 rounded border border-white/10 bg-white/5 text-gray-500">↵</kbd>select</span>
+              <span className="flex items-center gap-1.5"><kbd className="px-1 py-0.5 rounded border border-white/10 bg-white/5 text-gray-500">Esc</kbd>close</span>
             </div>
           </motion.div>
         </div>

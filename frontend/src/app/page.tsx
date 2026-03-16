@@ -164,7 +164,7 @@ export default function Home() {
                 variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0, transition: { type: "spring", damping: 28, stiffness: 260 } } }}
               >
                 <p className="text-[11px] font-mono text-gray-500 text-center max-w-[190px] leading-relaxed">
-                  Select an endpoint to visualize its execution path.
+                  Select an endpoint above to trace its call flow.
                 </p>
                 <motion.button
                   onClick={() => window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true, bubbles: true }))}
