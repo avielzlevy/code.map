@@ -5,10 +5,7 @@ import { motion, useInView } from "framer-motion";
 import {
   Github,
   ArrowRight,
-  Layers,
-  Sparkles,
   ExternalLink,
-  Terminal,
   ChevronRight,
 } from "lucide-react";
 import { SPRING_DEFAULT, SPRING_SNAPPY, SPRING_STANDARD } from "@/lib/spring";
@@ -60,7 +57,7 @@ function VideoPlaceholder({
         }}
       />
       {/* Top edge highlight */}
-      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+      <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-white/15 to-transparent" />
       {/* Play button + label */}
       <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 z-10">
         <div className="w-11 h-11 rounded-full border border-white/12 bg-white/5 flex items-center justify-center">
@@ -220,7 +217,7 @@ export default function LandingPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ ...SPRING_DEFAULT, delay: 0.05 }}
             >
-              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/[0.04] text-[11px] font-mono text-gray-500">
+              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/4 text-[11px] font-mono text-gray-500">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400/80" />
                 Open source &nbsp;·&nbsp; NestJS &amp; FastAPI
               </span>
@@ -243,7 +240,7 @@ export default function LandingPage() {
               initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ ...SPRING_DEFAULT, delay: 0.15 }}
-              className="text-[17px] text-gray-400 leading-relaxed max-w-[420px]"
+              className="text-[17px] text-gray-400 leading-relaxed max-w-105"
             >
               code-map instruments your API and renders the full execution
               path — from route handler to database call — as an interactive
@@ -273,7 +270,7 @@ export default function LandingPage() {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.97 }}
                 transition={SPRING_SNAPPY}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-lg border border-white/12 bg-white/[0.04] text-gray-400 font-medium text-[15px] hover:bg-white/8 hover:border-white/20 hover:text-white transition-colors"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-lg border border-white/12 bg-white/4 text-gray-400 font-medium text-[15px] hover:bg-white/8 hover:border-white/20 hover:text-white transition-colors"
               >
                 <Github className="w-4 h-4" />
                 Star on GitHub
@@ -289,7 +286,7 @@ export default function LandingPage() {
               {["Next.js", "@xyflow/react", "dagre", "Framer Motion"].map(
                 (dep, i) => (
                   <span key={dep} className="flex items-center gap-2">
-                    <span className="px-1.5 py-0.5 rounded bg-white/[0.04] border border-white/8 text-gray-600">
+                    <span className="px-1.5 py-0.5 rounded bg-white/4 border border-white/8 text-gray-600">
                       {dep}
                     </span>
                     {i < 3 && <span className="text-white/10">·</span>}
@@ -306,10 +303,10 @@ export default function LandingPage() {
             transition={{ ...SPRING_DEFAULT, delay: 0.18 }}
             className="relative"
           >
-            <div className="absolute -inset-8 bg-white/[0.025] rounded-3xl blur-3xl pointer-events-none" />
+            <div className="absolute -inset-8 bg-white/2.5 rounded-3xl blur-3xl pointer-events-none" />
             <VideoPlaceholder
               label="hero-demo.mp4"
-              className="relative aspect-[4/3] w-full shadow-[0_0_100px_rgba(0,0,0,0.9),0_0_0_1px_rgba(255,255,255,0.06)]"
+              className="relative aspect-4/3 w-full shadow-[0_0_100px_rgba(0,0,0,0.9),0_0_0_1px_rgba(255,255,255,0.06)]"
             />
           </motion.div>
         </div>
@@ -388,7 +385,7 @@ export default function LandingPage() {
               <br />
               at a glance.
             </h2>
-            <p className="text-gray-400 text-[16px] leading-relaxed max-w-[400px]">
+            <p className="text-gray-400 text-[16px] leading-relaxed max-w-100">
               Select any endpoint and see every function it touches — ordered
               by execution, visually connected. Hover a node to highlight its
               edges. Click to inspect.
@@ -413,7 +410,7 @@ export default function LandingPage() {
           <Reveal delay={0.1}>
             <VideoPlaceholder
               label="call-graph-demo.mp4"
-              className="aspect-[4/3]"
+              className="aspect-4/3"
             />
           </Reveal>
         </div>
@@ -432,7 +429,7 @@ export default function LandingPage() {
               <br />
               as you need.
             </h2>
-            <p className="text-gray-400 text-[16px] leading-relaxed max-w-[400px]">
+            <p className="text-gray-400 text-[16px] leading-relaxed max-w-100">
               Double-click any node to expand its own call chain. Navigate
               multiple levels with breadcrumbs. One click to go back — no
               browser history, no lost context.
@@ -457,7 +454,7 @@ export default function LandingPage() {
           <Reveal className="lg:order-first">
             <VideoPlaceholder
               label="drill-down-demo.mp4"
-              className="aspect-[4/3]"
+              className="aspect-4/3"
             />
           </Reveal>
         </div>
@@ -477,7 +474,7 @@ export default function LandingPage() {
               functions{" "}
               <span className="text-amber-400/90">actually</span> do.
             </h2>
-            <p className="text-gray-400 text-[16px] leading-relaxed max-w-[400px]">
+            <p className="text-gray-400 text-[16px] leading-relaxed max-w-100">
               Amber nodes carry AI-generated intent tags and plain-English
               summaries. Get context without reading the source — then jump
               straight to it with one click.
@@ -502,7 +499,7 @@ export default function LandingPage() {
           <Reveal delay={0.1}>
             <VideoPlaceholder
               label="ai-enrichment-demo.mp4"
-              className="aspect-[4/3]"
+              className="aspect-4/3"
             />
           </Reveal>
         </div>
@@ -512,7 +509,7 @@ export default function LandingPage() {
       <section className="py-16 border-t border-white/8">
         <div className="max-w-6xl mx-auto px-6">
           <Reveal>
-            <div className="rounded-xl border border-white/10 bg-white/[0.02] p-8 md:p-12 flex flex-col md:flex-row items-start md:items-center gap-8 md:gap-12">
+            <div className="rounded-xl border border-white/10 bg-white/2 p-8 md:p-12 flex flex-col md:flex-row items-start md:items-center gap-8 md:gap-12">
               <div className="p-3 rounded-xl border border-white/10 bg-white/5 shrink-0">
                 <ExternalLink className="w-6 h-6 text-gray-400" />
               </div>
@@ -559,7 +556,7 @@ export default function LandingPage() {
           <Reveal delay={0.14}>
             <p className="text-[12px] font-mono text-gray-700">
               Then open{" "}
-              <span className="text-gray-500 px-1.5 py-0.5 border border-white/8 rounded bg-white/[0.03]">
+              <span className="text-gray-500 px-1.5 py-0.5 border border-white/8 rounded bg-white/3">
                 localhost:7070
               </span>{" "}
               and select any endpoint.
@@ -596,7 +593,7 @@ export default function LandingPage() {
       <footer className="border-t border-white/8 py-10">
         <div className="max-w-6xl mx-auto px-6 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-6 h-6 rounded-md flex items-center justify-center border border-white/10 bg-white/[0.04]">
+            <div className="w-6 h-6 rounded-md flex items-center justify-center border border-white/10 bg-white/4">
               <span className="font-mono text-[9px] font-bold text-white/40 tracking-tighter">
                 fn
               </span>
