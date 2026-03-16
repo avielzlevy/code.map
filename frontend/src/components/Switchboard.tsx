@@ -59,7 +59,7 @@ export function Switchboard({ paths, selectedPath, onSelectPath, usingMockData }
               >
                 {path.method}
               </span>
-              <span className={clsx("truncate max-w-[180px]", isSelected ? "text-white" : "")}>
+              <span className={clsx("truncate max-w-[180px]", isSelected ? "text-white" : "")} title={path.endpoint}>
                 {path.endpoint}
               </span>
             </motion.button>

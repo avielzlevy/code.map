@@ -1,27 +1,80 @@
 import { Handle, Position } from "@xyflow/react";
+import { motion } from "framer-motion";
 import { FunctionSquare, Layers, CornerLeftUp } from "lucide-react";
+
+const ghostSpring = { type: "spring" as const, damping: 25, stiffness: 280 };
 
 export function GhostEntryPin({ data }: any) {
   return (
-    <div className="flex flex-col items-center select-none group cursor-pointer" style={{ width: 450 }}
+    <motion.div
+      className="flex flex-col items-center select-none cursor-pointer"
+      style={{ width: 450 }}
+      initial="idle"
+      whileHover="hover"
       onClick={(e) => { e.stopPropagation(); data.onBack?.(); }}
     >
       {/* Dashed line going up off-screen */}
-      <div className="w-px h-12 border-l-2 border-dashed border-white/15 transition-colors duration-200 group-hover:border-white/40" />
+      <motion.div
+        className="w-px h-12 border-l-2 border-dashed"
+        variants={{
+          idle: { borderColor: "rgba(255,255,255,0.15)" },
+          hover: { borderColor: "rgba(255,255,255,0.40)" },
+        }}
+        transition={ghostSpring}
+      />
 
       {/* The chip */}
-      <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-zinc-950 transition-[border-color,background-color] duration-200 group-hover:border-white/30 group-hover:bg-white/6">
-        <CornerLeftUp className="w-3 h-3 text-white/30 -scale-x-100 transition-colors duration-200 group-hover:text-white/70" />
-        <span className="font-mono text-[11px] text-white/35 tracking-wide transition-colors duration-200 group-hover:text-white/70">
-          called by: <span className="text-white/55 group-hover:text-white/90 transition-colors duration-200">{data.callerLabel}</span>
+      <motion.div
+        className="flex items-center gap-2 px-3 py-1.5 rounded-full border"
+        variants={{
+          idle: { borderColor: "rgba(255,255,255,0.10)", backgroundColor: "rgb(9,9,11)" },
+          hover: { borderColor: "rgba(255,255,255,0.30)", backgroundColor: "rgba(255,255,255,0.06)" },
+        }}
+        transition={ghostSpring}
+      >
+        <motion.div
+          variants={{
+            idle: { color: "rgba(255,255,255,0.30)" },
+            hover: { color: "rgba(255,255,255,0.70)" },
+          }}
+          transition={ghostSpring}
+        >
+          <CornerLeftUp className="w-3 h-3 -scale-x-100" />
+        </motion.div>
+        <span className="font-mono text-[11px] tracking-wide">
+          <motion.span
+            variants={{
+              idle: { color: "rgba(255,255,255,0.35)" },
+              hover: { color: "rgba(255,255,255,0.70)" },
+            }}
+            transition={ghostSpring}
+          >
+            called by:{" "}
+          </motion.span>
+          <motion.span
+            variants={{
+              idle: { color: "rgba(255,255,255,0.55)" },
+              hover: { color: "rgba(255,255,255,0.90)" },
+            }}
+            transition={ghostSpring}
+          >
+            {data.callerLabel}
+          </motion.span>
         </span>
-      </div>
+      </motion.div>
 
       {/* Connector down to the root node */}
-      <div className="w-px h-6 border-l-2 border-dashed border-white/15 transition-colors duration-200 group-hover:border-white/40" />
+      <motion.div
+        className="w-px h-6 border-l-2 border-dashed"
+        variants={{
+          idle: { borderColor: "rgba(255,255,255,0.15)" },
+          hover: { borderColor: "rgba(255,255,255,0.40)" },
+        }}
+        transition={ghostSpring}
+      />
 
       <Handle type="source" position={Position.Bottom} style={{ opacity: 0, pointerEvents: "none" }} />
-    </div>
+    </motion.div>
   );
 }
 
@@ -50,8 +103,8 @@ export function StandardNode({ data }: any) {
           <FunctionSquare className="w-5 h-5 text-gray-300" />
         </div>
         <div className="flex flex-col flex-1 min-w-0">
-          <span className="text-lg font-semibold text-white tracking-wide truncate pr-6">{data.funcName}</span>
-          <span className="text-[11px] text-gray-400 font-mono truncate mt-0.5">
+          <span className="text-lg font-semibold text-white tracking-wide truncate pr-6" title={data.funcName}>{data.funcName}</span>
+          <span className="text-[11px] text-gray-400 font-mono truncate mt-0.5" title={data.fileName}>
             {data.fileName.split("/").pop()}
           </span>
         </div>
@@ -59,7 +112,7 @@ export function StandardNode({ data }: any) {
       {data.docstring && (
         <div className="mt-3 text-[11px] font-mono font-medium bg-white/5 border border-white/10 text-gray-300 px-2 py-1 rounded-md flex items-center gap-1.5 overflow-hidden">
           <span className="w-1.5 h-1.5 shrink-0 rounded-full bg-white/60" />
-          <span className="truncate">{data.docstring.split("\n")[0].replace(/^\s*\/?\*+\s*/, "").trim()}</span>
+          <span className="truncate" title={data.docstring}>{data.docstring.split("\n")[0].replace(/^\s*\/?\*+\s*/, "").trim()}</span>
         </div>
       )}
       <Handle
@@ -83,7 +136,7 @@ export function EnhancedNode({ data }: any) {
     >
       {/* Gradient tint — distinguishes enhanced nodes from standard */}
       <div className="absolute inset-0 rounded-xl overflow-hidden pointer-events-none">
-        <div className="absolute inset-0 bg-linear-to-br from-amber-500/8 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-br from-amber-500/8 to-transparent" />
       </div>
 
       {data.hasDetail && (
@@ -112,7 +165,7 @@ export function EnhancedNode({ data }: any) {
       {data.intentTag && (
         <div className="mt-3 relative z-10 text-[11px] font-mono font-medium bg-amber-500/10 border border-amber-500/20 text-amber-300 px-2 py-1 rounded-md flex items-center gap-1.5 overflow-hidden">
           <span className="w-1.5 h-1.5 shrink-0 rounded-full bg-amber-400 shadow-[0_0_6px_rgba(245,158,11,0.7)]" />
-          <span className="truncate">{data.intentTag}</span>
+          <span className="truncate" title={data.intentTag}>{data.intentTag}</span>
         </div>
       )}
       <Handle

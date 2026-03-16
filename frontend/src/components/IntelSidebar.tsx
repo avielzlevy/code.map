@@ -110,7 +110,7 @@ export function IntelSidebar({ node, anchorX, anchorY, onClose, onDrillDown }: I
                   className="overflow-hidden"
                 >
                   <h3 className="text-[11px] uppercase tracking-wider text-gray-600 font-semibold mb-2 flex items-center gap-1.5">
-                    <Sparkles className="w-3 h-3 text-white/25" /> AI Summary
+                    <Sparkles className="w-3 h-3 text-white/40" /> AI Summary
                   </h3>
                   <div className="bg-white/3 p-4 rounded-md border border-white/8">
                     <p className="text-sm text-gray-300 leading-relaxed">{node.aiSummary}</p>
@@ -134,7 +134,7 @@ export function IntelSidebar({ node, anchorX, anchorY, onClose, onDrillDown }: I
             <a
               href={getVSCodeUrl(node.fileName, node.line)}
               rel="noopener"
-              className="w-full flex items-center justify-center gap-2 bg-transparent hover:bg-white/5 active:bg-white/10 border border-white/15 hover:border-white/25 text-gray-400 hover:text-white py-2.5 px-4 rounded-md font-medium transition-colors"
+              className="w-full flex items-center justify-center gap-2 bg-transparent hover:bg-white/5 active:bg-white/10 border border-white/15 hover:border-white/40 text-gray-400 hover:text-white py-2.5 px-4 rounded-md font-medium transition-colors"
             >
               <ExternalLink className="w-4 h-4" />
               Open in VS Code

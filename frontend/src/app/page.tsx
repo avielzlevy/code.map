@@ -152,7 +152,7 @@ export default function Home() {
                 </p>
                 <button
                   onClick={() => window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true, bubbles: true }))}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/8 bg-white/2 hover:bg-white/5 hover:border-white/12 active:bg-white/8 transition-colors text-gray-500 hover:text-gray-300 text-[11px] font-mono"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/8 bg-white/5 hover:bg-white/8 hover:border-white/15 active:bg-white/10 transition-colors text-gray-400 hover:text-gray-200 text-[11px] font-mono"
                 >
                   Search endpoints
                   <kbd className="text-[11px] bg-white/5 border border-white/10 px-1.5 py-0.5 rounded text-gray-600">⌘K</kbd>

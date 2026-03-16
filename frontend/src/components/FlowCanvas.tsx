@@ -214,7 +214,7 @@ function Canvas({
           >
             <button
               onClick={() => onBackTo(-1)}
-              className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-300 cursor-pointer transition-colors"
+              className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-200 cursor-pointer transition-colors"
             >
               <Home className="w-3 h-3" />
               <span className="font-mono">{endpointLabel}</span>
@@ -230,7 +230,7 @@ function Canvas({
                     className={`text-xs transition-colors ${
                       isLast
                         ? "text-gray-200 cursor-default font-medium"
-                        : "text-gray-500 hover:text-gray-300 cursor-pointer"
+                        : "text-gray-400 hover:text-gray-200 cursor-pointer"
                     }`}
                   >
                     {entry.label}
@@ -242,7 +242,7 @@ function Canvas({
             <button
               onClick={handleCopyBreadcrumb}
               aria-label="Copy breadcrumb path"
-              className="ml-auto text-gray-600 hover:text-gray-400 active:text-gray-300 transition-colors p-1 rounded"
+              className="ml-auto text-gray-400 hover:text-gray-200 active:text-gray-100 transition-colors p-1 rounded"
             >
               {copiedBreadcrumb ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3" />}
             </button>
