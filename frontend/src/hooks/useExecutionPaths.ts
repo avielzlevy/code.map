@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { apiClient } from "@/lib/api-client";
-import { ExecutionPath, MOCK_PATHS } from "@/lib/mockData";
+import { ExecutionPath } from "@/lib/mockData";
 
 type Status = "loading" | "success" | "error";
 
@@ -25,20 +25,12 @@ export function useExecutionPaths(): UseExecutionPathsResult {
       .getPaths()
       .then((fetched) => {
         if (cancelled) return;
-        if (fetched.length === 0) {
-          setPaths(MOCK_PATHS);
-          setUsingMockData(true);
-        } else {
-          setPaths(fetched);
-        }
+        setPaths(fetched);
         setStatus("success");
       })
       .catch(() => {
         if (cancelled) return;
-        // Sidecar unreachable (dev without backend running) — fall back to mock data
-        setPaths(MOCK_PATHS);
-        setUsingMockData(true);
-        setStatus("success");
+        setStatus("error");
       });
 
     return () => {

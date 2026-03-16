@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Github, ArrowRight, FunctionSquare } from "lucide-react";
 import { SPRING_DEFAULT, SPRING_SNAPPY, SPRING_STANDARD } from "@/lib/spring";
+import { apiClient } from "@/lib/api-client";
 
 // ─── Static graph preview ─────────────────────────────────────────────────────
 
@@ -227,6 +228,18 @@ const FEATURES = [
 ];
 
 export default function LandingPage() {
+  const [sidecarReachable, setSidecarReachable] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    apiClient
+      .healthCheck()
+      .then(() => setSidecarReachable(true))
+      .catch(() => setSidecarReachable(false));
+  }, []);
+
+  const appHref = sidecarReachable ? "/app" : undefined;
+  const appDisabled = sidecarReachable === false;
+
   return (
     <div className="min-h-screen bg-black text-white antialiased">
       {/* ── Nav ──────────────────────────────────────────────────────────── */}
@@ -253,11 +266,16 @@ export default function LandingPage() {
               <span className="hidden sm:inline">GitHub</span>
             </a>
             <motion.a
-              href="/app"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.97 }}
+              href={appHref}
+              whileHover={appDisabled ? {} : { scale: 1.02 }}
+              whileTap={appDisabled ? {} : { scale: 0.97 }}
               transition={SPRING_SNAPPY}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-white text-black text-[13px] font-semibold hover:bg-white/90 transition-colors"
+              title={appDisabled ? "Sidecar unreachable — start your backend first" : undefined}
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-[13px] font-semibold transition-colors ${
+                appDisabled
+                  ? "bg-white/10 text-white/30 cursor-not-allowed"
+                  : "bg-white text-black hover:bg-white/90"
+              }`}
             >
               Open app
               <ArrowRight className="w-3.5 h-3.5" />
@@ -309,11 +327,16 @@ export default function LandingPage() {
               className="flex flex-wrap items-center gap-3"
             >
               <motion.a
-                href="/app"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.97 }}
+                href={appHref}
+                whileHover={appDisabled ? {} : { scale: 1.02 }}
+                whileTap={appDisabled ? {} : { scale: 0.97 }}
                 transition={SPRING_SNAPPY}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-white text-black font-semibold text-[15px] hover:bg-white/90 transition-colors"
+                title={appDisabled ? "Sidecar unreachable — start your backend first" : undefined}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-[15px] transition-colors ${
+                  appDisabled
+                    ? "bg-white/10 text-white/30 cursor-not-allowed"
+                    : "bg-white text-black hover:bg-white/90"
+                }`}
               >
                 Try it now
                 <ArrowRight className="w-4 h-4" />
@@ -421,11 +444,16 @@ export default function LandingPage() {
             className="flex flex-col sm:flex-row items-center gap-3"
           >
             <motion.a
-              href="/app"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.97 }}
+              href={appHref}
+              whileHover={appDisabled ? {} : { scale: 1.02 }}
+              whileTap={appDisabled ? {} : { scale: 0.97 }}
               transition={SPRING_SNAPPY}
-              className="flex items-center gap-2 px-6 py-3 rounded-lg bg-white text-black font-semibold text-[15px] hover:bg-white/90 transition-colors"
+              title={appDisabled ? "Sidecar unreachable — start your backend first" : undefined}
+              className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-[15px] transition-colors ${
+                appDisabled
+                  ? "bg-white/10 text-white/30 cursor-not-allowed"
+                  : "bg-white text-black hover:bg-white/90"
+              }`}
             >
               Open code-map
               <ArrowRight className="w-4 h-4" />
@@ -465,7 +493,11 @@ export default function LandingPage() {
             >
               GitHub
             </a>
-            <a href="/app" className="hover:text-gray-400 transition-colors">
+            <a
+              href={appHref}
+              title={appDisabled ? "Sidecar unreachable" : undefined}
+              className={`transition-colors ${appDisabled ? "opacity-30 cursor-not-allowed" : "hover:text-gray-400"}`}
+            >
               Open app
             </a>
           </div>
