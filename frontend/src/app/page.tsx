@@ -174,7 +174,7 @@ export default function Home() {
                   className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/8 bg-white/5 hover:bg-white/8 hover:border-white/15 active:bg-white/10 transition-colors text-gray-400 hover:text-gray-200 text-[11px] font-mono"
                 >
                   Search endpoints
-                  <kbd className="text-[11px] bg-white/5 border border-white/10 px-1.5 py-0.5 rounded text-gray-600">⌘K</kbd>
+                  <kbd className="text-[11px] bg-white/5 border border-white/10 px-1.5 py-0.5 rounded text-gray-500">⌘K</kbd>
                 </motion.button>
               </motion.div>
             </motion.div>

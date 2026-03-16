@@ -34,7 +34,7 @@ export function StandardNode({ data }: any) {
     <div
       className={`px-5 py-4 rounded-xl bg-zinc-950 border w-112.5 group relative
         ${data.hasDetail
-          ? "border-white/20 hover:border-white/40 cursor-pointer transition-[border-color,box-shadow] duration-200 shadow-[0_4px_24px_rgba(0,0,0,0.6),0_0_15px_rgba(255,255,255,0.05)] hover:shadow-[0_4px_24px_rgba(0,0,0,0.6),0_0_15px_rgba(255,255,255,0.05),3px_4px_0_-1px_rgba(255,255,255,0.04),6px_8px_0_-2px_rgba(255,255,255,0.02)]"
+          ? "border-white/20 hover:border-white/40 cursor-pointer transition-[border-color,box-shadow] duration-200 shadow-[0_4px_24px_rgba(0,0,0,0.6)] hover:shadow-[0_4px_24px_rgba(0,0,0,0.6),3px_4px_0_-1px_rgba(255,255,255,0.04),6px_8px_0_-2px_rgba(255,255,255,0.02)]"
           : "border-white/10 transition-colors shadow-[0_4px_24px_rgba(0,0,0,0.6)]"
         }`}
     >

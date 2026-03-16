@@ -18,9 +18,8 @@ export function Switchboard({ paths, selectedPath, onSelectPath, usingMockData }
       {/* Logo */}
       <div className="flex items-center gap-2.5 px-4 h-full border-r border-white/10 shrink-0">
         <motion.div
-          className="w-7 h-7 rounded-md flex items-center justify-center shrink-0"
-          style={{ borderWidth: 1, borderStyle: "solid", borderColor: "rgba(255,255,255,0.12)", backgroundColor: "rgba(255,255,255,0.05)" }}
-          whileHover={{ borderColor: "rgba(255,255,255,0.3)", backgroundColor: "rgba(255,255,255,0.09)", boxShadow: "0 0 12px rgba(255,255,255,0.1)" }}
+          className="w-7 h-7 rounded-md flex items-center justify-center shrink-0 border border-white/[0.12] bg-white/[0.05]"
+          whileHover={{ borderColor: "rgba(255,255,255,0.3)", backgroundColor: "rgba(255,255,255,0.09)" }}
           transition={{ type: "spring", damping: 25, stiffness: 300 }}
         >
           <span className="font-mono text-[10px] font-bold text-white/70 tracking-tighter">fn</span>
@@ -78,17 +77,17 @@ export function Switchboard({ paths, selectedPath, onSelectPath, usingMockData }
       <div className="flex items-center gap-2 px-3 h-full border-l border-white/10 shrink-0">
         {usingMockData && (
           <span
-            className="w-1.5 h-1.5 rounded-full bg-yellow-500/50 shrink-0"
+            className="w-1.5 h-1.5 rounded-full bg-white/25 shrink-0"
             title="demo data · backend offline"
           />
         )}
         <button
           onClick={() => window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true, bubbles: true }))}
           aria-label="Search (⌘K)"
-          className="flex items-center gap-2 px-2.5 py-1.5 rounded-md border border-white/8 bg-white/2 hover:bg-white/5 hover:border-white/12 active:bg-white/8 transition-colors text-gray-500 hover:text-gray-300"
+          className="flex items-center gap-2 px-2.5 py-1.5 rounded-md border border-white/8 bg-transparent hover:bg-white/5 hover:border-white/15 active:bg-white/8 transition-colors text-gray-500 hover:text-gray-300"
         >
           <Search className="w-3 h-3 shrink-0" />
-          <kbd className="text-[11px] font-mono bg-white/5 border border-white/10 px-1.5 py-0.5 rounded text-gray-600">⌘K</kbd>
+          <kbd className="text-[11px] font-mono bg-white/5 border border-white/10 px-1.5 py-0.5 rounded text-gray-500">⌘K</kbd>
         </button>
       </div>
     </div>
