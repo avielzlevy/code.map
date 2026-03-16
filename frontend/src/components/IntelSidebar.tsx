@@ -2,7 +2,7 @@
 
 import { useLayoutEffect, useRef, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Tag, FileText, Sparkles, ExternalLink, Layers } from "lucide-react";
+import { X, Sparkles, ExternalLink, Layers } from "lucide-react";
 import { FlowNode } from "@/lib/mockData";
 import { getVSCodeUrl } from "@/lib/deep-link";
 import { SPRING_DEFAULT, SPRING_STANDARD, SPRING_SNAPPY, SPRING_GENTLE } from "@/lib/spring";
@@ -98,9 +98,6 @@ export function IntelSidebar({ node, anchorX, anchorY, onClose, onDrillDown, ins
           >
             {node.intentTag && (
               <motion.div variants={itemVariants}>
-                <h3 className="text-[10px] text-gray-500 font-medium mb-2 flex items-center gap-1.5">
-                  <Tag className="w-3 h-3" /> Intent
-                </h3>
                 <div className="bg-amber-500/10 border border-amber-500/30 p-2.5 rounded-md text-amber-400 font-mono text-sm">
                   {node.intentTag}
                 </div>
@@ -109,10 +106,7 @@ export function IntelSidebar({ node, anchorX, anchorY, onClose, onDrillDown, ins
 
             {node.docstring && (
               <motion.div variants={itemVariants}>
-                <h3 className="text-[10px] text-gray-500 font-medium mb-2 flex items-center gap-1.5">
-                  <FileText className="w-3 h-3" /> Docs
-                </h3>
-                <pre className="bg-white/5 p-3 rounded-md border border-white/10 text-xs text-gray-300 font-mono whitespace-pre-wrap">
+                <pre className="bg-white/5 p-3 rounded-md border border-white/10 border-l-2 border-l-white/20 text-xs text-gray-300 font-mono whitespace-pre-wrap">
                   {node.docstring}
                 </pre>
               </motion.div>
@@ -127,11 +121,9 @@ export function IntelSidebar({ node, anchorX, anchorY, onClose, onDrillDown, ins
                   transition={SPRING_GENTLE}
                   className="overflow-hidden"
                 >
-                  <h3 className="text-[10px] text-gray-500 font-medium mb-2 flex items-center gap-1.5">
-                    <Sparkles className="w-3 h-3 text-white/40" /> AI Summary
-                  </h3>
-                  <div className="bg-white/3 p-4 rounded-md border border-white/8">
-                    <p className="text-sm text-gray-300 leading-relaxed">{node.aiSummary}</p>
+                  <div className="bg-white/3 p-4 rounded-md border border-white/8 relative">
+                    <Sparkles className="absolute top-3 right-3 w-3 h-3 text-white/20" />
+                    <p className="text-sm text-gray-300 leading-relaxed pr-5">{node.aiSummary}</p>
                   </div>
                 </motion.div>
               )}
