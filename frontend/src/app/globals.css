@@ -52,25 +52,26 @@ input:focus-visible {
 }
 
 .react-flow__controls {
-  background-color: var(--node-bg) !important;
-  border: 1px solid var(--node-border) !important;
+  background-color: rgba(0, 0, 0, 0.9) !important;
+  backdrop-filter: blur(4px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
   border-radius: 8px !important;
   overflow: hidden !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
 }
 
 .react-flow__controls-button {
-  background-color: var(--node-bg) !important;
-  border-bottom: 1px solid var(--node-border) !important;
-  fill: var(--foreground) !important;
+  background-color: transparent !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  fill: rgba(156, 163, 175, 1) !important; /* gray-400 */
 }
 
 .react-flow__controls-button:hover {
-  background-color: rgba(255, 255, 255, 0.05) !important;
+  background-color: rgba(255, 255, 255, 0.1) !important;
 }
 
 .react-flow__controls-button svg {
-  fill: var(--foreground) !important;
+  fill: rgba(156, 163, 175, 1) !important;
 }
 
 .react-flow__panel {

@@ -345,10 +345,7 @@ function Canvas({
               )}
             </AnimatePresence>
           </Panel>
-          <Controls
-            showInteractive={false}
-            className="bg-black/90! backdrop-blur-sm! border! border-white/10! fill-gray-400 stroke-gray-400 text-gray-400 [&>button]:bg-transparent! [&>button]:border-b! [&>button]:border-white/10! [&>button:hover]:bg-white/10!"
-          />
+          <Controls showInteractive={false} />
         </ReactFlow>
       </motion.div>
     </div>
