@@ -105,26 +105,21 @@ export default function Home() {
   if (status === "loading") {
     return (
       <div className="flex w-full h-screen bg-black items-center justify-center">
-        <div className="flex flex-col items-center gap-3 text-gray-600">
+        <div className="flex flex-col items-center gap-3">
           <div className="w-5 h-5 rounded-full border-2 border-white/10 border-t-white/50 animate-spin" />
-          <span className="text-xs font-mono text-gray-600">{LOADING_MESSAGES[loadingMsgIdx]}</span>
+          <span className="text-[11px] font-mono text-gray-400">{LOADING_MESSAGES[loadingMsgIdx]}</span>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex w-full h-screen bg-black text-[#e2e8f0] overflow-hidden">
-      {usingMockData && (
-        <div className="absolute top-2 left-1/2 -translate-x-1/2 z-50 text-xs bg-yellow-900/60 border border-yellow-700 text-yellow-300 px-3 py-1 rounded-full">
-          Sidecar offline — showing demo data
-        </div>
-      )}
-
+    <div className="flex w-full h-screen bg-black text-foreground overflow-hidden">
       <Switchboard
         paths={paths}
         selectedPath={activePath}
         onSelectPath={handleSelectPath}
+        usingMockData={usingMockData}
       />
 
       <main className="flex-1 relative">
@@ -143,22 +138,22 @@ export default function Home() {
             <div className="flex flex-col items-center select-none" aria-hidden="true">
               {[0, 1, 2].map((i) => (
                 <div key={i} className="flex flex-col items-center">
-                  <div className="w-28 h-7 rounded-lg border border-white/[0.07] bg-white/[0.025]" />
-                  {i < 2 && <div className="w-px h-4 border-l border-dashed border-white/[0.08]" />}
+                  <div className="w-28 h-7 rounded-lg border border-white/5 bg-white/[2.5]" />
+                  {i < 2 && <div className="w-px h-4 border-l border-dashed border-white/8" />}
                 </div>
               ))}
             </div>
             {/* Copy + CTA */}
             <div className="flex flex-col items-center gap-3">
-              <p className="text-xs font-mono text-gray-600 text-center max-w-[190px] leading-relaxed">
+              <p className="text-[11px] font-mono text-gray-500 text-center max-w-[190px] leading-relaxed">
                 Select an endpoint to visualize its execution path.
               </p>
               <button
                 onClick={() => window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true, bubbles: true }))}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/[0.08] bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/[0.12] active:bg-white/[0.08] transition-colors text-gray-500 hover:text-gray-300 text-xs font-mono"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/8 bg-white/2 hover:bg-white/5 hover:border-white/12 active:bg-white/8 transition-colors text-gray-500 hover:text-gray-300 text-[11px] font-mono"
               >
                 Search endpoints
-                <kbd className="text-[10px] bg-white/5 border border-white/10 px-1.5 py-0.5 rounded text-gray-600">⌘K</kbd>
+                <kbd className="text-[11px] bg-white/5 border border-white/10 px-1.5 py-0.5 rounded text-gray-600">⌘K</kbd>
               </button>
             </div>
           </div>

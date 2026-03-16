@@ -172,7 +172,7 @@ export function CommandPalette({ paths, onSelectEndpoint, onSelectNode }: Comman
                       key={index}
                       onClick={() => handleSelect(index)}
                       className={clsx(
-                        "w-full flex items-center justify-between px-3 py-3 rounded-lg transition-all text-left",
+                        "w-full flex items-center justify-between px-3 py-3 rounded-lg transition-colors text-left",
                         active ? "bg-white/8 shadow-[inset_2px_0_0_0_rgba(255,255,255,0.3)]" : "hover:bg-white/5"
                       )}
                     >
