@@ -1,66 +1,28 @@
-import { useState } from "react";
 import { Handle, Position } from "@xyflow/react";
 import { motion } from "framer-motion";
 import { FunctionSquare, Layers, CornerLeftUp } from "lucide-react";
 
-const ghostSpring = { type: "spring" as const, damping: 25, stiffness: 280 };
-
 export function GhostEntryPin({ data }: any) {
-  const [hovered, setHovered] = useState(false);
-
   return (
-    // Plain div — keeps ReactFlow's handle position measurements untransformed
     <div
-      className="flex flex-col items-center select-none cursor-pointer"
+      className="flex flex-col items-center select-none cursor-pointer group"
       style={{ width: 450 }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
       onClick={(e) => { e.stopPropagation(); data.onBack?.(); }}
     >
       {/* Dashed line going up off-screen */}
-      <motion.div
-        className="w-px h-12 border-l-2 border-dashed"
-        animate={{ borderColor: hovered ? "rgba(255,255,255,0.40)" : "rgba(255,255,255,0.15)" }}
-        transition={ghostSpring}
-      />
+      <div className="w-px h-12 border-l-2 border-dashed border-white/15 group-hover:border-white/40 transition-colors duration-150" />
 
       {/* The chip */}
-      <motion.div
-        className="flex items-center gap-2 px-3 py-1.5 rounded-full border"
-        animate={{
-          borderColor: hovered ? "rgba(255,255,255,0.30)" : "rgba(255,255,255,0.10)",
-          backgroundColor: hovered ? "rgba(255,255,255,0.06)" : "rgb(9,9,11)",
-        }}
-        transition={ghostSpring}
-      >
-        <motion.div
-          animate={{ color: hovered ? "rgba(255,255,255,0.70)" : "rgba(255,255,255,0.30)" }}
-          transition={ghostSpring}
-        >
-          <CornerLeftUp className="w-3 h-3 -scale-x-100" />
-        </motion.div>
+      <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-zinc-950 group-hover:border-white/30 group-hover:bg-white/6 transition-[border-color,background-color] duration-150">
+        <CornerLeftUp className="w-3 h-3 -scale-x-100 text-white/30 group-hover:text-white/70 transition-colors duration-150" />
         <span className="font-mono text-[11px] tracking-wide">
-          <motion.span
-            animate={{ color: hovered ? "rgba(255,255,255,0.70)" : "rgba(255,255,255,0.35)" }}
-            transition={ghostSpring}
-          >
-            called by:{" "}
-          </motion.span>
-          <motion.span
-            animate={{ color: hovered ? "rgba(255,255,255,0.90)" : "rgba(255,255,255,0.55)" }}
-            transition={ghostSpring}
-          >
-            {data.callerLabel}
-          </motion.span>
+          <span className="text-white/35 group-hover:text-white/70 transition-colors duration-150">called by: </span>
+          <span className="text-white/55 group-hover:text-white/90 transition-colors duration-150">{data.callerLabel}</span>
         </span>
-      </motion.div>
+      </div>
 
       {/* Connector down to the root node */}
-      <motion.div
-        className="w-px h-6 border-l-2 border-dashed"
-        animate={{ borderColor: hovered ? "rgba(255,255,255,0.40)" : "rgba(255,255,255,0.15)" }}
-        transition={ghostSpring}
-      />
+      <div className="w-px h-6 border-l-2 border-dashed border-white/15 group-hover:border-white/40 transition-colors duration-150" />
 
       <Handle type="source" position={Position.Bottom} style={{ opacity: 0, pointerEvents: "none" }} />
     </div>
