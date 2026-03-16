@@ -130,7 +130,7 @@ function GraphPreview() {
 
 // ─── Install block ────────────────────────────────────────────────────────────
 
-type Framework = "nestjs" | "fastapi" | "nextjs";
+type Framework = "nestjs" | "fastapi";
 
 const CODE: Record<Framework, { label: string; lines: string[] }> = {
   nestjs: {
@@ -159,19 +159,6 @@ const CODE: Record<Framework, { label: string; lines: string[] }> = {
       "CodeMapPlugin(app, port=7070)",
       "",
       "# That's it.",
-    ],
-  },
-  nextjs: {
-    label: "Next.js",
-    lines: [
-      "// next.config.ts",
-      "import { withCodeMap } from '@code-map/nextjs';",
-      "",
-      "const nextConfig = {",
-      "  // ... your existing config",
-      "};",
-      "",
-      "export default withCodeMap(nextConfig);",
     ],
   },
 };
@@ -268,7 +255,7 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-black text-white antialiased">
       {/* ── Nav ──────────────────────────────────────────────────────────── */}
-      <nav className="fixed top-0 inset-x-0 z-50 h-12 flex items-center border-b border-white/8 bg-black/90 backdrop-blur-md">
+      <nav className="fixed top-0 inset-x-0 z-50 h-12 flex items-center border-b border-white/8 bg-black">
         <div className="max-w-6xl mx-auto w-full px-6 flex items-center justify-between">
           <a href="/" className="flex items-center gap-2.5 group">
             <div className="w-7 h-7 rounded-md flex items-center justify-center border border-white/12 bg-white/5 group-hover:border-white/25 group-hover:bg-white/8 transition-colors">
@@ -475,38 +462,24 @@ export default function LandingPage() {
             and select any endpoint.
           </motion.p>
 
-          <motion.div
+          <motion.a
+            href={appHref}
             initial={{ opacity: 0, y: 8 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
+            whileHover={appDisabled ? {} : { scale: 1.02 }}
+            whileTap={appDisabled ? {} : { scale: 0.97 }}
             transition={{ ...SPRING_DEFAULT, delay: 0.18 }}
-            className="flex flex-col sm:flex-row items-center gap-3"
+            title={appDisabled ? "Your backend isn't running yet — start it first" : undefined}
+            className={`inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-[15px] transition-colors ${
+              appDisabled
+                ? "bg-white/10 text-white/30 cursor-not-allowed"
+                : "bg-white text-black hover:bg-white/90"
+            }`}
           >
-            <motion.a
-              href={appHref}
-              whileHover={appDisabled ? {} : { scale: 1.02 }}
-              whileTap={appDisabled ? {} : { scale: 0.97 }}
-              transition={SPRING_SNAPPY}
-              title={appDisabled ? "Your backend isn't running yet — start it first" : undefined}
-              className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-[15px] transition-colors ${
-                appDisabled
-                  ? "bg-white/10 text-white/30 cursor-not-allowed"
-                  : "bg-white text-black hover:bg-white/90"
-              }`}
-            >
-              Open code-map
-              <ArrowRight className="w-4 h-4" />
-            </motion.a>
-            <a
-              href="https://github.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 text-[13px] text-gray-600 hover:text-gray-400 transition-colors"
-            >
-              <Github className="w-4 h-4" />
-              View docs on GitHub
-            </a>
-          </motion.div>
+            Open code-map
+            <ArrowRight className="w-4 h-4" />
+          </motion.a>
         </div>
       </section>
 
@@ -523,23 +496,14 @@ export default function LandingPage() {
               code<span className="text-white/15">.</span>map
             </span>
           </div>
-          <div className="flex items-center gap-6 text-[12px] text-gray-700">
-            <a
-              href="https://github.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-gray-400 transition-colors"
-            >
-              GitHub
-            </a>
-            <a
-              href={appHref}
-              title={appDisabled ? "Backend not running" : undefined}
-              className={`transition-colors ${appDisabled ? "opacity-30 cursor-not-allowed" : "hover:text-gray-400"}`}
-            >
-              Open app
-            </a>
-          </div>
+          <a
+            href="https://github.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[12px] text-gray-700 hover:text-gray-400 transition-colors"
+          >
+            GitHub
+          </a>
         </div>
       </footer>
     </div>
