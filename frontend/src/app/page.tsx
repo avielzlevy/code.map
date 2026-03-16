@@ -269,7 +269,7 @@ export default function LandingPage() {
           </a>
           <div className="flex items-center gap-3">
             <a
-              href="https://github.com"
+              href="https://github.com/avielzlevy/code.map"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-1.5 text-[13px] text-gray-500 hover:text-gray-300 transition-colors"
@@ -355,7 +355,7 @@ export default function LandingPage() {
                 <ArrowRight className="w-4 h-4" />
               </motion.a>
               <motion.a
-                href="https://github.com"
+                href="https://github.com/avielzlevy/code.map"
                 target="_blank"
                 rel="noopener noreferrer"
                 whileHover={{ scale: 1.02 }}
@@ -497,7 +497,7 @@ export default function LandingPage() {
             </span>
           </div>
           <a
-            href="https://github.com"
+            href="https://github.com/avielzlevy/code.map"
             target="_blank"
             rel="noopener noreferrer"
             className="text-[12px] text-gray-700 hover:text-gray-400 transition-colors"
