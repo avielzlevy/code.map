@@ -112,9 +112,11 @@ export function CommandPalette({ paths, onSelectEndpoint, onSelectNode }: Comman
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "ArrowDown") {
       e.preventDefault();
+      if (filteredItems.length === 0) return;
       setSelectedIndex((prev) => (prev + 1) % filteredItems.length);
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
+      if (filteredItems.length === 0) return;
       setSelectedIndex((prev) => (prev - 1 + filteredItems.length) % filteredItems.length);
     } else if (e.key === "Enter") {
       e.preventDefault();

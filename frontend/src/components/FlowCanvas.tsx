@@ -106,23 +106,41 @@ function Canvas({
     setHasInteracted(false);
   }, [activeNodes]);
 
+  const writeToClipboard = useCallback((text: string, onSuccess: () => void) => {
+    navigator.clipboard.writeText(text).then(onSuccess).catch(() => {
+      // Fallback for HTTP (non-secure) contexts or denied permissions
+      try {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.style.cssText = "position:fixed;opacity:0;pointer-events:none";
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+        onSuccess();
+      } catch {
+        // Silent fail — clipboard unavailable
+      }
+    });
+  }, []);
+
   const handleCopy = useCallback(() => {
     const text = activeNodes
-      .map((n) => `${n.funcName}(${n.fileName.split("/").pop()})`)
+      .map((n) => `${n.funcName}(${n.fileName.split("/").pop() ?? n.fileName})`)
       .join(" -> ");
-    navigator.clipboard.writeText(text).then(() => {
+    writeToClipboard(text, () => {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     });
-  }, [activeNodes]);
+  }, [activeNodes, writeToClipboard]);
 
   const handleCopyBreadcrumb = useCallback(() => {
     const parts = [endpointLabel, ...drillStack.map((e) => e.label)];
-    navigator.clipboard.writeText(parts.join(" > ")).then(() => {
+    writeToClipboard(parts.join(" > "), () => {
       setCopiedBreadcrumb(true);
       setTimeout(() => setCopiedBreadcrumb(false), 1500);
     });
-  }, [drillStack, endpointLabel]);
+  }, [drillStack, endpointLabel, writeToClipboard]);
 
   useEffect(() => {
     const g = buildDagreLayout(activeNodes, activeEdges);

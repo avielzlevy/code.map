@@ -1,4 +1,5 @@
 export function getVSCodeUrl(absolutePath: string, line: number): string {
-  // Use the vscode:// path format
-  return `vscode://file${absolutePath}:${line}`;
+  const safePath = absolutePath || "/";
+  const safeLine = Number.isFinite(line) && line > 0 ? line : 1;
+  return `vscode://file${safePath}:${safeLine}`;
 }

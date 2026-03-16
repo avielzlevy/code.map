@@ -55,6 +55,8 @@ export function IntelSidebar({ node, anchorX, anchorY, onClose, onDrillDown, ins
   useLayoutEffect(() => {
     if (!node) return;
     reposition();
+    window.addEventListener("resize", reposition);
+    return () => window.removeEventListener("resize", reposition);
   }, [node, anchorX, anchorY, reposition]);
 
   return (
@@ -74,7 +76,7 @@ export function IntelSidebar({ node, anchorX, anchorY, onClose, onDrillDown, ins
           <div className="flex items-start justify-between px-4 py-3 border-b border-white/10">
             <div className="flex flex-col min-w-0 flex-1 mr-3">
               <span className="font-mono text-sm font-bold text-white truncate">{node.funcName}()</span>
-              <span className="text-[11px] text-gray-500 font-mono break-all mt-0.5 leading-snug">
+              <span className="text-[11px] text-gray-500 font-mono break-all mt-0.5 leading-snug line-clamp-3" title={`${node.fileName}:${node.line}`}>
                 {node.fileName}:{node.line}
               </span>
             </div>

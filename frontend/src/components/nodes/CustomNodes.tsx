@@ -83,7 +83,7 @@ export function StandardNode({ data }: { data: NodeProps }) {
         <div className="flex flex-col flex-1 min-w-0">
           <span className="text-base font-semibold text-white truncate pr-7" title={data.funcName}>{data.funcName}</span>
           <span className="text-[11px] text-gray-400 font-mono truncate mt-0.5" title={data.fileName}>
-            {data.fileName.split("/").pop()}
+            {data.fileName.split("/").pop() ?? data.fileName}
           </span>
         </div>
       </div>
@@ -148,10 +148,10 @@ export function EnhancedNode({ data }: { data: NodeProps }) {
         <div className="p-2 bg-amber-500/10 rounded-lg border border-amber-500/30 text-amber-400">
           <FunctionSquare className="w-5 h-5" />
         </div>
-        <div className="flex flex-col flex-1">
+        <div className="flex flex-col flex-1 min-w-0">
           <span className="text-base font-semibold text-amber-300 truncate pr-7" title={data.funcName}>{data.funcName}</span>
-          <span className="text-[11px] text-gray-400 font-mono truncate mt-0.5">
-            {data.fileName.split("/").pop()}
+          <span className="text-[11px] text-gray-400 font-mono truncate mt-0.5" title={data.fileName}>
+            {data.fileName.split("/").pop() ?? data.fileName}
           </span>
         </div>
       </div>
