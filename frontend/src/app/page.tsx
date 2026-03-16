@@ -22,6 +22,7 @@ export default function Home() {
   const { paths, status, usingMockData } = useExecutionPaths();
   const [selectedPath, setSelectedPath] = useState<ExecutionPath | null>(null);
   const [selectedNode, setSelectedNode] = useState<FlowNode | null>(null);
+  const [panelAnchor, setPanelAnchor] = useState({ x: 0, y: 0 });
   const [drillStack, setDrillStack] = useState<DrillEntry[]>([]);
   const [loadingMsgIdx, setLoadingMsgIdx] = useState(0);
 
@@ -64,8 +65,9 @@ export default function Home() {
     setDrillStack([]);
   };
 
-  const handleNodeClick = (node: FlowNode) => {
+  const handleNodeClick = (node: FlowNode, screenX: number, screenY: number) => {
     setSelectedNode(node);
+    setPanelAnchor({ x: screenX, y: screenY });
   };
 
   const handleNodeDrillDown = (node: FlowNode) => {
@@ -128,7 +130,6 @@ export default function Home() {
             <FlowCanvas
               path={activePath}
               drillStack={drillStack}
-              sidebarOpen={selectedNode !== null}
               onNodeClick={handleNodeClick}
               onNodeDrillDown={handleNodeDrillDown}
               onBackTo={handleBackTo}
@@ -161,8 +162,15 @@ export default function Home() {
           )}
         </main>
 
-        <IntelSidebar node={selectedNode} onClose={() => setSelectedNode(null)} onDrillDown={handleNodeDrillDown} />
       </div>
+
+      <IntelSidebar
+        node={selectedNode}
+        anchorX={panelAnchor.x}
+        anchorY={panelAnchor.y}
+        onClose={() => setSelectedNode(null)}
+        onDrillDown={handleNodeDrillDown}
+      />
 
       <CommandPalette
         paths={paths}

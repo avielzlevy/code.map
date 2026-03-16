@@ -1,9 +1,14 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Tag, FileText, Sparkles, ExternalLink, Layers } from "lucide-react";
 import { FlowNode } from "@/lib/mockData";
 import { getVSCodeUrl } from "@/lib/deep-link";
+
+const PANEL_W = 320;
+const PANEL_H_EST = 500;
+const GAP = 20;
 
 const contentVariants = {
   hidden: {},
@@ -12,28 +17,44 @@ const contentVariants = {
 
 const itemVariants = {
   hidden: { opacity: 0, y: 8 },
-  visible: { opacity: 1, y: 0, transition: { type: "spring", damping: 28, stiffness: 300 } },
+  visible: { opacity: 1, y: 0, transition: { type: "spring" as const, damping: 28, stiffness: 300 } },
 };
 
 interface IntelSidebarProps {
   node: FlowNode | null;
+  anchorX: number;
+  anchorY: number;
   onClose: () => void;
   onDrillDown: (node: FlowNode) => void;
 }
 
-export function IntelSidebar({ node, onClose, onDrillDown }: IntelSidebarProps) {
+export function IntelSidebar({ node, anchorX, anchorY, onClose, onDrillDown }: IntelSidebarProps) {
+  const [pos, setPos] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    if (!node) return;
+    const winW = window.innerWidth;
+    const winH = window.innerHeight;
+    // Prefer right of click; flip left if near right edge
+    const fitsRight = anchorX + GAP + PANEL_W + 12 <= winW;
+    const rawX = fitsRight ? anchorX + GAP : anchorX - PANEL_W - GAP;
+    const x = Math.max(12, Math.min(rawX, winW - PANEL_W - 12));
+    const y = Math.max(60, Math.min(anchorY - 100, winH - PANEL_H_EST - 12));
+    setPos({ x, y });
+  }, [node, anchorX, anchorY]);
+
   return (
     <AnimatePresence>
       {node && (
         <motion.div
-          initial={{ width: 0 }}
-          animate={{ width: 384 }}
-          exit={{ width: 0 }}
-          transition={{ type: "spring", damping: 28, stiffness: 220 }}
-          className="h-full shrink-0 overflow-hidden"
+          style={{ position: "fixed", left: pos.x, top: pos.y, width: PANEL_W, zIndex: 50 }}
+          initial={{ opacity: 0, scale: 0.93, y: 10 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.93, y: 8 }}
+          transition={{ type: "spring", damping: 28, stiffness: 260 }}
+          className="rounded-xl bg-black/80 backdrop-blur-2xl border border-white/12 shadow-[0_8px_40px_rgba(0,0,0,0.9)] flex flex-col text-gray-200 overflow-hidden"
         >
-        <div className="w-96 h-full bg-black/60 backdrop-blur-2xl border-l border-white/10 shadow-[-10px_0_30px_rgba(0,0,0,0.8)] flex flex-col text-gray-200">
-          {/* Header — funcName is the title */}
+          {/* Header */}
           <div className="flex items-start justify-between px-4 py-3 border-b border-white/10">
             <div className="flex flex-col min-w-0 flex-1 mr-3">
               <span className="font-mono text-sm font-bold text-white truncate">{node.funcName}()</span>
@@ -52,12 +73,11 @@ export function IntelSidebar({ node, onClose, onDrillDown }: IntelSidebarProps) 
 
           <motion.div
             key={node.id}
-            className="flex-1 overflow-y-auto p-4 space-y-5"
+            className="overflow-y-auto p-4 space-y-5 max-h-[55vh]"
             variants={contentVariants}
             initial="hidden"
             animate="visible"
           >
-            {/* Intent (Conditional) */}
             {node.intentTag && (
               <motion.div variants={itemVariants}>
                 <h3 className="text-[11px] uppercase tracking-wider text-gray-600 font-semibold mb-2 flex items-center gap-1.5">
@@ -69,7 +89,6 @@ export function IntelSidebar({ node, onClose, onDrillDown }: IntelSidebarProps) 
               </motion.div>
             )}
 
-            {/* Docs (Conditional) */}
             {node.docstring && (
               <motion.div variants={itemVariants}>
                 <h3 className="text-[11px] uppercase tracking-wider text-gray-600 font-semibold mb-2 flex items-center gap-1.5">
@@ -81,7 +100,6 @@ export function IntelSidebar({ node, onClose, onDrillDown }: IntelSidebarProps) 
               </motion.div>
             )}
 
-            {/* AI Summary (Conditional) — keeps own exit animation for streaming/dynamic appearance */}
             <AnimatePresence>
               {node.aiSummary && (
                 <motion.div
@@ -95,16 +113,14 @@ export function IntelSidebar({ node, onClose, onDrillDown }: IntelSidebarProps) 
                     <Sparkles className="w-3 h-3 text-white/25" /> AI Summary
                   </h3>
                   <div className="bg-white/3 p-4 rounded-md border border-white/8">
-                    <p className="text-sm text-gray-300 leading-relaxed">
-                      {node.aiSummary}
-                    </p>
+                    <p className="text-sm text-gray-300 leading-relaxed">{node.aiSummary}</p>
                   </div>
                 </motion.div>
               )}
             </AnimatePresence>
           </motion.div>
 
-          {/* Action Footer — drill-down is primary, VS Code is secondary */}
+          {/* Footer actions */}
           <div className="p-4 border-t border-white/10 bg-black/40 flex flex-col gap-2">
             {node.hasDetail && (
               <button
@@ -124,7 +140,6 @@ export function IntelSidebar({ node, onClose, onDrillDown }: IntelSidebarProps) 
               Open in VS Code
             </a>
           </div>
-        </div>
         </motion.div>
       )}
     </AnimatePresence>

@@ -29,8 +29,7 @@ const nodeTypes = { standard: StandardNode, enhanced: EnhancedNode, ghostEntryPi
 interface FlowCanvasProps {
   path: ExecutionPath;
   drillStack: DrillEntry[];
-  sidebarOpen: boolean;
-  onNodeClick: (node: FlowNode) => void;
+  onNodeClick: (node: FlowNode, screenX: number, screenY: number) => void;
   onNodeDrillDown: (node: FlowNode) => void;
   onBackTo: (index: number) => void;
 }
@@ -75,7 +74,6 @@ function Canvas({
   activeEdges,
   drillStack,
   endpointLabel,
-  sidebarOpen,
   containerRef,
   onNodeClick,
   onNodeDrillDown,
@@ -85,9 +83,8 @@ function Canvas({
   activeEdges: FlowEdge[];
   drillStack: DrillEntry[];
   endpointLabel: string;
-  sidebarOpen: boolean;
   containerRef: RefObject<HTMLDivElement | null>;
-  onNodeClick: (node: FlowNode) => void;
+  onNodeClick: (node: FlowNode, screenX: number, screenY: number) => void;
   onNodeDrillDown: (node: FlowNode) => void;
   onBackTo: (index: number) => void;
 }) {
@@ -171,21 +168,11 @@ function Canvas({
     return () => clearTimeout(t);
   }, [activeNodes, activeEdges, drillStack, setNodes, setEdges, fitView]);
 
-  // Pan viewport left/right as the sidebar opens/closes (sidebar is 384px wide)
-  const prevSidebarOpen = useRef(sidebarOpen);
-  useEffect(() => {
-    if (prevSidebarOpen.current === sidebarOpen) return;
-    prevSidebarOpen.current = sidebarOpen;
-    const vp = getViewport();
-    const shift = 192; // half of sidebar width so the canvas re-centers
-    setViewport({ ...vp, x: vp.x + (sidebarOpen ? -shift : shift) }, { duration: 350 });
-  }, [sidebarOpen, getViewport, setViewport]);
-
   const handleNodeClick = useCallback(
-    (_: React.MouseEvent, node: Node) => {
+    (event: React.MouseEvent, node: Node) => {
       if (node.id === "__ghost_entry_pin__") return;
       setHasInteracted(true);
-      onNodeClick(node.data as FlowNode);
+      onNodeClick(node.data as FlowNode, event.clientX, event.clientY);
     },
     [onNodeClick],
   );
@@ -327,7 +314,7 @@ function Canvas({
   );
 }
 
-export function FlowCanvas({ path, drillStack, sidebarOpen, onNodeClick, onNodeDrillDown, onBackTo }: FlowCanvasProps) {
+export function FlowCanvas({ path, drillStack, onNodeClick, onNodeDrillDown, onBackTo }: FlowCanvasProps) {
   const currentNodeId = drillStack.length > 0 ? drillStack[drillStack.length - 1].id : null;
   const currentDetail = currentNodeId ? path.nodeDetails[currentNodeId] ?? null : null;
 
@@ -344,7 +331,6 @@ export function FlowCanvas({ path, drillStack, sidebarOpen, onNodeClick, onNodeD
         activeEdges={activeEdges}
         drillStack={drillStack}
         endpointLabel={endpointLabel}
-        sidebarOpen={sidebarOpen}
         containerRef={containerRef}
         onNodeClick={onNodeClick}
         onNodeDrillDown={onNodeDrillDown}
