@@ -95,7 +95,7 @@ export class SidecarService {
     const frontendOutPath = path.resolve(__dirname, '../../../../../frontend/out');
 
     if (fs.existsSync(frontendOutPath)) {
-      this.app.use(express.static(frontendOutPath));
+      this.app.use(express.static(frontendOutPath, { extensions: ['html'] }));
       this.app.get('*', (_req: Request, res: Response) => {
         res.sendFile(path.join(frontendOutPath, 'index.html'));
       });
