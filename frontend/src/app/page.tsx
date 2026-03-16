@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { useExecutionPaths } from "@/hooks/useExecutionPaths";
 import { ExecutionPath, FlowNode } from "@/lib/mockData";
@@ -11,11 +11,50 @@ import { CommandPalette } from "@/components/CommandPalette";
 
 export type DrillEntry = { id: string; label: string };
 
+const LOADING_MESSAGES = [
+  "Connecting to sidecar…",
+  "Tracing call stacks…",
+  "Mapping execution paths…",
+  "Reading function signatures…",
+];
+
 export default function Home() {
   const { paths, status, usingMockData } = useExecutionPaths();
   const [selectedPath, setSelectedPath] = useState<ExecutionPath | null>(null);
   const [selectedNode, setSelectedNode] = useState<FlowNode | null>(null);
   const [drillStack, setDrillStack] = useState<DrillEntry[]>([]);
+  const [loadingMsgIdx, setLoadingMsgIdx] = useState(0);
+
+  // Rotate loading messages while connecting
+  useEffect(() => {
+    if (status !== "loading") return;
+    const interval = setInterval(() => {
+      setLoadingMsgIdx((i) => (i + 1) % LOADING_MESSAGES.length);
+    }, 900);
+    return () => clearInterval(interval);
+  }, [status]);
+
+  // Developer easter egg — console signature
+  useEffect(() => {
+    console.log(
+      "%c code.map %c\n\n" +
+        "  ┌─────────────────┐\n" +
+        "  │  route handler  │\n" +
+        "  └────────┬────────┘\n" +
+        "           │\n" +
+        "  ┌────────▼────────┐\n" +
+        "  │   controller    │\n" +
+        "  └────────┬────────┘\n" +
+        "           │\n" +
+        "  ┌────────▼────────┐\n" +
+        "  │    service      │\n" +
+        "  └─────────────────┘\n\n" +
+        "  Visualizing your API execution paths.\n" +
+        "  Built with Next.js · @xyflow/react · dagre\n",
+      "background: #10b981; color: #000; padding: 2px 6px; border-radius: 3px; font-weight: bold;",
+      ""
+    );
+  }, []);
 
   const activePath = selectedPath ?? paths[0] ?? null;
 
@@ -68,7 +107,7 @@ export default function Home() {
       <div className="flex w-full h-screen bg-black items-center justify-center">
         <div className="flex flex-col items-center gap-3 text-gray-600">
           <div className="w-5 h-5 rounded-full border-2 border-white/10 border-t-emerald-400 animate-spin" />
-          <span className="text-xs font-mono text-gray-600">Connecting to sidecar…</span>
+          <span className="text-xs font-mono text-gray-600">{LOADING_MESSAGES[loadingMsgIdx]}</span>
         </div>
       </div>
     );

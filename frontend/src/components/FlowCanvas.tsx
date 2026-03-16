@@ -240,8 +240,14 @@ function Canvas({
         </button>
       </div>
 
-      {/* Flow canvas */}
-      <div className="flex-1 relative z-10">
+      {/* Flow canvas — keyed on drill depth so each level fades in cleanly */}
+      <motion.div
+        key={drillStack.length}
+        className="flex-1 relative z-10"
+        initial={{ opacity: 0.4 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.2, ease: "easeOut" }}
+      >
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -259,13 +265,15 @@ function Canvas({
           zoomOnDoubleClick={false}
         >
           <Panel position="top-right" style={{ margin: "8px" }}>
-            <button
+            <motion.button
               onClick={handleCopy}
               aria-label="Copy flow as text"
+              animate={copied ? { scale: [1, 1.3, 1] } : { scale: 1 }}
+              transition={{ type: "spring", damping: 14, stiffness: 400 }}
               className={`p-1.5 rounded-md border transition-colors ${copied ? "text-emerald-400 border-emerald-500/30 bg-emerald-500/10" : "text-gray-600 border-white/10 bg-black/40 hover:text-gray-400 hover:border-white/20 active:bg-white/5"}`}
             >
               {copied ? <Check size={14} /> : <Copy size={14} />}
-            </button>
+            </motion.button>
           </Panel>
           {/* Interaction hint — teaches click/double-click, dismisses on first node interaction */}
           <Panel position="bottom-center" style={{ marginBottom: "20px", pointerEvents: "none" }}>
@@ -291,7 +299,7 @@ function Canvas({
             className="!bg-black/60 !backdrop-blur-xl !border !border-white/10 fill-gray-400 stroke-gray-400 text-gray-400 [&>button]:!bg-transparent [&>button]:!border-b [&>button]:!border-white/10 [&>button:hover]:!bg-white/10"
           />
         </ReactFlow>
-      </div>
+      </motion.div>
     </div>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "framer-motion";
 import { ExecutionPath } from "@/lib/mockData";
 import { ChevronRight, Search } from "lucide-react";
 import clsx from "clsx";
@@ -16,10 +17,15 @@ export function Switchboard({ paths, selectedPath, onSelectPath }: SwitchboardPr
       {/* Topbar */}
       <div className="w-full px-5 py-4 border-b border-white/[0.06] shrink-0 flex items-center gap-3">
 
-        {/* Logomark: fn node — mirrors the app's own card language */}
-        <div className="w-9 h-9 shrink-0 rounded-lg border border-emerald-500/25 bg-emerald-500/[0.07] flex items-center justify-center animate-[glow-pulse_3s_ease-in-out_infinite]">
+        {/* Logomark: fn node — hover to glow, no idle animation */}
+        <motion.div
+          className="w-9 h-9 shrink-0 rounded-lg flex items-center justify-center"
+          style={{ borderWidth: 1, borderStyle: "solid", borderColor: "rgba(52, 211, 153, 0.25)", backgroundColor: "rgba(52, 211, 153, 0.07)" }}
+          whileHover={{ borderColor: "rgba(52, 211, 153, 0.55)", backgroundColor: "rgba(52, 211, 153, 0.13)", boxShadow: "0 0 14px rgba(52, 211, 153, 0.25)" }}
+          transition={{ type: "spring", damping: 25, stiffness: 300 }}
+        >
           <span className="font-mono text-[11px] font-bold text-emerald-400 tracking-tighter">fn</span>
-        </div>
+        </motion.div>
 
         {/* Wordmark */}
         <div className="flex flex-col justify-center gap-[3px]">
