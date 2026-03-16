@@ -34,11 +34,16 @@ body {
   scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
 }
 
-/* Global focus ring — emerald accent, consistent with design system */
+/* Global focus ring — consistent with design system */
 :focus-visible {
   outline: 2px solid rgba(255, 255, 255, 0.35);
   outline-offset: 2px;
   border-radius: 3px;
+}
+
+/* Inputs manage their own focus context via parent containers */
+input:focus-visible {
+  outline: none;
 }
 
 /* React Flow customizations to match premium dark theme */

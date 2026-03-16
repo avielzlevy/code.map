@@ -125,7 +125,7 @@ export function CommandPalette({ paths, onSelectEndpoint, onSelectNode }: Comman
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[15vh]">
+        <div className="fixed inset-0 z-100 flex items-start justify-center pt-[15vh]">
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -153,7 +153,7 @@ export function CommandPalette({ paths, onSelectEndpoint, onSelectNode }: Comman
                 onKeyDown={handleKeyDown}
                 placeholder="Jump to endpoint or function..."
                 aria-label="Jump to endpoint or function"
-                className="flex-1 bg-transparent border-none outline-none text-white px-3 text-lg placeholder:text-gray-500"
+                className="flex-1 appearance-none bg-transparent border-0 ring-0 outline-none focus:ring-0 focus-visible:outline-none text-white px-3 text-lg placeholder:text-gray-500"
               />
               <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-white/5 border border-white/10 text-gray-400 text-xs font-mono">
                 <Command className="w-3 h-3" />
