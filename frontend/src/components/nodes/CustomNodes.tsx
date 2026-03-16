@@ -32,11 +32,11 @@ export function GhostEntryPin({ data }: { data: GhostPinData }) {
       <div className="w-px h-12 border-l-2 border-dashed border-white/15 group-hover:border-white/40 transition-colors duration-150" />
 
       {/* The chip */}
-      <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-zinc-950 group-hover:border-white/30 group-hover:bg-white/8 transition-[border-color,background-color] duration-150">
-        <CornerLeftUp className="w-3 h-3 -scale-x-100 text-white/30 group-hover:text-white/70 transition-colors duration-150" />
-        <span className="font-mono text-[11px] tracking-wide">
-          <span className="text-white/35 group-hover:text-white/70 transition-colors duration-150">called by: </span>
-          <span className="text-white/55 group-hover:text-white/90 transition-colors duration-150">{data.callerLabel}</span>
+      <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-zinc-950 group-hover:border-white/30 group-hover:bg-white/8 transition-[border-color,background-color] duration-150 max-w-xs overflow-hidden">
+        <CornerLeftUp className="w-3 h-3 -scale-x-100 text-white/30 group-hover:text-white/70 transition-colors duration-150 shrink-0" />
+        <span className="font-mono text-[11px] tracking-wide min-w-0 flex items-center gap-1 overflow-hidden">
+          <span className="text-white/35 group-hover:text-white/70 transition-colors duration-150 shrink-0">called by:</span>
+          <span className="text-white/55 group-hover:text-white/90 transition-colors duration-150 truncate" title={data.callerLabel}>{data.callerLabel}</span>
         </span>
       </div>
 
@@ -66,7 +66,7 @@ function ExpandedPanel({ data, amber }: { data: NodeProps; amber?: boolean }) {
     >
       {/* Always-visible metadata — full path + line */}
       <div className="px-4 pt-4 pb-3 flex flex-col gap-1">
-        <span className={`font-mono text-[13px] font-semibold ${amber ? "text-amber-300" : "text-white"}`}>
+        <span className={`font-mono text-[13px] font-semibold truncate ${amber ? "text-amber-300" : "text-white"}`} title={`${data.funcName}()`}>
           {data.funcName}()
         </span>
         <span className="font-mono text-[10px] text-gray-500 break-all leading-snug">

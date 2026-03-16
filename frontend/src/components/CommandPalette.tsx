@@ -105,11 +105,13 @@ export function CommandPalette({
   const filteredItems = useMemo(() => {
     if (!query) return allItems.slice(0, 10);
     const q = query.toLowerCase();
-    return allItems.filter(
-      (item) =>
-        item.label.toLowerCase().includes(q) ||
-        item.sublabel.toLowerCase().includes(q),
-    );
+    return allItems
+      .filter(
+        (item) =>
+          item.label.toLowerCase().includes(q) ||
+          item.sublabel.toLowerCase().includes(q),
+      )
+      .slice(0, 20);
   }, [query, allItems]);
 
   useEffect(() => {
@@ -222,10 +224,10 @@ export function CommandPalette({
                             transition={SPRING_SNAPPY}
                           />
                         )}
-                        <div className="relative z-10 flex items-center gap-3">
+                        <div className="relative z-10 flex items-center gap-3 min-w-0">
                           <div
                             className={clsx(
-                              "p-1.5 rounded-md border",
+                              "p-1.5 rounded-md border shrink-0",
                               item.type === "endpoint"
                                 ? "bg-white/8 border-white/15 text-white/70"
                                 : "bg-white/5 border-white/10 text-gray-400",
@@ -237,16 +239,17 @@ export function CommandPalette({
                               <FunctionSquare className="w-4 h-4" />
                             )}
                           </div>
-                          <div className="flex flex-col">
+                          <div className="flex flex-col min-w-0">
                             <span
                               className={clsx(
-                                "font-medium",
+                                "font-medium truncate",
                                 active ? "text-white" : "text-gray-300",
                               )}
+                              title={item.label}
                             >
                               {item.label}
                             </span>
-                            <span className="text-xs text-gray-500">
+                            <span className="text-xs text-gray-500 truncate" title={item.sublabel}>
                               {item.sublabel}
                             </span>
                           </div>
