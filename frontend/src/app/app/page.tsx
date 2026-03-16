@@ -107,7 +107,7 @@ export default function Home() {
           <div className="flex flex-col items-center gap-1.5">
             <span className="text-[13px] font-mono font-semibold text-white/75">Backend unreachable</span>
             <span className="text-[11px] font-mono text-gray-500 leading-relaxed">
-              Start your server with the code-map plugin, then come back.
+              Start your server with the code-map plugin installed, then refresh.
             </span>
           </div>
 
