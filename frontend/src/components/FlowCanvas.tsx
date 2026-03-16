@@ -214,7 +214,7 @@ function Canvas({
     setNodes(layoutNodes);
     setEdges(layoutEdges);
 
-    const t = setTimeout(() => fitView({ padding: 0.25, duration: 350 }), 60);
+    const t = setTimeout(() => fitView({ padding: 0.25 }), 60);
     return () => {
       clearTimeout(t);
       if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
@@ -331,6 +331,7 @@ function Canvas({
             <button
               onClick={handleCopyBreadcrumb}
               aria-label="Copy breadcrumb path"
+              title="Copy path to clipboard"
               className="shrink-0 text-gray-400 hover:text-gray-200 active:text-gray-100 transition-colors p-1 rounded border border-transparent hover:border-white/10 hover:bg-white/5"
             >
               {copiedBreadcrumb ? <Check className="w-3 h-3 text-white" /> : <Copy className="w-3 h-3" />}

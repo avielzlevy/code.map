@@ -161,7 +161,7 @@ export function StandardNode({ data }: { data: NodeProps }) {
       <div className="px-5 pt-4 pb-3">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-white/5 rounded-lg border border-white/10">
-            <FunctionSquare className="w-5 h-5 text-gray-300" />
+            <FunctionSquare className="w-5 h-5 text-gray-400" />
           </div>
           <div className="flex flex-col flex-1 min-w-0">
             <span className="text-base font-semibold text-white truncate pr-7" title={data.funcName}>{data.funcName}</span>
@@ -171,7 +171,7 @@ export function StandardNode({ data }: { data: NodeProps }) {
           </div>
         </div>
         {data.docstring && (
-          <div className={`mt-3 text-[11px] font-mono font-medium bg-white/5 border border-white/10 text-gray-300 px-2 py-1 rounded-md flex items-start gap-1.5 ${data.isExpanded ? "" : "overflow-hidden"}`}>
+          <div className={`mt-3 text-[11px] font-mono font-medium bg-white/5 border border-white/10 text-gray-400 px-2 py-1 rounded-md flex items-start gap-1.5 ${data.isExpanded ? "" : "overflow-hidden"}`}>
             <span className="w-1.5 h-1.5 shrink-0 rounded-full bg-white/60 mt-0.75" />
             <span className={data.isExpanded ? "whitespace-pre-wrap wrap-break-word" : "truncate"} title={data.isExpanded ? undefined : data.docstring}>
               {data.isExpanded ? data.docstring : data.docstring.split("\n")[0].replace(/^\s*\/?\*+\s*/, "").trim()}
