@@ -120,9 +120,9 @@ export default function Home() {
     return (
       <div className="flex w-full h-screen bg-black items-center justify-center">
         <div className="flex flex-col items-center gap-3 text-center">
-          <span className="text-[13px] font-mono font-semibold text-white/60">Sidecar unreachable.</span>
-          <span className="text-[11px] font-mono text-gray-600 max-w-[220px] leading-relaxed">
-            Make sure your backend is running with the code-map plugin active, then refresh.
+          <span className="text-[13px] font-mono font-semibold text-white/75">Sidecar unreachable.</span>
+          <span className="text-[11px] font-mono text-gray-500 max-w-[280px] leading-relaxed">
+            Make sure your backend is running with the code-map plugin active on port&nbsp;4567, then refresh.
           </span>
           <button
             onClick={() => window.location.reload()}
@@ -204,7 +204,7 @@ export default function Home() {
                 </motion.button>
                 <button
                   onClick={handleCopyLLMPrompt}
-                  className="text-[11px] font-mono text-gray-700 hover:text-gray-400 transition-colors"
+                  className={`text-[11px] font-mono transition-colors ${promptCopied ? "text-green-500" : "text-gray-500 hover:text-gray-300"}`}
                 >
                   {promptCopied ? "✓ copied" : "copy a prompt for your LLM →"}
                 </button>

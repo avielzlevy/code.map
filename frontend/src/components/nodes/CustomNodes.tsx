@@ -1,3 +1,4 @@
+import { useRef, useState, useEffect } from "react";
 import { Handle, Position } from "@xyflow/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FunctionSquare, Layers, CornerLeftUp, ChevronsDown, Sparkles, ExternalLink } from "lucide-react";
@@ -52,19 +53,29 @@ export function GhostEntryPin({ data }: { data: GhostPinData }) {
   );
 }
 
-/** Detail panel that opens to the right of a node when it's expanded.
- *  Positioned to the right so it never overlaps the vertical edges (TB layout). */
+/** Detail panel that opens beside a node when it's expanded.
+ *  Defaults to the right; flips left when near the viewport's right edge. */
 function ExpandedPanel({ data, amber }: { data: NodeProps; amber?: boolean }) {
+  const panelRef = useRef<HTMLDivElement>(null);
+  const [flipLeft, setFlipLeft] = useState(false);
+
+  useEffect(() => {
+    if (!panelRef.current) return;
+    const rect = panelRef.current.getBoundingClientRect();
+    if (rect.right > window.innerWidth - 16) setFlipLeft(true);
+  }, []);
+
   return (
     <motion.div
+      ref={panelRef}
       key="panel"
       initial={{ opacity: 0, x: -8, scale: 0.98 }}
       animate={{ opacity: 1, x: 0, scale: 1 }}
       exit={{ opacity: 0, x: -4, scale: 0.98 }}
       transition={SPRING_DEFAULT}
-      className={`absolute left-full ml-3 top-0 w-72 z-50 rounded-xl bg-black/98 border shadow-[0_12px_48px_rgba(0,0,0,0.95)] overflow-hidden ${
-        amber ? "border-amber-500/20" : "border-white/15"
-      }`}
+      className={`absolute top-0 w-72 z-50 rounded-xl bg-black/98 border shadow-[0_12px_48px_rgba(0,0,0,0.95)] overflow-hidden ${
+        flipLeft ? "right-full mr-3" : "left-full ml-3"
+      } ${amber ? "border-amber-500/20" : "border-white/15"}`}
       onClick={(e) => e.stopPropagation()}
       onDoubleClick={(e) => e.stopPropagation()}
     >
@@ -104,7 +115,7 @@ function ExpandedPanel({ data, amber }: { data: NodeProps; amber?: boolean }) {
                 amber ? "text-amber-400/30" : "text-white/20"
               }`}
             />
-            <p className="text-[12px] text-gray-300 leading-relaxed pr-5">{data.aiSummary}</p>
+            <p className="text-[12px] text-gray-400 leading-relaxed pr-5">{data.aiSummary}</p>
           </div>
         </div>
       )}
@@ -162,7 +173,7 @@ export function StandardNode({ data }: { data: NodeProps }) {
             hover: { scale: 1.15, opacity: 1 },
           }}
           transition={SPRING_BADGE}
-          className="absolute top-3 right-3 w-6 h-6 rounded-full bg-white/15 border border-white/30 flex items-center justify-center z-20"
+          className="absolute top-3 right-3 w-6 h-6 rounded-full bg-white/22 border border-white/45 flex items-center justify-center z-20"
         >
           <Layers className="w-3.5 h-3.5 text-white/80" />
         </motion.div>
@@ -178,7 +189,7 @@ export function StandardNode({ data }: { data: NodeProps }) {
         >
           <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/6 border border-white/12">
             <ChevronsDown className="w-2.5 h-2.5 text-white/50" />
-            <span className="text-[9px] font-mono text-white/45 tracking-wide">double-click to drill</span>
+            <span className="text-[11px] font-mono text-white/45">double-click to drill</span>
           </div>
         </motion.div>
       )}
@@ -251,7 +262,7 @@ export function EnhancedNode({ data }: { data: NodeProps }) {
             hover: { scale: 1.15, opacity: 1 },
           }}
           transition={SPRING_BADGE}
-          className="absolute top-3 right-3 w-6 h-6 rounded-full bg-amber-500/25 border border-amber-500/50 flex items-center justify-center z-20"
+          className="absolute top-3 right-3 w-6 h-6 rounded-full bg-amber-500/32 border border-amber-500/60 flex items-center justify-center z-20"
         >
           <Layers className="w-3.5 h-3.5 text-amber-400" />
         </motion.div>
@@ -267,7 +278,7 @@ export function EnhancedNode({ data }: { data: NodeProps }) {
         >
           <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/8 border border-amber-500/20">
             <ChevronsDown className="w-2.5 h-2.5 text-amber-400/60" />
-            <span className="text-[9px] font-mono text-amber-300/50 tracking-wide">double-click to drill</span>
+            <span className="text-[11px] font-mono text-amber-300/50">double-click to drill</span>
           </div>
         </motion.div>
       )}
