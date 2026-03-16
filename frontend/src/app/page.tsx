@@ -242,8 +242,8 @@ const FEATURES = [
   },
   {
     n: "03",
-    title: "AI intent on amber nodes.",
-    desc: "Enriched functions carry a plain-English intent tag and summary. Understand what it does before opening the file.",
+    title: "Know what it does before you open it.",
+    desc: "Enriched functions carry a plain-English intent tag and AI summary — right on the graph. No file-opening required.",
   },
   {
     n: "04",
@@ -295,7 +295,7 @@ export default function LandingPage() {
               whileHover={appDisabled ? {} : { scale: 1.02 }}
               whileTap={appDisabled ? {} : { scale: 0.97 }}
               transition={SPRING_SNAPPY}
-              title={appDisabled ? "Sidecar unreachable — start your backend first" : undefined}
+              title={appDisabled ? "Your backend isn't running yet — start it first" : undefined}
               className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-[13px] font-semibold transition-colors ${
                 appDisabled
                   ? "bg-white/10 text-white/30 cursor-not-allowed"
@@ -487,7 +487,7 @@ export default function LandingPage() {
               whileHover={appDisabled ? {} : { scale: 1.02 }}
               whileTap={appDisabled ? {} : { scale: 0.97 }}
               transition={SPRING_SNAPPY}
-              title={appDisabled ? "Sidecar unreachable — start your backend first" : undefined}
+              title={appDisabled ? "Your backend isn't running yet — start it first" : undefined}
               className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-[15px] transition-colors ${
                 appDisabled
                   ? "bg-white/10 text-white/30 cursor-not-allowed"
@@ -534,7 +534,7 @@ export default function LandingPage() {
             </a>
             <a
               href={appHref}
-              title={appDisabled ? "Sidecar unreachable" : undefined}
+              title={appDisabled ? "Backend not running" : undefined}
               className={`transition-colors ${appDisabled ? "opacity-30 cursor-not-allowed" : "hover:text-gray-400"}`}
             >
               Open app

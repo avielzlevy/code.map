@@ -13,7 +13,7 @@ import { CommandPalette } from "@/components/CommandPalette";
 export type DrillEntry = { id: string; label: string };
 
 const LOADING_MESSAGES = [
-  "Connecting to sidecar…",
+  "Connecting to your backend…",
   "Tracing call stacks…",
   "Mapping execution paths…",
   "Reading function signatures…",
@@ -104,9 +104,9 @@ export default function Home() {
     return (
       <div className="flex w-full h-screen bg-black items-center justify-center">
         <div className="flex flex-col items-center gap-3 text-center">
-          <span className="text-[13px] font-mono font-semibold text-white/75">Sidecar unreachable.</span>
+          <span className="text-[13px] font-mono font-semibold text-white/75">Can&apos;t connect to your backend.</span>
           <span className="text-[11px] font-mono text-gray-500 max-w-70 leading-relaxed">
-            Make sure your backend is running with the code-map plugin active on port&nbsp;4567, then refresh.
+            Make sure your server is running with the code-map plugin active, then refresh.
           </span>
           <button
             onClick={() => window.location.reload()}
@@ -164,11 +164,10 @@ export default function Home() {
                 variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0, transition: SPRING_DEFAULT } }}
               >
                 <p className="text-[13px] font-mono font-semibold text-white/60">
-                  No endpoints detected.
+                  No traffic yet.
                 </p>
                 <p className="text-[11px] text-gray-600 max-w-55 leading-relaxed">
-                  Your project may have no routes yet, or the plugin isn&apos;t receiving traffic.
-                  Write an endpoint and restart your server.
+                  Make a request to any endpoint in your app — code-map will trace the execution path and show it here.
                 </p>
               </motion.div>
 
