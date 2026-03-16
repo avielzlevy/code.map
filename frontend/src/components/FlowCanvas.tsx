@@ -35,10 +35,10 @@ interface FlowCanvasProps {
 
 function buildDagreLayout(nodes: FlowNode[], edges: FlowEdge[]) {
   const g = new dagre.graphlib.Graph();
-  g.setGraph({ rankdir: "TB", nodesep: 80, ranksep: 120 });
+  g.setGraph({ rankdir: "LR", nodesep: 80, ranksep: 120 });
   g.setDefaultEdgeLabel(() => ({}));
   const NODE_W = 450;
-  nodes.forEach((n) => g.setNode(n.id, { width: NODE_W, height: (n.intentTag || n.docstring) ? 110 : 80 }));
+  nodes.forEach((n) => g.setNode(n.id, { width: NODE_W, height: (n.intentTag || n.docstring) ? 130 : 100 }));
   [...edges].sort((a, b) => a.callOrder - b.callOrder).forEach((e) => g.setEdge(e.source, e.target));
   dagre.layout(g);
   return g;
@@ -94,16 +94,14 @@ function Canvas({
     try { return sessionStorage.getItem("code-map:hint-dismissed") === "1"; } catch { return false; }
   });
   const [isDrilling, setIsDrilling] = useState(false);
-  const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Track drill direction: +1 = going deeper, -1 = going back
   const prevDrillDepthRef = useRef(drillStack.length);
-  const drillEnterY = drillStack.length >= prevDrillDepthRef.current ? 10 : -10;
+  const drillEnterX = drillStack.length >= prevDrillDepthRef.current ? 30 : -30;
   prevDrillDepthRef.current = drillStack.length;
 
   // Which node is currently expanded (in-place detail panel)
   const [expandedNodeId, setExpandedNodeId] = useState<string | null>(null);
-  const closeExpanded = useCallback(() => setExpandedNodeId(null), []);
   // Stable ref so layout effect can capture latest onNodeDrillDown without re-running
   const onNodeDrillDownRef = useRef(onNodeDrillDown);
   onNodeDrillDownRef.current = onNodeDrillDown;
@@ -182,10 +180,10 @@ function Canvas({
           hasIncoming: targets.has(n.id),
           hasOutgoing: sources.has(n.id),
           isExpanded: false,
-          onClose: closeExpanded,
+          onToggleExpand: () => setExpandedNodeId((prev) => (prev === n.id ? null : n.id)),
           onDrillDown: () => onNodeDrillDownRef.current(n),
         },
-        position: { x: pos.x - 225, y: pos.y - ((n.intentTag || n.docstring) ? 55 : 40) },
+        position: { x: pos.x - 225, y: pos.y - ((n.intentTag || n.docstring) ? 65 : 50) },
         style: { overflow: "visible" as const },
       };
     });
@@ -193,21 +191,21 @@ function Canvas({
     // When nested, prepend a ghost entry pin above the topmost node
     const layoutEdges: Edge[] = validEdges.map((e) => buildReactFlowEdge(e));
     if (drillStack.length > 0) {
-      const topNode = layoutNodes.reduce((a, b) => (a.position.y < b.position.y ? a : b));
+      const leftmostNode = layoutNodes.reduce((a, b) => (a.position.x < b.position.x ? a : b));
       const callerLabel = drillStack[drillStack.length - 1].label;
       const pinId = "__ghost_entry_pin__";
       layoutNodes.unshift({
         id: pinId,
         type: "ghostEntryPin",
         data: { callerLabel, onBack: () => onBackTo(drillStack.length - 2) },
-        position: { x: topNode.position.x, y: topNode.position.y - 120 },
+        position: { x: leftmostNode.position.x - 200, y: leftmostNode.position.y },
         selectable: false,
         draggable: false,
       } as Node);
       layoutEdges.unshift({
-        id: `${pinId}->${topNode.id}`,
+        id: `${pinId}->${leftmostNode.id}`,
         source: pinId,
-        target: topNode.id,
+        target: leftmostNode.id,
         style: { stroke: "rgba(255,255,255,0.08)", strokeWidth: 1, strokeDasharray: "4 4" },
         animated: false,
       });
@@ -231,21 +229,12 @@ function Canvas({
       // Resurface the hint after 30s of no interaction
       if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
       idleTimerRef.current = setTimeout(() => setHasInteracted(false), 30_000);
-      // 150ms delay to cancel if a double-click follows (prevents expansion flash)
-      if (clickTimerRef.current) clearTimeout(clickTimerRef.current);
-      clickTimerRef.current = setTimeout(() => {
-        setExpandedNodeId((prev) => (prev === node.id ? null : node.id));
-      }, 150);
     },
     [],
   );
 
   const handleNodeDoubleClick = useCallback(
     (_: React.MouseEvent, node: Node) => {
-      if (clickTimerRef.current) {
-        clearTimeout(clickTimerRef.current);
-        clickTimerRef.current = null;
-      }
       const flowNode = node.data as FlowNode;
       if (!flowNode.hasDetail) return;
       // Brief dim confirms the action, then drill
@@ -350,8 +339,8 @@ function Canvas({
       <motion.div
         key={drillStack.at(-1)?.id ?? "root"}
         className="flex-1 relative z-10"
-        initial={{ opacity: 0, y: drillEnterY }}
-        animate={{ opacity: isDrilling ? 0.6 : 1, y: 0 }}
+        initial={{ opacity: 0, x: drillEnterX }}
+        animate={{ opacity: isDrilling ? 0.6 : 1, x: 0 }}
         transition={SPRING_DEFAULT}
       >
         <ReactFlow
@@ -396,9 +385,9 @@ function Canvas({
                   transition={{ ...SPRING_GENTLE, delay: 0.5 }}
                   className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-black/85 border border-white/8 text-[11px] text-white/50 font-sans select-none"
                 >
-                  <span>click to inspect</span>
+                  <span>↓ expand</span>
                   <span className="w-px h-3 bg-white/15" />
-                  <span>double-click to drill in</span>
+                  <span>double-click ⊕ to drill</span>
                 </motion.div>
               )}
             </AnimatePresence>
