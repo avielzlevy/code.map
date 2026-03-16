@@ -260,7 +260,7 @@ function Canvas({
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ type: "spring", damping: 28, stiffness: 280 }}
                 >
-                  <ChevronRight className="w-3 h-3 text-gray-700" />
+                  <ChevronRight className="w-3 h-3 text-gray-600" />
                   <button
                     onClick={() => !isLast && onBackTo(idx)}
                     className={`text-xs transition-colors ${
@@ -278,7 +278,7 @@ function Canvas({
             <button
               onClick={handleCopyBreadcrumb}
               aria-label="Copy breadcrumb path"
-              className="ml-auto text-gray-400 hover:text-gray-200 active:text-gray-100 transition-colors p-1 rounded"
+              className="ml-auto text-gray-400 hover:text-gray-200 active:text-gray-100 transition-colors p-1 rounded border border-transparent hover:border-white/10 hover:bg-white/5"
             >
               {copiedBreadcrumb ? <Check className="w-3 h-3 text-white" /> : <Copy className="w-3 h-3" />}
             </button>

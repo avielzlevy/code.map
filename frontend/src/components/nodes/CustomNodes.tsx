@@ -13,7 +13,7 @@ export function GhostEntryPin({ data }: any) {
       <div className="w-px h-12 border-l-2 border-dashed border-white/15 group-hover:border-white/40 transition-colors duration-150" />
 
       {/* The chip */}
-      <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-zinc-950 group-hover:border-white/30 group-hover:bg-white/6 transition-[border-color,background-color] duration-150">
+      <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-zinc-950 group-hover:border-white/30 group-hover:bg-white/8 transition-[border-color,background-color] duration-150">
         <CornerLeftUp className="w-3 h-3 -scale-x-100 text-white/30 group-hover:text-white/70 transition-colors duration-150" />
         <span className="font-mono text-[11px] tracking-wide">
           <span className="text-white/35 group-hover:text-white/70 transition-colors duration-150">called by: </span>
@@ -31,30 +31,45 @@ export function GhostEntryPin({ data }: any) {
 
 export function StandardNode({ data }: any) {
   return (
-    <div
+    <motion.div
       className={`px-5 py-4 rounded-xl bg-zinc-950 border w-112.5 group relative
         ${data.hasDetail
           ? "border-white/20 hover:border-white/40 cursor-pointer transition-[border-color,box-shadow] duration-200 shadow-[0_4px_24px_rgba(0,0,0,0.6)] hover:shadow-[0_4px_24px_rgba(0,0,0,0.6),3px_4px_0_-1px_rgba(255,255,255,0.04),6px_8px_0_-2px_rgba(255,255,255,0.02)]"
           : "border-white/10 transition-colors shadow-[0_4px_24px_rgba(0,0,0,0.6)]"
         }`}
+      initial="rest"
+      whileHover={data.hasDetail ? "hover" : undefined}
+      animate="rest"
+      variants={{
+        rest: { y: 0 },
+        hover: { y: -3 },
+      }}
+      transition={{ type: "spring", damping: 25, stiffness: 300 }}
     >
       {data.hasDetail && (
-        <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-white/10 border border-white/20 flex items-center justify-center z-20">
+        <motion.div
+          variants={{
+            rest: { scale: 1, opacity: 0.65 },
+            hover: { scale: 1.2, opacity: 1 },
+          }}
+          transition={{ type: "spring", damping: 20, stiffness: 350 }}
+          className="absolute top-3 right-3 w-5 h-5 rounded-full bg-white/10 border border-white/20 flex items-center justify-center z-20"
+        >
           <Layers className="w-3 h-3 text-white/80" />
-        </div>
+        </motion.div>
       )}
       <Handle
         type="target"
         position={Position.Top}
         data-connected={data.hasIncoming ? "true" : "false"}
-        className="w-2.5! h-2.5! border-2! border-black! bg-white! shadow-[0_0_8px_rgba(255,255,255,0.6)]"
+        className="w-2.5! h-2.5! border-2! border-black! bg-white! shadow-[0_0_6px_rgba(255,255,255,0.3)]"
       />
       <div className="flex items-center gap-3">
         <div className="p-2 bg-white/5 rounded-lg border border-white/10">
           <FunctionSquare className="w-5 h-5 text-gray-300" />
         </div>
         <div className="flex flex-col flex-1 min-w-0">
-          <span className="text-base font-semibold text-white tracking-wide truncate pr-6" title={data.funcName}>{data.funcName}</span>
+          <span className="text-base font-semibold text-white truncate pr-6" title={data.funcName}>{data.funcName}</span>
           <span className="text-[11px] text-gray-400 font-mono truncate mt-0.5" title={data.fileName}>
             {data.fileName.split("/").pop()}
           </span>
@@ -70,20 +85,28 @@ export function StandardNode({ data }: any) {
         type="source"
         position={Position.Bottom}
         data-connected={data.hasOutgoing ? "true" : "false"}
-        className="w-2.5! h-2.5! border-2! border-black! bg-white! shadow-[0_0_8px_rgba(255,255,255,0.6)]"
+        className="w-2.5! h-2.5! border-2! border-black! bg-white! shadow-[0_0_6px_rgba(255,255,255,0.3)]"
       />
-    </div>
+    </motion.div>
   );
 }
 
 export function EnhancedNode({ data }: any) {
   return (
-    <div
+    <motion.div
       className={`px-5 py-4 rounded-xl bg-zinc-950 border w-112.5 relative group
         ${data.hasDetail
-          ? "border-amber-500/50 hover:border-amber-400 cursor-pointer transition-[border-color,box-shadow] duration-200 shadow-[0_4px_30px_rgba(245,158,11,0.15),0_0_15px_rgba(245,158,11,0.08)] hover:shadow-[0_4px_30px_rgba(245,158,11,0.15),0_0_15px_rgba(245,158,11,0.08),3px_4px_0_-1px_rgba(245,158,11,0.05),6px_8px_0_-2px_rgba(245,158,11,0.025)]"
-          : "border-amber-500/30 hover:border-amber-500/40 transition-colors shadow-[0_4px_30px_rgba(245,158,11,0.1)]"
+          ? "border-amber-500/50 hover:border-amber-400 cursor-pointer transition-[border-color,box-shadow] duration-200 shadow-[0_4px_30px_rgba(245,158,11,0.12)] hover:shadow-[0_4px_30px_rgba(245,158,11,0.18),3px_4px_0_-1px_rgba(245,158,11,0.05),6px_8px_0_-2px_rgba(245,158,11,0.025)]"
+          : "border-amber-500/30 hover:border-amber-500/40 transition-colors shadow-[0_4px_24px_rgba(0,0,0,0.6)]"
         }`}
+      initial="rest"
+      whileHover={data.hasDetail ? "hover" : undefined}
+      animate="rest"
+      variants={{
+        rest: { y: 0 },
+        hover: { y: -3 },
+      }}
+      transition={{ type: "spring", damping: 25, stiffness: 300 }}
     >
       {/* Gradient tint — distinguishes enhanced nodes from standard */}
       <div className="absolute inset-0 rounded-xl overflow-hidden pointer-events-none">
@@ -91,23 +114,30 @@ export function EnhancedNode({ data }: any) {
       </div>
 
       {data.hasDetail && (
-        <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center z-20">
+        <motion.div
+          variants={{
+            rest: { scale: 1, opacity: 0.65 },
+            hover: { scale: 1.2, opacity: 1 },
+          }}
+          transition={{ type: "spring", damping: 20, stiffness: 350 }}
+          className="absolute top-3 right-3 w-5 h-5 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center z-20"
+        >
           <Layers className="w-3 h-3 text-amber-400" />
-        </div>
+        </motion.div>
       )}
 
       <Handle
         type="target"
         position={Position.Top}
         data-connected={data.hasIncoming ? "true" : "false"}
-        className="w-2.5! h-2.5! border-2! border-black! bg-amber-400! shadow-[0_0_12px_rgba(245,158,11,0.7)] z-20"
+        className="w-2.5! h-2.5! border-2! border-black! bg-amber-400! shadow-[0_0_8px_rgba(245,158,11,0.5)] z-20"
       />
       <div className="flex items-center gap-3 relative z-10">
         <div className="p-2 bg-amber-500/10 rounded-lg border border-amber-500/30 text-amber-400">
           <FunctionSquare className="w-5 h-5" />
         </div>
         <div className="flex flex-col flex-1">
-          <span className="text-base font-semibold text-amber-300 tracking-wide">{data.funcName}</span>
+          <span className="text-base font-semibold text-amber-300">{data.funcName}</span>
           <span className="text-[11px] text-gray-400 font-mono truncate mt-0.5">
             {data.fileName.split("/").pop()}
           </span>
@@ -115,7 +145,7 @@ export function EnhancedNode({ data }: any) {
       </div>
       {data.intentTag && (
         <div className="mt-3 relative z-10 text-[11px] font-mono font-medium bg-amber-500/10 border border-amber-500/20 text-amber-300 px-2 py-1 rounded-md flex items-center gap-1.5 overflow-hidden">
-          <span className="w-1.5 h-1.5 shrink-0 rounded-full bg-amber-400 shadow-[0_0_6px_rgba(245,158,11,0.7)]" />
+          <span className="w-1.5 h-1.5 shrink-0 rounded-full bg-amber-400 shadow-[0_0_4px_rgba(245,158,11,0.4)]" />
           <span className="truncate" title={data.intentTag}>{data.intentTag}</span>
         </div>
       )}
@@ -123,8 +153,8 @@ export function EnhancedNode({ data }: any) {
         type="source"
         position={Position.Bottom}
         data-connected={data.hasOutgoing ? "true" : "false"}
-        className="w-2.5! h-2.5! border-2! border-black! bg-amber-400! shadow-[0_0_12px_rgba(245,158,11,0.7)] z-20"
+        className="w-2.5! h-2.5! border-2! border-black! bg-amber-400! shadow-[0_0_8px_rgba(245,158,11,0.5)] z-20"
       />
-    </div>
+    </motion.div>
   );
 }
