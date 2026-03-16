@@ -102,18 +102,54 @@ export default function Home() {
 
   if (status === "error") {
     return (
-      <div className="flex w-full h-screen bg-black items-center justify-center">
-        <div className="flex flex-col items-center gap-3 text-center">
-          <span className="text-[13px] font-mono font-semibold text-white/75">Can&apos;t connect to your backend.</span>
-          <span className="text-[11px] font-mono text-gray-500 max-w-70 leading-relaxed">
-            Make sure your server is running with the code-map plugin active, then refresh.
-          </span>
-          <button
-            onClick={() => window.location.reload()}
-            className="mt-2 px-4 py-2 rounded-lg bg-white text-black font-semibold text-[12px] hover:bg-white/90 transition-colors"
-          >
-            Refresh
-          </button>
+      <div className="flex w-full h-screen bg-black items-center justify-center px-6">
+        <div className="flex flex-col items-center gap-5 text-center w-full max-w-xs">
+          <div className="flex flex-col items-center gap-1.5">
+            <span className="text-[13px] font-mono font-semibold text-white/75">Backend unreachable</span>
+            <span className="text-[11px] font-mono text-gray-500 leading-relaxed">
+              Start your server with the code-map plugin, then come back.
+            </span>
+          </div>
+
+          {/* Quick-start steps */}
+          <div className="w-full rounded-xl border border-white/8 bg-zinc-950 overflow-hidden text-left">
+            <div className="px-4 py-2 border-b border-white/6">
+              <span className="text-[9px] font-mono text-white/25 uppercase tracking-[0.18em]">Quick start</span>
+            </div>
+            <div className="px-4 py-3 border-b border-white/5 flex flex-col gap-1">
+              <span className="text-[9px] font-mono text-amber-500/60 uppercase tracking-wider">NestJS</span>
+              <code className="text-[11px] font-mono text-gray-400">
+                <span className="text-gray-600">import</span>{" "}
+                {"{ CodeMapModule }"}{" "}
+                <span className="text-gray-600">from</span>{" "}
+                <span className="text-gray-500">&apos;@code-map/nestjs&apos;</span>
+              </code>
+            </div>
+            <div className="px-4 py-3 flex flex-col gap-1">
+              <span className="text-[9px] font-mono text-amber-500/60 uppercase tracking-wider">FastAPI</span>
+              <code className="text-[11px] font-mono text-gray-400">
+                <span className="text-gray-600">from</span>{" "}
+                <span className="text-gray-500">code_map</span>{" "}
+                <span className="text-gray-600">import</span>{" "}
+                CodeMapPlugin
+              </code>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 rounded-lg bg-white text-black font-semibold text-[12px] hover:bg-white/90 transition-colors"
+            >
+              Refresh
+            </button>
+            <a
+              href="/"
+              className="px-4 py-2 rounded-lg border border-white/10 text-gray-400 font-medium text-[12px] hover:border-white/20 hover:text-white transition-colors"
+            >
+              Setup guide
+            </a>
+          </div>
         </div>
       </div>
     );

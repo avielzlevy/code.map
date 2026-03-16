@@ -180,6 +180,21 @@ export function StandardNode({ data }: { data: NodeProps }) {
         )}
       </div>
 
+      {/* Drill hint — fades in on hover for drillable nodes */}
+      {data.hasDetail && !data.isExpanded && (
+        <motion.div
+          variants={{
+            rest: { opacity: 0, y: 3 },
+            hover: { opacity: 1, y: 0 },
+          }}
+          transition={SPRING_STANDARD}
+          className="px-5 -mt-1 pb-2 flex items-center gap-1.5 pointer-events-none"
+        >
+          <Layers className="w-3 h-3 text-white/25" />
+          <span className="text-[10px] font-mono text-white/25 tracking-wide">double-click to drill</span>
+        </motion.div>
+      )}
+
       <AnimatePresence>
         {data.isExpanded && <NodeExpansion data={data} />}
       </AnimatePresence>
@@ -271,6 +286,21 @@ export function EnhancedNode({ data }: { data: NodeProps }) {
           </div>
         )}
       </div>
+
+      {/* Drill hint — fades in on hover for drillable enhanced nodes */}
+      {data.hasDetail && !data.isExpanded && (
+        <motion.div
+          variants={{
+            rest: { opacity: 0, y: 3 },
+            hover: { opacity: 1, y: 0 },
+          }}
+          transition={SPRING_STANDARD}
+          className="px-5 -mt-1 pb-2 flex items-center gap-1.5 relative z-10 pointer-events-none"
+        >
+          <Layers className="w-3 h-3 text-amber-500/35" />
+          <span className="text-[10px] font-mono text-amber-500/35 tracking-wide">double-click to drill</span>
+        </motion.div>
+      )}
 
       <AnimatePresence>
         {data.isExpanded && <NodeExpansion data={data} amber />}

@@ -2,129 +2,87 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Github, ArrowRight, FunctionSquare } from "lucide-react";
-import { SPRING_DEFAULT, SPRING_GENTLE, SPRING_SNAPPY, SPRING_STANDARD } from "@/lib/spring";
+import { Github, ArrowRight, Play } from "lucide-react";
+import { SPRING_DEFAULT, SPRING_SNAPPY, SPRING_STANDARD } from "@/lib/spring";
 import { apiClient } from "@/lib/api-client";
 
-// ─── Static graph preview ─────────────────────────────────────────────────────
+// ─── Video placeholder ────────────────────────────────────────────────────────
 
-/** Stagger variants for individual elements inside GraphPreview */
-const previewItemVariants = {
-  hidden: { opacity: 0, y: 8 },
-  visible: { opacity: 1, y: 0, transition: SPRING_GENTLE },
-};
-
-function DemoNode({
-  funcName,
-  file,
-  enhanced,
-  intentTag,
-}: {
-  funcName: string;
-  file: string;
-  enhanced?: boolean;
-  intentTag?: string;
-}) {
+function VideoPlaceholder() {
   return (
-    <motion.div
-      variants={previewItemVariants}
-      whileHover={{ y: -2, transition: SPRING_STANDARD }}
-      className={`relative w-full px-4 py-3 rounded-xl border bg-zinc-950 cursor-default ${
-        enhanced
-          ? "border-amber-500/50 shadow-[0_0_24px_rgba(245,158,11,0.08)] hover:border-amber-400/70"
-          : "border-white/20 hover:border-white/35"
-      } transition-[border-color]`}
-    >
-      {enhanced && (
-        <div className="absolute inset-0 rounded-xl overflow-hidden pointer-events-none">
-          <div className="absolute inset-0 bg-linear-to-br from-amber-500/8 to-transparent" />
+    <div className="relative w-full rounded-xl overflow-hidden border border-white/10 bg-zinc-950 group cursor-pointer select-none">
+      {/* Fake app chrome — Switchboard */}
+      <div className="h-10 border-b border-white/8 bg-black flex items-center gap-3 px-4 shrink-0">
+        <div className="w-5 h-5 rounded-md border border-white/10 bg-white/5 flex items-center justify-center">
+          <span className="font-mono text-[8px] font-bold text-white/40 tracking-tighter">fn</span>
         </div>
-      )}
-      <div className="relative flex items-center gap-2.5">
-        <div
-          className={`p-1.5 rounded-lg border ${
-            enhanced
-              ? "bg-amber-500/10 border-amber-500/30"
-              : "bg-white/5 border-white/10"
-          }`}
-        >
-          <FunctionSquare
-            className={`w-3.5 h-3.5 ${enhanced ? "text-amber-400" : "text-gray-400"}`}
-          />
-        </div>
-        <div className="flex flex-col min-w-0">
-          <span
-            className={`font-mono text-[13px] font-semibold truncate ${
-              enhanced ? "text-amber-300" : "text-white"
-            }`}
-          >
-            {funcName}
-          </span>
-          <span className="font-mono text-[11px] text-gray-600">{file}</span>
+        <div className="flex items-center gap-1.5 overflow-hidden">
+          <div className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-white/8 border border-white/15 text-[10px] font-mono text-white/60 shrink-0">
+            <span className="w-1.5 h-1.5 rounded-full bg-blue-400/70" />
+            GET <span className="text-white/35">/api/users/profile</span>
+          </div>
+          <div className="flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-mono text-white/20 shrink-0">
+            <span className="w-1.5 h-1.5 rounded-full bg-green-400/40" />
+            POST <span className="text-white/15">/api/auth/login</span>
+          </div>
         </div>
       </div>
-      {intentTag && (
-        <div className="relative mt-2 text-[11px] font-mono bg-amber-500/10 border border-amber-500/20 text-amber-300 px-2 py-1 rounded-md flex items-center gap-1.5">
-          <span className="w-1 h-1 shrink-0 rounded-full bg-amber-400" />
-          {intentTag}
-        </div>
-      )}
-    </motion.div>
-  );
-}
 
-function GraphConnector() {
-  return (
-    <motion.div variants={previewItemVariants} className="flex flex-col items-center py-0.5">
-      <div className="w-px h-7 bg-white/15" />
+      {/* Canvas area */}
       <div
-        className="w-0 h-0"
+        className="relative h-52 overflow-hidden"
         style={{
-          borderLeft: "4px solid transparent",
-          borderRight: "4px solid transparent",
-          borderTop: "6px solid rgba(255,255,255,0.2)",
+          backgroundImage:
+            "radial-gradient(circle, rgba(255,255,255,0.035) 1px, transparent 1px)",
+          backgroundSize: "24px 24px",
         }}
-      />
-    </motion.div>
-  );
-}
-
-function GraphPreview() {
-  return (
-    <motion.div
-      variants={{
-        hidden: {},
-        visible: { transition: { staggerChildren: 0.11, delayChildren: 0.45 } },
-      }}
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true }}
-      className="relative rounded-xl border border-white/8 bg-black px-6 py-7 flex flex-col items-stretch gap-0"
-    >
-      <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-white/10 to-transparent rounded-t-xl" />
-
-      {/* Switchboard chrome hint */}
-      <motion.div variants={previewItemVariants} className="mb-5 flex items-center gap-2">
-        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-white/15 bg-white/5 text-[10px] font-mono text-white/70">
-          <span className="w-1.5 h-1.5 rounded-full bg-blue-400/80" />
-          GET
-          <span className="text-white/40 ml-0.5">/api/users/profile</span>
+      >
+        {/* Ghost graph — blurred suggestion of a call graph */}
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-2.5 opacity-50 blur-[0.3px] pointer-events-none">
+          <div className="w-52 h-9 rounded-lg border border-white/15 bg-zinc-950 flex items-center gap-2.5 px-3">
+            <div className="w-4 h-4 rounded-md bg-white/8 border border-white/10 shrink-0" />
+            <div className="flex flex-col gap-1 flex-1">
+              <div className="w-28 h-2 rounded-full bg-white/20" />
+              <div className="w-18 h-1.5 rounded-full bg-white/8" />
+            </div>
+          </div>
+          <div className="w-px h-3 bg-white/15" />
+          <div className="w-52 h-9 rounded-lg border border-amber-500/35 bg-zinc-950 flex items-center gap-2.5 px-3">
+            <div className="w-4 h-4 rounded-md bg-amber-500/12 border border-amber-500/30 shrink-0" />
+            <div className="flex flex-col gap-1 flex-1">
+              <div className="w-32 h-2 rounded-full bg-amber-400/30" />
+              <div className="w-22 h-1.5 rounded-full bg-white/8" />
+            </div>
+          </div>
+          <div className="w-px h-3 bg-white/15" />
+          <div className="w-52 h-9 rounded-lg border border-white/10 bg-zinc-950 flex items-center gap-2.5 px-3">
+            <div className="w-4 h-4 rounded-md bg-white/5 border border-white/8 shrink-0" />
+            <div className="flex flex-col gap-1 flex-1">
+              <div className="w-24 h-2 rounded-full bg-white/12" />
+              <div className="w-16 h-1.5 rounded-full bg-white/6" />
+            </div>
+          </div>
         </div>
-      </motion.div>
 
-      <DemoNode funcName="AuthGuard.canActivate" file="auth.guard.ts:24" />
-      <GraphConnector />
-      <DemoNode funcName="UserController.getProfile" file="user.controller.ts:41" />
-      <GraphConnector />
-      <DemoNode
-        funcName="UserService.findById"
-        file="user.service.ts:88"
-        enhanced
-        intentTag="validates session · fetches user profile"
-      />
-      <GraphConnector />
-      <DemoNode funcName="db.user.findUnique" file="prisma.service.ts:15" />
-    </motion.div>
+        {/* Play button overlay */}
+        <div className="absolute inset-0 flex items-center justify-center bg-black/25 group-hover:bg-black/35 transition-colors duration-200">
+          <motion.div
+            whileHover={{ scale: 1.08 }}
+            whileTap={{ scale: 0.94 }}
+            transition={SPRING_SNAPPY}
+            className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-[0_0_32px_rgba(255,255,255,0.18)] group-hover:shadow-[0_0_44px_rgba(255,255,255,0.28)] transition-shadow duration-200"
+          >
+            <Play className="w-4 h-4 fill-black text-black ml-0.5" />
+          </motion.div>
+        </div>
+      </div>
+
+      {/* Bottom bar */}
+      <div className="px-4 py-2.5 border-t border-white/6 flex items-center justify-between bg-black/40">
+        <span className="text-[11px] font-mono text-white/25">2 min walkthrough</span>
+        <span className="text-[11px] font-mono text-white/15 tracking-wide">HD · no audio</span>
+      </div>
+    </div>
   );
 }
 
@@ -382,13 +340,13 @@ export default function LandingPage() {
             </motion.div>
           </div>
 
-          {/* Graph preview */}
+          {/* Video placeholder */}
           <motion.div
             initial={{ opacity: 0, scale: 0.97, y: 14 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ ...SPRING_DEFAULT, delay: 0.18 }}
           >
-            <GraphPreview />
+            <VideoPlaceholder />
           </motion.div>
         </div>
       </section>
