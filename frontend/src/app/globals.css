@@ -72,6 +72,12 @@ body {
   color: var(--foreground);
 }
 
+/* Edge path transitions — enables smooth color change on node hover */
+.react-flow__edge-path,
+.react-flow__edge-interaction {
+  transition: stroke 150ms ease, stroke-opacity 150ms ease;
+}
+
 /* Raise edges above nodes */
 .react-flow__edges {
   z-index: 1000 !important;

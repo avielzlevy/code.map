@@ -46,23 +46,23 @@ function buildDagreLayout(nodes: FlowNode[], edges: FlowEdge[]) {
   return g;
 }
 
+const EDGE_COLOR_REST = "rgba(255, 255, 255, 0.22)";
+const EDGE_COLOR_ACTIVE = "rgba(255, 255, 255, 0.75)";
+const EDGE_COLOR_DIM = "rgba(255, 255, 255, 0.08)";
+
 function buildReactFlowEdge(e: FlowEdge): Edge {
-  const color = "rgba(255, 255, 255, 0.45)";
-  const glow = "rgba(255, 255, 255, 0.8)";
   return {
     id: e.id,
     source: e.source,
     target: e.target,
-    animated: true,
     type: "smoothstep",
     style: {
-      stroke: color,
-      strokeWidth: 2,
-      filter: `drop-shadow(0 0 6px ${glow})`,
+      stroke: EDGE_COLOR_REST,
+      strokeWidth: 1.5,
     },
     markerEnd: {
       type: MarkerType.ArrowClosed,
-      color,
+      color: EDGE_COLOR_REST,
       width: 14,
       height: 14,
     },
@@ -208,6 +208,28 @@ function Canvas({
     [onNodeDrillDown],
   );
 
+  const handleNodeMouseEnter = useCallback(
+    (_: React.MouseEvent, node: Node) => {
+      if (node.id === "__ghost_entry_pin__") return;
+      setEdges((eds) =>
+        eds.map((e) => ({
+          ...e,
+          style: {
+            ...e.style,
+            stroke: e.source === node.id || e.target === node.id ? EDGE_COLOR_ACTIVE : EDGE_COLOR_DIM,
+          },
+        })) as Edge[],
+      );
+    },
+    [setEdges],
+  );
+
+  const handleNodeMouseLeave = useCallback(() => {
+    setEdges((eds) =>
+      eds.map((e) => ({ ...e, style: { ...e.style, stroke: EDGE_COLOR_REST } })) as Edge[],
+    );
+  }, [setEdges]);
+
   const isDetail = drillStack.length > 0;
 
   return (
@@ -282,6 +304,8 @@ function Canvas({
           nodeTypes={nodeTypes}
           onNodeClick={handleNodeClick}
           onNodeDoubleClick={handleNodeDoubleClick}
+          onNodeMouseEnter={handleNodeMouseEnter}
+          onNodeMouseLeave={handleNodeMouseLeave}
           fitView
           fitViewOptions={{ padding: 0.25 }}
           proOptions={{ hideAttribution: true }}
