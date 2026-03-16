@@ -15,7 +15,7 @@ export function Switchboard({ paths, selectedPath, onSelectPath }: SwitchboardPr
   return (
     <div className="w-80 h-screen border-r border-white/10 bg-black/80 backdrop-blur-3xl flex flex-col shrink-0 relative z-20 shadow-[4px_0_30px_rgba(0,0,0,0.8)]">
       {/* Topbar */}
-      <div className="w-full px-5 py-4 border-b border-white/[0.06] shrink-0 flex items-center gap-3">
+      <div className="w-full px-5 py-4 border-b border-white/6 shrink-0 flex items-center gap-3">
 
         {/* Logomark: fn node — hover to glow, no idle animation */}
         <motion.div
@@ -28,11 +28,11 @@ export function Switchboard({ paths, selectedPath, onSelectPath }: SwitchboardPr
         </motion.div>
 
         {/* Wordmark */}
-        <div className="flex flex-col justify-center gap-[3px]">
+        <div className="flex flex-col justify-center gap-0.75">
           <span className="font-mono text-[15px] font-bold tracking-tight text-white leading-none">
             code<span className="text-emerald-400">.</span>map
           </span>
-          <span className="font-mono text-[10px] tracking-[0.2em] text-white/30 uppercase leading-none">
+          <span className="font-mono text-[11px] tracking-[0.2em] text-white/30 uppercase leading-none">
             execution flow
           </span>
         </div>
@@ -42,7 +42,7 @@ export function Switchboard({ paths, selectedPath, onSelectPath }: SwitchboardPr
       <div className="px-3 py-2 shrink-0">
         <button
           onClick={() => window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true, bubbles: true }))}
-          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/10 active:bg-white/[0.07] transition-colors text-gray-600 hover:text-gray-400 text-xs"
+          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-white/6 bg-white/2 hover:bg-white/5 hover:border-white/10 active:bg-white/7 transition-colors text-gray-600 hover:text-gray-400 text-xs"
         >
           <Search className="w-3.5 h-3.5 shrink-0" />
           <span className="flex-1 text-left font-mono">Search…</span>
@@ -53,11 +53,12 @@ export function Switchboard({ paths, selectedPath, onSelectPath }: SwitchboardPr
       <div className="flex-1 overflow-y-auto py-1">
         <ul className="space-y-1 px-3">
           {paths.map((path) => {
-            const isSelected = selectedPath?.endpoint === path.endpoint;
+            const isSelected = selectedPath?.endpoint === path.endpoint && selectedPath?.method === path.method;
             return (
-              <li key={path.endpoint}>
+              <li key={`${path.method}:${path.endpoint}`}>
                 <button
                   onClick={() => onSelectPath(path)}
+                  aria-current={isSelected ? "true" : undefined}
                   className={clsx(
                     "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors text-left border",
                     isSelected

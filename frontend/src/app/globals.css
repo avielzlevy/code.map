@@ -29,19 +29,16 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Firefox thin scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
 }
 
-@keyframes glow-pulse {
-  0%, 100% {
-    border-color: rgba(52, 211, 153, 0.25);
-    box-shadow: 0 0 0px rgba(52, 211, 153, 0);
-    background-color: rgba(52, 211, 153, 0.07);
-  }
-  50% {
-    border-color: rgba(52, 211, 153, 0.55);
-    box-shadow: 0 0 14px rgba(52, 211, 153, 0.25);
-    background-color: rgba(52, 211, 153, 0.13);
-  }
+/* Global focus ring — emerald accent, consistent with design system */
+:focus-visible {
+  outline: 2px solid rgba(16, 185, 129, 0.5);
+  outline-offset: 2px;
+  border-radius: 3px;
 }
 
 /* React Flow customizations to match premium dark theme */
@@ -73,11 +70,6 @@ body {
 
 .react-flow__panel {
   color: var(--foreground);
-}
-
-/* Hide watermark if proOptions doesn't work locally */
-.react-flow__attribution {
-  display: none !important;
 }
 
 /* Raise edges above nodes */

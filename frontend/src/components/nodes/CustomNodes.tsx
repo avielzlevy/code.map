@@ -10,7 +10,7 @@ export function GhostEntryPin({ data }: any) {
       <div className="w-px h-12 border-l-2 border-dashed border-white/15 transition-colors duration-200 group-hover:border-white/40" />
 
       {/* The chip */}
-      <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-white/[0.04] backdrop-blur-sm transition-all duration-200 group-hover:border-white/30 group-hover:bg-white/[0.09]">
+      <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-white/4 backdrop-blur-sm transition-[border-color,background-color] duration-200 group-hover:border-white/30 group-hover:bg-white/9">
         <CornerLeftUp className="w-3 h-3 text-white/30 -scale-x-100 transition-colors duration-200 group-hover:text-white/70" />
         <span className="font-mono text-[11px] text-white/35 tracking-wide transition-colors duration-200 group-hover:text-white/70">
           called by: <span className="text-white/55 group-hover:text-white/90 transition-colors duration-200">{data.callerLabel}</span>
@@ -28,7 +28,7 @@ export function GhostEntryPin({ data }: any) {
 export function StandardNode({ data }: any) {
   return (
     <div
-      className={`px-5 py-4 rounded-xl bg-white/5 backdrop-blur-xl border w-[450px] group relative
+      className={`px-5 py-4 rounded-xl bg-white/5 backdrop-blur-xl border w-112.5 group relative
         ${data.hasDetail
           ? "border-white/20 hover:border-white/40 cursor-pointer transition-[border-color,box-shadow] duration-200 shadow-[0_4px_24px_rgba(0,0,0,0.6),0_0_15px_rgba(255,255,255,0.05)] hover:shadow-[0_4px_24px_rgba(0,0,0,0.6),0_0_15px_rgba(255,255,255,0.05),3px_4px_0_-1px_rgba(255,255,255,0.04),6px_8px_0_-2px_rgba(255,255,255,0.02)]"
           : "border-white/10 transition-colors shadow-[0_4px_24px_rgba(0,0,0,0.6)]"
@@ -43,7 +43,7 @@ export function StandardNode({ data }: any) {
         type="target"
         position={Position.Top}
         data-connected={data.hasIncoming ? "true" : "false"}
-        className="!w-2.5 !h-2.5 !border-2 !border-black !bg-white shadow-[0_0_8px_rgba(255,255,255,0.6)]"
+        className="w-2.5! h-2.5! border-2! border-black! bg-white! shadow-[0_0_8px_rgba(255,255,255,0.6)]"
       />
       <div className="flex items-center gap-3">
         <div className="p-2 bg-white/5 rounded-lg border border-white/10">
@@ -66,7 +66,7 @@ export function StandardNode({ data }: any) {
         type="source"
         position={Position.Bottom}
         data-connected={data.hasOutgoing ? "true" : "false"}
-        className="!w-2.5 !h-2.5 !border-2 !border-black !bg-white shadow-[0_0_8px_rgba(255,255,255,0.6)]"
+        className="w-2.5! h-2.5! border-2! border-black! bg-white! shadow-[0_0_8px_rgba(255,255,255,0.6)]"
       />
     </div>
   );
@@ -75,7 +75,7 @@ export function StandardNode({ data }: any) {
 export function EnhancedNode({ data }: any) {
   return (
     <div
-      className={`px-5 py-4 rounded-xl bg-black/40 backdrop-blur-xl border w-[450px] relative group
+      className={`px-5 py-4 rounded-xl bg-black/40 backdrop-blur-xl border w-112.5 relative group
         ${data.hasDetail
           ? "border-emerald-500/50 hover:border-emerald-400 cursor-pointer transition-[border-color,box-shadow] duration-200 shadow-[0_4px_30px_rgba(16,185,129,0.2),0_0_15px_rgba(16,185,129,0.1)] hover:shadow-[0_4px_30px_rgba(16,185,129,0.2),0_0_15px_rgba(16,185,129,0.1),3px_4px_0_-1px_rgba(16,185,129,0.06),6px_8px_0_-2px_rgba(16,185,129,0.03)]"
           : "border-emerald-500/30 hover:border-emerald-500/40 transition-colors shadow-[0_4px_30px_rgba(16,185,129,0.15)]"
@@ -83,7 +83,7 @@ export function EnhancedNode({ data }: any) {
     >
       {/* Gradient tint — distinguishes enhanced nodes from standard */}
       <div className="absolute inset-0 rounded-xl overflow-hidden pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-br from-emerald-500/10 to-transparent" />
       </div>
 
       {data.hasDetail && (
@@ -96,7 +96,7 @@ export function EnhancedNode({ data }: any) {
         type="target"
         position={Position.Top}
         data-connected={data.hasIncoming ? "true" : "false"}
-        className="!w-2.5 !h-2.5 !border-2 !border-black !bg-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.9)] z-20"
+        className="w-2.5! h-2.5! border-2! border-black! bg-emerald-400! shadow-[0_0_12px_rgba(16,185,129,0.9)] z-20"
       />
       <div className="flex items-center gap-3 relative z-10">
         <div className="p-2 bg-emerald-500/10 rounded-lg border border-emerald-500/30 text-emerald-400">
@@ -111,7 +111,7 @@ export function EnhancedNode({ data }: any) {
       </div>
       {data.intentTag && (
         <div className="mt-3 relative z-10 text-[11px] font-mono font-medium bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 px-2 py-1 rounded-md flex items-center gap-1.5 overflow-hidden">
-          <span className="w-1.5 h-1.5 shrink-0 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_6px_rgba(16,185,129,0.8)]" />
+          <span className="w-1.5 h-1.5 shrink-0 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(16,185,129,0.8)]" />
           <span className="truncate">{data.intentTag}</span>
         </div>
       )}
@@ -119,7 +119,7 @@ export function EnhancedNode({ data }: any) {
         type="source"
         position={Position.Bottom}
         data-connected={data.hasOutgoing ? "true" : "false"}
-        className="!w-2.5 !h-2.5 !border-2 !border-black !bg-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.9)] z-20"
+        className="w-2.5! h-2.5! border-2! border-black! bg-emerald-400! shadow-[0_0_12px_rgba(16,185,129,0.9)] z-20"
       />
     </div>
   );

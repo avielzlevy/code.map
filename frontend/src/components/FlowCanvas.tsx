@@ -201,7 +201,7 @@ function Canvas({
   return (
     <div className="w-full h-full bg-black relative flex flex-col">
       {/* Breadcrumb bar */}
-      <div className="flex items-center gap-1 px-4 py-2 border-b border-white/10 bg-black/50 backdrop-blur-md shrink-0 min-h-[40px] justify-between z-20">
+      <div className="flex items-center gap-1 px-4 py-2 border-b border-white/10 bg-black/50 backdrop-blur-md shrink-0 min-h-10 justify-between z-20">
         <button
           onClick={() => onBackTo(-1)}
           className={`flex items-center gap-1.5 text-xs transition-colors ${
@@ -284,7 +284,7 @@ function Canvas({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 3 }}
                   transition={{ type: "spring", damping: 28, stiffness: 220, delay: 0.5 }}
-                  className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-black/70 backdrop-blur-md border border-white/[0.08] text-[11px] text-white/30 font-mono select-none"
+                  className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-black/70 backdrop-blur-md border border-white/8 text-[11px] text-white/30 font-mono select-none"
                 >
                   <span>click to inspect</span>
                   <span className="w-px h-3 bg-white/10" />
@@ -296,7 +296,7 @@ function Canvas({
           <Background variant={BackgroundVariant.Dots} gap={24} size={1} color="rgba(255,255,255,0.05)" />
           <Controls
             showInteractive={false}
-            className="!bg-black/60 !backdrop-blur-xl !border !border-white/10 fill-gray-400 stroke-gray-400 text-gray-400 [&>button]:!bg-transparent [&>button]:!border-b [&>button]:!border-white/10 [&>button:hover]:!bg-white/10"
+            className="bg-black/60! backdrop-blur-xl! border! border-white/10! fill-gray-400 stroke-gray-400 text-gray-400 [&>button]:bg-transparent! [&>button]:border-b! [&>button]:border-white/10! [&>button:hover]:bg-white/10!"
           />
         </ReactFlow>
       </motion.div>

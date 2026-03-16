@@ -60,7 +60,7 @@ export function IntelSidebar({ node, onClose, onDrillDown }: IntelSidebarProps) 
             {/* Intent (Conditional) */}
             {node.intentTag && (
               <motion.div variants={itemVariants}>
-                <h3 className="text-[10px] uppercase tracking-wider text-gray-600 font-semibold mb-2 flex items-center gap-1.5">
+                <h3 className="text-[11px] uppercase tracking-wider text-gray-600 font-semibold mb-2 flex items-center gap-1.5">
                   <Tag className="w-3 h-3" /> Intent
                 </h3>
                 <div className="bg-emerald-500/10 border border-emerald-500/30 p-2.5 rounded-md text-emerald-400 font-mono text-sm">
@@ -72,7 +72,7 @@ export function IntelSidebar({ node, onClose, onDrillDown }: IntelSidebarProps) 
             {/* Docs (Conditional) */}
             {node.docstring && (
               <motion.div variants={itemVariants}>
-                <h3 className="text-[10px] uppercase tracking-wider text-gray-600 font-semibold mb-2 flex items-center gap-1.5">
+                <h3 className="text-[11px] uppercase tracking-wider text-gray-600 font-semibold mb-2 flex items-center gap-1.5">
                   <FileText className="w-3 h-3" /> Docs
                 </h3>
                 <pre className="bg-white/5 p-3 rounded-md border border-white/10 text-xs text-gray-300 font-mono whitespace-pre-wrap">
@@ -91,7 +91,7 @@ export function IntelSidebar({ node, onClose, onDrillDown }: IntelSidebarProps) 
                   transition={{ type: "spring", damping: 28, stiffness: 220 }}
                   className="overflow-hidden"
                 >
-                  <h3 className="text-[10px] uppercase tracking-wider text-gray-600 font-semibold mb-2 flex items-center gap-1.5">
+                  <h3 className="text-[11px] uppercase tracking-wider text-gray-600 font-semibold mb-2 flex items-center gap-1.5">
                     <Sparkles className="w-3 h-3 text-emerald-500" /> AI Summary
                   </h3>
                   <div className="bg-emerald-500/5 p-4 rounded-md border border-emerald-500/15">
@@ -109,7 +109,7 @@ export function IntelSidebar({ node, onClose, onDrillDown }: IntelSidebarProps) 
             {node.hasDetail && (
               <button
                 onClick={() => { onDrillDown(node); onClose(); }}
-                className="w-full flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-400 active:bg-emerald-600 active:scale-[0.98] text-black py-2.5 px-4 rounded-md font-semibold transition-all"
+                className="w-full flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-400 active:bg-emerald-600 active:scale-[0.98] text-black py-2.5 px-4 rounded-md font-semibold transition-colors"
               >
                 <Layers className="w-4 h-4" />
                 Drill into calls
@@ -117,6 +117,7 @@ export function IntelSidebar({ node, onClose, onDrillDown }: IntelSidebarProps) 
             )}
             <a
               href={getVSCodeUrl(node.fileName, node.line)}
+              rel="noopener"
               className="w-full flex items-center justify-center gap-2 bg-transparent hover:bg-white/5 active:bg-white/10 border border-white/15 hover:border-white/25 text-gray-400 hover:text-white py-2.5 px-4 rounded-md font-medium transition-colors"
             >
               <ExternalLink className="w-4 h-4" />
