@@ -60,11 +60,11 @@ function DemoNode({
           >
             {funcName}
           </span>
-          <span className="font-mono text-[10px] text-gray-600">{file}</span>
+          <span className="font-mono text-[11px] text-gray-600">{file}</span>
         </div>
       </div>
       {intentTag && (
-        <div className="relative mt-2 text-[10px] font-mono bg-amber-500/10 border border-amber-500/20 text-amber-300 px-2 py-1 rounded-md flex items-center gap-1.5">
+        <div className="relative mt-2 text-[11px] font-mono bg-amber-500/10 border border-amber-500/20 text-amber-300 px-2 py-1 rounded-md flex items-center gap-1.5">
           <span className="w-1 h-1 shrink-0 rounded-full bg-amber-400" />
           {intentTag}
         </div>

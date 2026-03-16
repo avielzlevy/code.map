@@ -33,6 +33,7 @@ export function CommandPalette({
   onSelectEndpoint,
   onSelectNode,
 }: CommandPaletteProps) {
+  "use no memo"; // React Compiler over-memoizes this component — query state changes must trigger re-renders
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -57,23 +58,33 @@ export function CommandPalette({
     if (isOpen) {
       setQuery("");
       setSelectedIndex(0);
-      setTimeout(() => inputRef.current?.focus(), 100);
+      // autoFocus is unreliable inside AnimatePresence — focus explicitly after paint
+      requestAnimationFrame(() => inputRef.current?.focus());
     }
   }, [isOpen]);
 
   const allItems = useMemo(() => {
     const items: SearchResultItem[] = [];
+    const seenEndpoints = new Set<string>();
+    const seenNodes = new Set<string>();
 
     paths.forEach((path) => {
-      items.push({
-        type: "endpoint",
-        path,
-        label: path.endpoint,
-        sublabel: path.method,
-      });
+      const endpointKey = `${path.method}::${path.endpoint}`;
+      if (!seenEndpoints.has(endpointKey)) {
+        seenEndpoints.add(endpointKey);
+        items.push({
+          type: "endpoint",
+          path,
+          label: path.endpoint,
+          sublabel: path.method,
+        });
+      }
 
       // Root nodes
       path.nodes.forEach((node) => {
+        const key = `${path.endpoint}::${node.id}`;
+        if (seenNodes.has(key)) return;
+        seenNodes.add(key);
         items.push({
           type: "node",
           path,
@@ -87,6 +98,9 @@ export function CommandPalette({
       // Child nodes
       Object.entries(path.nodeDetails || {}).forEach(([parentId, detail]) => {
         detail.nodes.forEach((node) => {
+          const key = `${path.endpoint}::${node.id}`;
+          if (seenNodes.has(key)) return;
+          seenNodes.add(key);
           items.push({
             type: "node",
             path,
@@ -103,20 +117,35 @@ export function CommandPalette({
   }, [paths]);
 
   const filteredItems = useMemo(() => {
-    if (!query) return allItems.slice(0, 10);
-    const q = query.toLowerCase();
+    const q = query.toLowerCase().trim();
+
+    if (!q) return allItems.filter((item) => item.type === "endpoint");
+
+    const fuzzyMatch = (text: string, pattern: string): boolean => {
+      let pi = 0;
+      for (let i = 0; i < text.length && pi < pattern.length; i++) {
+        if (text[i] === pattern[pi]) pi++;
+      }
+      return pi === pattern.length;
+    };
+
+    const rankItem = (item: SearchResultItem): number => {
+      const label = item.label.toLowerCase();
+      const sublabel = item.sublabel.toLowerCase();
+      if (label === q) return 0;             // exact
+      if (label.startsWith(q)) return 1;     // prefix
+      if (label.includes(q)) return 2;       // substring
+      if (fuzzyMatch(label, q)) return 3;    // fuzzy label
+      if (sublabel.includes(q)) return 4;    // sublabel substring
+      if (fuzzyMatch(sublabel, q)) return 5; // fuzzy sublabel
+      return 99;
+    };
+
     return allItems
-      .filter(
-        (item) =>
-          item.label.toLowerCase().includes(q) ||
-          item.sublabel.toLowerCase().includes(q),
-      )
+      .filter((item) => rankItem(item) < 99)
+      .sort((a, b) => rankItem(a) - rankItem(b))
       .slice(0, 20);
   }, [query, allItems]);
-
-  useEffect(() => {
-    setSelectedIndex(0);
-  }, [query]);
 
   const handleSelect = (index: number) => {
     const item = filteredItems[index];
@@ -157,7 +186,7 @@ export function CommandPalette({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={SPRING_DEFAULT}
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/60"
             onClick={() => setIsOpen(false)}
           />
 
@@ -167,15 +196,16 @@ export function CommandPalette({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -10 }}
             transition={SPRING_STANDARD}
-            className="relative w-full max-w-2xl bg-black/90 backdrop-blur-xl border border-white/15 rounded-xl shadow-[0_20px_60px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col"
+            className="relative w-full max-w-2xl bg-black/98 border border-white/15 rounded-xl shadow-[0_20px_60px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col"
           >
             {/* Search Input */}
             <div className="flex items-center px-4 py-4 border-b border-white/10 group">
               <Search className="w-5 h-5 text-gray-400 group-focus-within:text-white transition-colors" />
               <input
                 ref={inputRef}
+                autoFocus
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
+                onChange={(e) => { setQuery(e.target.value); setSelectedIndex(0); }}
                 onKeyDown={handleKeyDown}
                 placeholder="Jump to endpoint or function..."
                 aria-label="Jump to endpoint or function"
@@ -199,14 +229,14 @@ export function CommandPalette({
                   const itemKey =
                     item.type === "endpoint"
                       ? `endpoint-${item.path.method}-${item.path.endpoint}`
-                      : `node-${item.path.endpoint}-${item.node.id}`;
+                      : `node-${item.path.endpoint}-${item.parentId ?? "root"}-${item.node.id}`;
                   const prevItem = index > 0 ? filteredItems[index - 1] : null;
                   const showGroupLabel =
                     !prevItem || prevItem.type !== item.type;
                   return (
                     <Fragment key={itemKey}>
                       {showGroupLabel && (
-                        <div className="px-3 pt-2 pb-1 text-[10px] text-gray-600 font-medium select-none">
+                        <div className="px-3 pt-2 pb-1 text-[11px] text-gray-600 font-medium select-none">
                           {item.type === "endpoint" ? "Endpoints" : "Functions"}
                         </div>
                       )}

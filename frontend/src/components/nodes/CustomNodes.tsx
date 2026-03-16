@@ -28,20 +28,24 @@ export function GhostEntryPin({ data }: { data: GhostPinData }) {
       onClick={handleActivate}
       onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && handleActivate(e)}
     >
-      {/* Dashed line going up off-screen */}
-      <div className="w-px h-12 border-l-2 border-dashed border-white/15 group-hover:border-white/40 transition-colors duration-150" />
+      {/* SVG line — matches React Flow ghost edge exactly: strokeDasharray "4 4", opacity 0.08 */}
+      <svg width="2" height="48" className="opacity-[0.08] group-hover:opacity-30 transition-opacity duration-150" aria-hidden="true">
+        <line x1="1" y1="0" x2="1" y2="48" stroke="white" strokeWidth="1" strokeDasharray="4 4" />
+      </svg>
 
-      {/* The chip */}
-      <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-zinc-950 group-hover:border-white/30 group-hover:bg-white/8 transition-[border-color,background-color] duration-150 max-w-xs overflow-hidden">
-        <CornerLeftUp className="w-3 h-3 -scale-x-100 text-white/30 group-hover:text-white/70 transition-colors duration-150 shrink-0" />
-        <span className="font-mono text-[11px] tracking-wide min-w-0 flex items-center gap-1 overflow-hidden">
-          <span className="text-white/35 group-hover:text-white/70 transition-colors duration-150 shrink-0">called by:</span>
-          <span className="text-white/55 group-hover:text-white/90 transition-colors duration-150 truncate" title={data.callerLabel}>{data.callerLabel}</span>
+      {/* Callout box */}
+      <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/8 bg-zinc-950 group-hover:border-white/20 group-hover:bg-white/5 transition-[border-color,background-color] duration-150 max-w-xs overflow-hidden">
+        <CornerLeftUp className="w-3 h-3 -scale-x-100 text-white/25 group-hover:text-white/55 transition-colors duration-150 shrink-0" />
+        <span className="font-mono text-[11px] min-w-0 flex items-center gap-1 overflow-hidden">
+          <span className="text-white/30 group-hover:text-white/55 transition-colors duration-150 shrink-0">called by:</span>
+          <span className="text-white/45 group-hover:text-white/80 transition-colors duration-150 truncate" title={data.callerLabel}>{data.callerLabel}</span>
         </span>
       </div>
 
-      {/* Connector down to the root node */}
-      <div className="w-px h-6 border-l-2 border-dashed border-white/15 group-hover:border-white/40 transition-colors duration-150" />
+      {/* Bottom SVG line — same spec as top, connects callout to the React Flow edge below */}
+      <svg width="2" height="24" className="opacity-[0.08] group-hover:opacity-30 transition-opacity duration-150" aria-hidden="true">
+        <line x1="1" y1="0" x2="1" y2="24" stroke="white" strokeWidth="1" strokeDasharray="4 4" />
+      </svg>
 
       <Handle type="source" position={Position.Bottom} style={{ opacity: 0, pointerEvents: "none" }} />
     </div>
@@ -69,7 +73,7 @@ function ExpandedPanel({ data, amber }: { data: NodeProps; amber?: boolean }) {
         <span className={`font-mono text-[13px] font-semibold truncate ${amber ? "text-amber-300" : "text-white"}`} title={`${data.funcName}()`}>
           {data.funcName}()
         </span>
-        <span className="font-mono text-[10px] text-gray-500 break-all leading-snug">
+        <span className="font-mono text-[11px] text-gray-500 break-all leading-snug">
           {data.fileName}:{data.line}
         </span>
       </div>
