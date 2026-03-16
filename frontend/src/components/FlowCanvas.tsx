@@ -16,6 +16,7 @@ import {
   Edge,
   BackgroundVariant,
 } from "@xyflow/react";
+
 import "@xyflow/react/dist/style.css";
 import dagre from "dagre";
 import { ChevronRight, Home, Copy, Check } from "lucide-react";
@@ -90,10 +91,11 @@ function Canvas({
 }) {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
-  const { fitView, getViewport, setViewport } = useReactFlow();
+  const { fitView } = useReactFlow();
   const [copied, setCopied] = useState(false);
   const [copiedBreadcrumb, setCopiedBreadcrumb] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
+  const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Reset hint whenever the viewed graph changes (new endpoint or drill level)
   useEffect(() => {
@@ -172,30 +174,28 @@ function Canvas({
     (event: React.MouseEvent, node: Node) => {
       if (node.id === "__ghost_entry_pin__") return;
       setHasInteracted(true);
-      onNodeClick(node.data as FlowNode, event.clientX, event.clientY);
+      // Delay single-click so a following double-click can cancel it
+      if (clickTimerRef.current) clearTimeout(clickTimerRef.current);
+      const { clientX, clientY } = event;
+      clickTimerRef.current = setTimeout(() => {
+        onNodeClick(node.data as FlowNode, clientX, clientY);
+      }, 220);
     },
     [onNodeClick],
   );
 
   const handleNodeDoubleClick = useCallback(
     (_: React.MouseEvent, node: Node) => {
+      // Cancel the pending single-click so the sidebar never flashes open
+      if (clickTimerRef.current) {
+        clearTimeout(clickTimerRef.current);
+        clickTimerRef.current = null;
+      }
       const flowNode = node.data as FlowNode;
       if (!flowNode.hasDetail) return;
-
-      // Zoom viewport into the clicked node, then switch graphs after animation
-      const vp = getViewport();
-      const nodeCenterX = node.position.x + 225; // half of NODE_W (450)
-      const nodeCenterY = node.position.y + 40;  // half of standard node height
-      const targetZoom = Math.min(vp.zoom * 3, 4);
-      const containerW = containerRef.current?.clientWidth ?? window.innerWidth;
-      const containerH = containerRef.current?.clientHeight ?? window.innerHeight;
-      const targetX = containerW / 2 - nodeCenterX * targetZoom;
-      const targetY = containerH / 2 - nodeCenterY * targetZoom;
-
-      setViewport({ x: targetX, y: targetY, zoom: targetZoom }, { duration: 350 });
-      setTimeout(() => onNodeDrillDown(flowNode), 370);
+      onNodeDrillDown(flowNode);
     },
-    [onNodeDrillDown, getViewport, setViewport, containerRef],
+    [onNodeDrillDown],
   );
 
   const isDetail = drillStack.length > 0;
