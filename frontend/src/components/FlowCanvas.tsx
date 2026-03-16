@@ -26,9 +26,14 @@ import { SPRING_DEFAULT, SPRING_BOUNCE, SPRING_GENTLE } from "@/lib/spring";
 
 const nodeTypes = { standard: StandardNode, enhanced: EnhancedNode, ghostEntryPin: GhostEntryPin };
 
+// Half the sidebar's total footprint (320px panel + 16px margin).
+// Panning by this amount re-centres the graph in the remaining visible area.
+const SIDEBAR_OFFSET = 168;
+
 interface FlowCanvasProps {
   path: ExecutionPath;
   drillStack: DrillEntry[];
+  sidebarOpen: boolean;
   onNodeClick: (node: FlowNode, screenX: number, screenY: number) => void;
   onNodeDrillDown: (node: FlowNode) => void;
   onBackTo: (index: number) => void;
@@ -75,6 +80,7 @@ function Canvas({
   drillStack,
   endpointLabel,
   containerRef,
+  sidebarOpen,
   onNodeClick,
   onNodeDrillDown,
   onBackTo,
@@ -84,13 +90,14 @@ function Canvas({
   drillStack: DrillEntry[];
   endpointLabel: string;
   containerRef: RefObject<HTMLDivElement | null>;
+  sidebarOpen: boolean;
   onNodeClick: (node: FlowNode, screenX: number, screenY: number) => void;
   onNodeDrillDown: (node: FlowNode) => void;
   onBackTo: (index: number) => void;
 }) {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
-  const { fitView } = useReactFlow();
+  const { fitView, getViewport, setViewport } = useReactFlow();
   const [copied, setCopied] = useState(false);
   const [copiedBreadcrumb, setCopiedBreadcrumb] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(() => {
@@ -99,10 +106,25 @@ function Canvas({
   const [isDrilling, setIsDrilling] = useState(false);
   const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const prevSidebarOpenRef = useRef(sidebarOpen);
   // Track drill direction: +1 = going deeper, -1 = going back
   const prevDrillDepthRef = useRef(drillStack.length);
   const drillEnterY = drillStack.length >= prevDrillDepthRef.current ? 10 : -10;
   prevDrillDepthRef.current = drillStack.length;
+
+  // Shift the viewport left when the sidebar opens so nodes stay visible,
+  // and restore it when the sidebar closes.
+  useEffect(() => {
+    const wasOpen = prevSidebarOpenRef.current;
+    prevSidebarOpenRef.current = sidebarOpen;
+    if (sidebarOpen && !wasOpen) {
+      const { x, y, zoom } = getViewport();
+      setViewport({ x: x - SIDEBAR_OFFSET, y, zoom }, { duration: 300 });
+    } else if (!sidebarOpen && wasOpen) {
+      const { x, y, zoom } = getViewport();
+      setViewport({ x: x + SIDEBAR_OFFSET, y, zoom }, { duration: 300 });
+    }
+  }, [sidebarOpen, getViewport, setViewport]);
 
   const writeToClipboard = useCallback((text: string, onSuccess: () => void) => {
     navigator.clipboard.writeText(text).then(onSuccess).catch(() => {
@@ -377,7 +399,7 @@ function Canvas({
   );
 }
 
-export function FlowCanvas({ path, drillStack, onNodeClick, onNodeDrillDown, onBackTo }: FlowCanvasProps) {
+export function FlowCanvas({ path, drillStack, sidebarOpen, onNodeClick, onNodeDrillDown, onBackTo }: FlowCanvasProps) {
   const currentNodeId = drillStack.length > 0 ? drillStack[drillStack.length - 1].id : null;
   const currentDetail = currentNodeId ? path.nodeDetails[currentNodeId] ?? null : null;
 
@@ -395,6 +417,7 @@ export function FlowCanvas({ path, drillStack, onNodeClick, onNodeDrillDown, onB
         drillStack={drillStack}
         endpointLabel={endpointLabel}
         containerRef={containerRef}
+        sidebarOpen={sidebarOpen}
         onNodeClick={onNodeClick}
         onNodeDrillDown={onNodeDrillDown}
         onBackTo={onBackTo}

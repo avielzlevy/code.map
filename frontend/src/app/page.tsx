@@ -20,7 +20,7 @@ function DemoNode({
 }) {
   return (
     <div
-      className={`w-full px-4 py-3 rounded-xl border bg-zinc-950 ${
+      className={`relative w-full px-4 py-3 rounded-xl border bg-zinc-950 ${
         enhanced
           ? "border-amber-500/50 shadow-[0_0_24px_rgba(245,158,11,0.08)]"
           : "border-white/20"
@@ -33,7 +33,7 @@ function DemoNode({
       )}
       <div className="relative flex items-center gap-2.5">
         <div
-          className={`p-1.5 rounded-md border ${
+          className={`p-1.5 rounded-lg border ${
             enhanced
               ? "bg-amber-500/10 border-amber-500/30"
               : "bg-white/5 border-white/10"
@@ -82,7 +82,7 @@ function GraphConnector() {
 
 function GraphPreview() {
   return (
-    <div className="relative rounded-xl border border-white/8 bg-[#060606] px-6 py-7 flex flex-col items-stretch gap-0">
+    <div className="relative rounded-xl border border-white/8 bg-black px-6 py-7 flex flex-col items-stretch gap-0">
       <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-white/10 to-transparent rounded-t-xl" />
 
       {/* Switchboard chrome hint */}
@@ -150,7 +150,7 @@ function InstallBlock() {
   const block = CODE[fw];
 
   return (
-    <div className="rounded-xl border border-white/10 bg-[#080808] overflow-hidden w-full max-w-2xl mx-auto">
+    <div className="rounded-xl border border-white/10 bg-zinc-950 overflow-hidden w-full max-w-2xl mx-auto">
       <div className="flex items-center gap-1 px-4 py-3 border-b border-white/8">
         {(["nestjs", "fastapi"] as Framework[]).map((f) => (
           <button

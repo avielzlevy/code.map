@@ -5,19 +5,34 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Search, Command, Network, FunctionSquare } from "lucide-react";
 import { ExecutionPath, FlowNode } from "@/lib/mockData";
 import clsx from "clsx";
-import { SPRING_STANDARD, SPRING_SNAPPY } from "@/lib/spring";
+import { SPRING_STANDARD, SPRING_SNAPPY, SPRING_DEFAULT } from "@/lib/spring";
 
 interface CommandPaletteProps {
   paths: ExecutionPath[];
   onSelectEndpoint: (path: ExecutionPath) => void;
-  onSelectNode: (path: ExecutionPath, node: FlowNode, parentId: string | null) => void;
+  onSelectNode: (
+    path: ExecutionPath,
+    node: FlowNode,
+    parentId: string | null,
+  ) => void;
 }
 
 type SearchResultItem =
   | { type: "endpoint"; path: ExecutionPath; label: string; sublabel: string }
-  | { type: "node"; path: ExecutionPath; node: FlowNode; parentId: string | null; label: string; sublabel: string };
+  | {
+      type: "node";
+      path: ExecutionPath;
+      node: FlowNode;
+      parentId: string | null;
+      label: string;
+      sublabel: string;
+    };
 
-export function CommandPalette({ paths, onSelectEndpoint, onSelectNode }: CommandPaletteProps) {
+export function CommandPalette({
+  paths,
+  onSelectEndpoint,
+  onSelectNode,
+}: CommandPaletteProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -90,7 +105,11 @@ export function CommandPalette({ paths, onSelectEndpoint, onSelectNode }: Comman
   const filteredItems = useMemo(() => {
     if (!query) return allItems.slice(0, 10);
     const q = query.toLowerCase();
-    return allItems.filter((item) => item.label.toLowerCase().includes(q) || item.sublabel.toLowerCase().includes(q));
+    return allItems.filter(
+      (item) =>
+        item.label.toLowerCase().includes(q) ||
+        item.sublabel.toLowerCase().includes(q),
+    );
   }, [query, allItems]);
 
   useEffect(() => {
@@ -117,7 +136,9 @@ export function CommandPalette({ paths, onSelectEndpoint, onSelectNode }: Comman
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
       if (filteredItems.length === 0) return;
-      setSelectedIndex((prev) => (prev - 1 + filteredItems.length) % filteredItems.length);
+      setSelectedIndex(
+        (prev) => (prev - 1 + filteredItems.length) % filteredItems.length,
+      );
     } else if (e.key === "Enter") {
       e.preventDefault();
       handleSelect(selectedIndex);
@@ -133,6 +154,7 @@ export function CommandPalette({ paths, onSelectEndpoint, onSelectNode }: Comman
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={SPRING_DEFAULT}
             className="absolute inset-0 bg-black/50 backdrop-blur-sm"
             onClick={() => setIsOpen(false)}
           />
@@ -166,15 +188,19 @@ export function CommandPalette({ paths, onSelectEndpoint, onSelectNode }: Comman
             {/* Results List */}
             <div className="max-h-[60vh] overflow-y-auto p-2">
               {filteredItems.length === 0 ? (
-                <div className="px-4 py-8 text-center text-gray-500">No matches — try a function name or endpoint path.</div>
+                <div className="px-4 py-8 text-center text-gray-500">
+                  No matches — try a function name or endpoint path.
+                </div>
               ) : (
                 filteredItems.map((item, index) => {
                   const active = index === selectedIndex;
-                  const itemKey = item.type === "endpoint"
-                    ? `endpoint-${item.path.method}-${item.path.endpoint}`
-                    : `node-${item.path.endpoint}-${item.node.id}`;
+                  const itemKey =
+                    item.type === "endpoint"
+                      ? `endpoint-${item.path.method}-${item.path.endpoint}`
+                      : `node-${item.path.endpoint}-${item.node.id}`;
                   const prevItem = index > 0 ? filteredItems[index - 1] : null;
-                  const showGroupLabel = !prevItem || prevItem.type !== item.type;
+                  const showGroupLabel =
+                    !prevItem || prevItem.type !== item.type;
                   return (
                     <Fragment key={itemKey}>
                       {showGroupLabel && (
@@ -182,44 +208,55 @@ export function CommandPalette({ paths, onSelectEndpoint, onSelectNode }: Comman
                           {item.type === "endpoint" ? "Endpoints" : "Functions"}
                         </div>
                       )}
-                    <button
-                      onClick={() => handleSelect(index)}
-                      className={clsx(
-                        "relative w-full flex items-center justify-between px-3 py-3 rounded-lg text-left overflow-hidden",
-                        !active && "hover:bg-white/5"
-                      )}
-                    >
-                      {active && (
-                        <motion.div
-                          layoutId="active-palette-result"
-                          className="absolute inset-0 rounded-lg bg-white/8 shadow-[inset_2px_0_0_0_rgba(255,255,255,0.3)]"
-                          transition={SPRING_SNAPPY}
-                        />
-                      )}
-                      <div className="relative z-10 flex items-center gap-3">
-                        <div
-                          className={clsx(
-                            "p-1.5 rounded-md border",
-                            item.type === "endpoint"
-                              ? "bg-white/8 border-white/15 text-white/70"
-                              : "bg-white/5 border-white/10 text-gray-400"
-                          )}
-                        >
-                          {item.type === "endpoint" ? <Network className="w-4 h-4" /> : <FunctionSquare className="w-4 h-4" />}
+                      <button
+                        onClick={() => handleSelect(index)}
+                        className={clsx(
+                          "relative w-full flex items-center justify-between px-3 py-3 rounded-lg text-left overflow-hidden",
+                          !active && "hover:bg-white/5",
+                        )}
+                      >
+                        {active && (
+                          <motion.div
+                            layoutId="active-palette-result"
+                            className="absolute inset-0 rounded-lg bg-white/8 shadow-[inset_2px_0_0_0_rgba(255,255,255,0.3)]"
+                            transition={SPRING_SNAPPY}
+                          />
+                        )}
+                        <div className="relative z-10 flex items-center gap-3">
+                          <div
+                            className={clsx(
+                              "p-1.5 rounded-md border",
+                              item.type === "endpoint"
+                                ? "bg-white/8 border-white/15 text-white/70"
+                                : "bg-white/5 border-white/10 text-gray-400",
+                            )}
+                          >
+                            {item.type === "endpoint" ? (
+                              <Network className="w-4 h-4" />
+                            ) : (
+                              <FunctionSquare className="w-4 h-4" />
+                            )}
+                          </div>
+                          <div className="flex flex-col">
+                            <span
+                              className={clsx(
+                                "font-medium",
+                                active ? "text-white" : "text-gray-300",
+                              )}
+                            >
+                              {item.label}
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              {item.sublabel}
+                            </span>
+                          </div>
                         </div>
-                        <div className="flex flex-col">
-                          <span className={clsx("font-medium", active ? "text-white" : "text-gray-300")}>
-                            {item.label}
-                          </span>
-                          <span className="text-xs text-gray-500">{item.sublabel}</span>
-                        </div>
-                      </div>
-                      {active && (
-                        <div className="relative z-10 flex items-center gap-1 text-gray-400 text-xs">
-                          ↵
-                        </div>
-                      )}
-                    </button>
+                        {active && (
+                          <div className="relative z-10 flex items-center gap-1 text-gray-400 text-xs">
+                            ↵
+                          </div>
+                        )}
+                      </button>
                     </Fragment>
                   );
                 })
@@ -227,9 +264,24 @@ export function CommandPalette({ paths, onSelectEndpoint, onSelectNode }: Comman
             </div>
             {/* Footer */}
             <div className="px-4 py-2 bg-white/5 border-t border-white/10 text-[11px] text-gray-500 flex items-center gap-4 font-mono">
-              <span className="flex items-center gap-1.5"><kbd className="px-1 py-0.5 rounded border border-white/10 bg-white/5 text-gray-500">↑↓</kbd>navigate</span>
-              <span className="flex items-center gap-1.5"><kbd className="px-1 py-0.5 rounded border border-white/10 bg-white/5 text-gray-500">↵</kbd>select</span>
-              <span className="flex items-center gap-1.5"><kbd className="px-1 py-0.5 rounded border border-white/10 bg-white/5 text-gray-500">Esc</kbd>close</span>
+              <span className="flex items-center gap-1.5">
+                <kbd className="px-1 py-0.5 rounded border border-white/10 bg-white/5 text-gray-500">
+                  ↑↓
+                </kbd>
+                navigate
+              </span>
+              <span className="flex items-center gap-1.5">
+                <kbd className="px-1 py-0.5 rounded border border-white/10 bg-white/5 text-gray-500">
+                  ↵
+                </kbd>
+                select
+              </span>
+              <span className="flex items-center gap-1.5">
+                <kbd className="px-1 py-0.5 rounded border border-white/10 bg-white/5 text-gray-500">
+                  Esc
+                </kbd>
+                close
+              </span>
             </div>
           </motion.div>
         </div>
