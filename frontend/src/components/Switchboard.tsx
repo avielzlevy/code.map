@@ -20,17 +20,17 @@ export function Switchboard({ paths, selectedPath, onSelectPath }: SwitchboardPr
         {/* Logomark: fn node — hover to glow, no idle animation */}
         <motion.div
           className="w-9 h-9 shrink-0 rounded-lg flex items-center justify-center"
-          style={{ borderWidth: 1, borderStyle: "solid", borderColor: "rgba(52, 211, 153, 0.25)", backgroundColor: "rgba(52, 211, 153, 0.07)" }}
-          whileHover={{ borderColor: "rgba(52, 211, 153, 0.55)", backgroundColor: "rgba(52, 211, 153, 0.13)", boxShadow: "0 0 14px rgba(52, 211, 153, 0.25)" }}
+          style={{ borderWidth: 1, borderStyle: "solid", borderColor: "rgba(255,255,255,0.12)", backgroundColor: "rgba(255,255,255,0.05)" }}
+          whileHover={{ borderColor: "rgba(255,255,255,0.35)", backgroundColor: "rgba(255,255,255,0.1)", boxShadow: "0 0 14px rgba(255,255,255,0.12)" }}
           transition={{ type: "spring", damping: 25, stiffness: 300 }}
         >
-          <span className="font-mono text-[11px] font-bold text-emerald-400 tracking-tighter">fn</span>
+          <span className="font-mono text-[11px] font-bold text-white/70 tracking-tighter">fn</span>
         </motion.div>
 
         {/* Wordmark */}
         <div className="flex flex-col justify-center gap-0.75">
           <span className="font-mono text-[15px] font-bold tracking-tight text-white leading-none">
-            code<span className="text-emerald-400">.</span>map
+            code<span className="text-white/40">.</span>map
           </span>
           <span className="font-mono text-[11px] tracking-[0.2em] text-white/30 uppercase leading-none">
             execution flow
@@ -62,7 +62,7 @@ export function Switchboard({ paths, selectedPath, onSelectPath }: SwitchboardPr
                   className={clsx(
                     "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors text-left border",
                     isSelected
-                      ? "bg-emerald-500/10 border-emerald-500/25 text-white shadow-[inset_2px_0_0_0_rgba(16,185,129,0.7)]"
+                      ? "bg-white/6 border-white/20 text-white shadow-[inset_2px_0_0_0_rgba(255,255,255,0.35)]"
                       : "border-transparent text-gray-400 hover:bg-white/5 hover:text-white"
                   )}
                 >
@@ -80,7 +80,7 @@ export function Switchboard({ paths, selectedPath, onSelectPath }: SwitchboardPr
                   <span className={clsx("truncate flex-1 font-medium", isSelected ? "text-white" : "")}>
                     {path.endpoint}
                   </span>
-                  {isSelected && <ChevronRight className="w-4 h-4 text-emerald-400 shrink-0" />}
+                  {isSelected && <ChevronRight className="w-4 h-4 text-white/50 shrink-0" />}
                 </button>
               </li>
             );

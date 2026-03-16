@@ -236,7 +236,7 @@ function Canvas({
           aria-label="Copy breadcrumb path"
           className="ml-auto text-gray-600 hover:text-gray-400 active:text-gray-300 transition-colors p-1 rounded"
         >
-          {copiedBreadcrumb ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+          {copiedBreadcrumb ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3" />}
         </button>
       </div>
 
@@ -270,7 +270,7 @@ function Canvas({
               aria-label="Copy flow as text"
               animate={copied ? { scale: [1, 1.3, 1] } : { scale: 1 }}
               transition={{ type: "spring", damping: 14, stiffness: 400 }}
-              className={`p-1.5 rounded-md border transition-colors ${copied ? "text-emerald-400 border-emerald-500/30 bg-emerald-500/10" : "text-gray-600 border-white/10 bg-black/40 hover:text-gray-400 hover:border-white/20 active:bg-white/5"}`}
+              className={`p-1.5 rounded-md border transition-colors ${copied ? "text-green-400 border-green-500/20 bg-green-500/8" : "text-gray-600 border-white/10 bg-black/40 hover:text-gray-400 hover:border-white/20 active:bg-white/5"}`}
             >
               {copied ? <Check size={14} /> : <Copy size={14} />}
             </motion.button>
@@ -288,7 +288,7 @@ function Canvas({
                 >
                   <span>click to inspect</span>
                   <span className="w-px h-3 bg-white/10" />
-                  <span>double-click <span className="text-emerald-500/40">◈</span> to drill in</span>
+                  <span>double-click <span className="text-white/20">◈</span> to drill in</span>
                 </motion.div>
               )}
             </AnimatePresence>

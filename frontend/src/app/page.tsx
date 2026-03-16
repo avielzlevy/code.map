@@ -51,7 +51,7 @@ export default function Home() {
         "  └─────────────────┘\n\n" +
         "  Visualizing your API execution paths.\n" +
         "  Built with Next.js · @xyflow/react · dagre\n",
-      "background: #10b981; color: #000; padding: 2px 6px; border-radius: 3px; font-weight: bold;",
+      "background: #fff; color: #000; padding: 2px 6px; border-radius: 3px; font-weight: bold;",
       ""
     );
   }, []);
@@ -106,7 +106,7 @@ export default function Home() {
     return (
       <div className="flex w-full h-screen bg-black items-center justify-center">
         <div className="flex flex-col items-center gap-3 text-gray-600">
-          <div className="w-5 h-5 rounded-full border-2 border-white/10 border-t-emerald-400 animate-spin" />
+          <div className="w-5 h-5 rounded-full border-2 border-white/10 border-t-white/50 animate-spin" />
           <span className="text-xs font-mono text-gray-600">{LOADING_MESSAGES[loadingMsgIdx]}</span>
         </div>
       </div>

@@ -63,7 +63,7 @@ export function IntelSidebar({ node, onClose, onDrillDown }: IntelSidebarProps) 
                 <h3 className="text-[11px] uppercase tracking-wider text-gray-600 font-semibold mb-2 flex items-center gap-1.5">
                   <Tag className="w-3 h-3" /> Intent
                 </h3>
-                <div className="bg-emerald-500/10 border border-emerald-500/30 p-2.5 rounded-md text-emerald-400 font-mono text-sm">
+                <div className="bg-amber-500/10 border border-amber-500/30 p-2.5 rounded-md text-amber-400 font-mono text-sm">
                   {node.intentTag}
                 </div>
               </motion.div>
@@ -92,9 +92,9 @@ export function IntelSidebar({ node, onClose, onDrillDown }: IntelSidebarProps) 
                   className="overflow-hidden"
                 >
                   <h3 className="text-[11px] uppercase tracking-wider text-gray-600 font-semibold mb-2 flex items-center gap-1.5">
-                    <Sparkles className="w-3 h-3 text-emerald-500" /> AI Summary
+                    <Sparkles className="w-3 h-3 text-white/25" /> AI Summary
                   </h3>
-                  <div className="bg-emerald-500/5 p-4 rounded-md border border-emerald-500/15">
+                  <div className="bg-white/3 p-4 rounded-md border border-white/8">
                     <p className="text-sm text-gray-300 leading-relaxed">
                       {node.aiSummary}
                     </p>
@@ -109,7 +109,7 @@ export function IntelSidebar({ node, onClose, onDrillDown }: IntelSidebarProps) 
             {node.hasDetail && (
               <button
                 onClick={() => { onDrillDown(node); onClose(); }}
-                className="w-full flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-400 active:bg-emerald-600 active:scale-[0.98] text-black py-2.5 px-4 rounded-md font-semibold transition-colors"
+                className="w-full flex items-center justify-center gap-2 bg-white hover:bg-white/90 active:bg-white/80 active:scale-[0.98] text-black py-2.5 px-4 rounded-md font-semibold transition-colors"
               >
                 <Layers className="w-4 h-4" />
                 Drill into calls

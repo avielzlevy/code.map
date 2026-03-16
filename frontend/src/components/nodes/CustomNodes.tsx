@@ -77,18 +77,18 @@ export function EnhancedNode({ data }: any) {
     <div
       className={`px-5 py-4 rounded-xl bg-black/40 backdrop-blur-xl border w-112.5 relative group
         ${data.hasDetail
-          ? "border-emerald-500/50 hover:border-emerald-400 cursor-pointer transition-[border-color,box-shadow] duration-200 shadow-[0_4px_30px_rgba(16,185,129,0.2),0_0_15px_rgba(16,185,129,0.1)] hover:shadow-[0_4px_30px_rgba(16,185,129,0.2),0_0_15px_rgba(16,185,129,0.1),3px_4px_0_-1px_rgba(16,185,129,0.06),6px_8px_0_-2px_rgba(16,185,129,0.03)]"
-          : "border-emerald-500/30 hover:border-emerald-500/40 transition-colors shadow-[0_4px_30px_rgba(16,185,129,0.15)]"
+          ? "border-amber-500/50 hover:border-amber-400 cursor-pointer transition-[border-color,box-shadow] duration-200 shadow-[0_4px_30px_rgba(245,158,11,0.15),0_0_15px_rgba(245,158,11,0.08)] hover:shadow-[0_4px_30px_rgba(245,158,11,0.15),0_0_15px_rgba(245,158,11,0.08),3px_4px_0_-1px_rgba(245,158,11,0.05),6px_8px_0_-2px_rgba(245,158,11,0.025)]"
+          : "border-amber-500/30 hover:border-amber-500/40 transition-colors shadow-[0_4px_30px_rgba(245,158,11,0.1)]"
         }`}
     >
       {/* Gradient tint — distinguishes enhanced nodes from standard */}
       <div className="absolute inset-0 rounded-xl overflow-hidden pointer-events-none">
-        <div className="absolute inset-0 bg-linear-to-br from-emerald-500/10 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-br from-amber-500/8 to-transparent" />
       </div>
 
       {data.hasDetail && (
-        <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center z-20">
-          <Layers className="w-3 h-3 text-emerald-400" />
+        <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center z-20">
+          <Layers className="w-3 h-3 text-amber-400" />
         </div>
       )}
 
@@ -96,22 +96,22 @@ export function EnhancedNode({ data }: any) {
         type="target"
         position={Position.Top}
         data-connected={data.hasIncoming ? "true" : "false"}
-        className="w-2.5! h-2.5! border-2! border-black! bg-emerald-400! shadow-[0_0_12px_rgba(16,185,129,0.9)] z-20"
+        className="w-2.5! h-2.5! border-2! border-black! bg-amber-400! shadow-[0_0_12px_rgba(245,158,11,0.7)] z-20"
       />
       <div className="flex items-center gap-3 relative z-10">
-        <div className="p-2 bg-emerald-500/10 rounded-lg border border-emerald-500/30 text-emerald-400">
+        <div className="p-2 bg-amber-500/10 rounded-lg border border-amber-500/30 text-amber-400">
           <FunctionSquare className="w-5 h-5" />
         </div>
         <div className="flex flex-col flex-1">
-          <span className="text-[15px] font-semibold text-emerald-300 tracking-wide">{data.funcName}</span>
+          <span className="text-[15px] font-semibold text-amber-300 tracking-wide">{data.funcName}</span>
           <span className="text-[11px] text-gray-400 font-mono truncate mt-0.5">
             {data.fileName.split("/").pop()}
           </span>
         </div>
       </div>
       {data.intentTag && (
-        <div className="mt-3 relative z-10 text-[11px] font-mono font-medium bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 px-2 py-1 rounded-md flex items-center gap-1.5 overflow-hidden">
-          <span className="w-1.5 h-1.5 shrink-0 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(16,185,129,0.8)]" />
+        <div className="mt-3 relative z-10 text-[11px] font-mono font-medium bg-amber-500/10 border border-amber-500/20 text-amber-300 px-2 py-1 rounded-md flex items-center gap-1.5 overflow-hidden">
+          <span className="w-1.5 h-1.5 shrink-0 rounded-full bg-amber-400 shadow-[0_0_6px_rgba(245,158,11,0.7)]" />
           <span className="truncate">{data.intentTag}</span>
         </div>
       )}
@@ -119,7 +119,7 @@ export function EnhancedNode({ data }: any) {
         type="source"
         position={Position.Bottom}
         data-connected={data.hasOutgoing ? "true" : "false"}
-        className="w-2.5! h-2.5! border-2! border-black! bg-emerald-400! shadow-[0_0_12px_rgba(16,185,129,0.9)] z-20"
+        className="w-2.5! h-2.5! border-2! border-black! bg-amber-400! shadow-[0_0_12px_rgba(245,158,11,0.7)] z-20"
       />
     </div>
   );
