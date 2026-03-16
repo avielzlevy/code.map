@@ -95,7 +95,12 @@ function Canvas({
   const [copied, setCopied] = useState(false);
   const [copiedBreadcrumb, setCopiedBreadcrumb] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
+  const [isDrilling, setIsDrilling] = useState(false);
   const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Track drill direction: +1 = going deeper, -1 = going back
+  const prevDrillDepthRef = useRef(drillStack.length);
+  const drillEnterY = drillStack.length >= prevDrillDepthRef.current ? 10 : -10;
+  prevDrillDepthRef.current = drillStack.length;
 
   // Reset hint whenever the viewed graph changes (new endpoint or drill level)
   useEffect(() => {
@@ -193,7 +198,12 @@ function Canvas({
       }
       const flowNode = node.data as FlowNode;
       if (!flowNode.hasDetail) return;
-      onNodeDrillDown(flowNode);
+      // Brief dim confirms the action, then drill
+      setIsDrilling(true);
+      setTimeout(() => {
+        setIsDrilling(false);
+        onNodeDrillDown(flowNode);
+      }, 130);
     },
     [onNodeDrillDown],
   );
@@ -256,13 +266,13 @@ function Canvas({
         )}
       </AnimatePresence>
 
-      {/* Flow canvas — keyed on drill depth; new graph springs in from slightly smaller scale */}
+      {/* Flow canvas — keyed on drill depth; direction-aware spring entrance */}
       <motion.div
         key={drillStack.length}
         className="flex-1 relative z-10"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ type: "spring", damping: 26, stiffness: 240 }}
+        initial={{ opacity: 0, y: drillEnterY }}
+        animate={{ opacity: isDrilling ? 0.6 : 1, y: 0 }}
+        transition={{ type: "spring", damping: 28, stiffness: 260 }}
       >
         <ReactFlow
           nodes={nodes}
