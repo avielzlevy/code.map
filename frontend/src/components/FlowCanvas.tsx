@@ -18,6 +18,7 @@ import {
 import "@xyflow/react/dist/style.css";
 import dagre from "dagre";
 import { ChevronRight, Home, Copy, Check } from "lucide-react";
+import { Tooltip } from "./Tooltip";
 
 import { ExecutionPath, FlowNode, FlowEdge } from "@/lib/mockData";
 import { StandardNode, EnhancedNode, GhostEntryPin } from "./nodes/CustomNodes";
@@ -293,14 +294,15 @@ function Canvas({
           >
             {/* Scrollable breadcrumb trail — constrained so the copy button never gets pushed off */}
             <div className="flex-1 flex items-center gap-1 min-w-0 overflow-x-auto scrollbar-hide">
+              <Tooltip content={endpointLabel} side="bottom">
               <button
                 onClick={() => onBackTo(-1)}
-                title={endpointLabel}
                 className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-200 cursor-pointer transition-colors shrink-0 max-w-40"
               >
                 <Home className="w-3 h-3 shrink-0" />
                 <span className="font-mono truncate">{endpointLabel}</span>
               </button>
+            </Tooltip>
 
               {drillStack.map((entry, idx) => {
                 const isLast = idx === drillStack.length - 1;
@@ -328,14 +330,15 @@ function Canvas({
               })}
             </div>
 
-            <button
-              onClick={handleCopyBreadcrumb}
-              aria-label="Copy breadcrumb path"
-              title="Copy path to clipboard"
-              className="shrink-0 text-gray-400 hover:text-gray-200 active:text-gray-100 transition-colors p-1 rounded border border-transparent hover:border-white/10 hover:bg-white/5"
-            >
-              {copiedBreadcrumb ? <Check className="w-3 h-3 text-white" /> : <Copy className="w-3 h-3" />}
-            </button>
+            <Tooltip content={copiedBreadcrumb ? "Copied!" : "Copy path"} side="bottom">
+              <button
+                onClick={handleCopyBreadcrumb}
+                aria-label="Copy breadcrumb path"
+                className="shrink-0 text-gray-400 hover:text-gray-200 active:text-gray-100 transition-colors p-1 rounded border border-transparent hover:border-white/10 hover:bg-white/5"
+              >
+                {copiedBreadcrumb ? <Check className="w-3 h-3 text-white" /> : <Copy className="w-3 h-3" />}
+              </button>
+            </Tooltip>
           </motion.div>
         )}
       </AnimatePresence>
@@ -368,16 +371,17 @@ function Canvas({
           zoomOnDoubleClick={false}
         >
           <Panel position="top-right" style={{ margin: "8px" }}>
-            <motion.button
-              onClick={handleCopy}
-              aria-label="Copy flow as text"
-              title="Copy call chain as text"
-              animate={copied ? { scale: [1, 1.3, 1] } : { scale: 1 }}
-              transition={SPRING_BOUNCE}
-              className={`p-1.5 rounded-md border transition-colors ${copied ? "text-white border-white/20 bg-white/8" : "text-gray-500 border-white/10 bg-black/40 hover:text-gray-300 hover:border-white/20 active:bg-white/5"}`}
-            >
-              {copied ? <Check size={14} /> : <Copy size={14} />}
-            </motion.button>
+            <Tooltip content={copied ? "Copied!" : "Copy call chain"}>
+              <motion.button
+                onClick={handleCopy}
+                aria-label="Copy flow as text"
+                animate={copied ? { scale: [1, 1.3, 1] } : { scale: 1 }}
+                transition={SPRING_BOUNCE}
+                className={`p-1.5 rounded-md border transition-colors ${copied ? "text-white border-white/20 bg-white/8" : "text-gray-500 border-white/10 bg-black/40 hover:text-gray-300 hover:border-white/20 active:bg-white/5"}`}
+              >
+                {copied ? <Check size={14} /> : <Copy size={14} />}
+              </motion.button>
+            </Tooltip>
           </Panel>
           {/* Interaction hint — teaches click/double-click, dismisses on first node interaction */}
           <Panel position="bottom-center" style={{ marginBottom: "20px", pointerEvents: "none" }}>
