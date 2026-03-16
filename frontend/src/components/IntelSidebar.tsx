@@ -1,13 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Tag, FileText, Sparkles, ExternalLink, Layers } from "lucide-react";
 import { FlowNode } from "@/lib/mockData";
 import { getVSCodeUrl } from "@/lib/deep-link";
 
 const PANEL_W = 320;
-const PANEL_H_EST = 500;
 const GAP = 20;
 
 const contentVariants = {
@@ -33,28 +32,36 @@ interface IntelSidebarProps {
 
 export function IntelSidebar({ node, anchorX, anchorY, onClose, onDrillDown, instantClose }: IntelSidebarProps) {
   const [pos, setPos] = useState({ x: 0, y: 0 });
+  const panelRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!node) return;
+  const reposition = useCallback(() => {
     const winW = window.innerWidth;
     const winH = window.innerHeight;
+    const panelH = panelRef.current?.offsetHeight ?? 400;
     // Prefer right of click; flip left if near right edge
     const fitsRight = anchorX + GAP + PANEL_W + 12 <= winW;
     const rawX = fitsRight ? anchorX + GAP : anchorX - PANEL_W - GAP;
     const x = Math.max(12, Math.min(rawX, winW - PANEL_W - 12));
-    const y = Math.max(60, Math.min(anchorY - 100, winH - PANEL_H_EST - 12));
+    const y = Math.max(60, Math.min(anchorY - 100, winH - panelH - 12));
     setPos({ x, y });
-  }, [node, anchorX, anchorY]);
+  }, [anchorX, anchorY]);
+
+  useEffect(() => {
+    if (!node) return;
+    reposition();
+  }, [node, anchorX, anchorY, reposition]);
 
   return (
     <AnimatePresence>
       {node && (
         <motion.div
+          ref={panelRef}
           style={{ position: "fixed", left: pos.x, top: pos.y, width: PANEL_W, zIndex: 50 }}
           initial={{ opacity: 0, scale: 0.93, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={instantClose ? { opacity: 0 } : { opacity: 0, scale: 0.93, y: 8 }}
           transition={instantClose ? { duration: 0 } : { type: "spring", damping: 28, stiffness: 260 }}
+          onAnimationStart={reposition}
           className="rounded-xl bg-black/90 backdrop-blur-md border border-white/12 shadow-[0_8px_40px_rgba(0,0,0,0.9)] flex flex-col text-gray-200 overflow-hidden"
         >
           {/* Header */}

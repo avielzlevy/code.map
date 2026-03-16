@@ -4,7 +4,6 @@ import { useEffect, useCallback, useState, useRef, RefObject } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ReactFlow,
-  Background,
   Controls,
   Panel,
   useNodesState,
@@ -14,7 +13,6 @@ import {
   MarkerType,
   Node,
   Edge,
-  BackgroundVariant,
 } from "@xyflow/react";
 
 import "@xyflow/react/dist/style.css";
@@ -343,7 +341,6 @@ function Canvas({
               )}
             </AnimatePresence>
           </Panel>
-          <Background variant={BackgroundVariant.Dots} gap={24} size={1} color="rgba(255,255,255,0.05)" />
           <Controls
             showInteractive={false}
             className="bg-black/90! backdrop-blur-sm! border! border-white/10! fill-gray-400 stroke-gray-400 text-gray-400 [&>button]:bg-transparent! [&>button]:border-b! [&>button]:border-white/10! [&>button:hover]:bg-white/10!"
