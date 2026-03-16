@@ -210,7 +210,7 @@ function Canvas({
             animate={{ height: 40, opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ type: "spring", damping: 28, stiffness: 260 }}
-            className="flex items-center gap-1 px-4 border-b border-white/10 bg-black/50 backdrop-blur-md shrink-0 overflow-hidden z-20 justify-between"
+            className="flex items-center gap-1 px-4 border-b border-white/10 bg-black/85 backdrop-blur-sm shrink-0 overflow-hidden z-20 justify-between"
           >
             <button
               onClick={() => onBackTo(-1)}
@@ -294,7 +294,7 @@ function Canvas({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 3 }}
                   transition={{ type: "spring", damping: 28, stiffness: 220, delay: 0.5 }}
-                  className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-black/70 backdrop-blur-md border border-white/8 text-[11px] text-white/30 font-mono select-none"
+                  className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-black/85 border border-white/8 text-[11px] text-white/30 font-mono select-none"
                 >
                   <span>click to inspect</span>
                   <span className="w-px h-3 bg-white/10" />
@@ -306,7 +306,7 @@ function Canvas({
           <Background variant={BackgroundVariant.Dots} gap={24} size={1} color="rgba(255,255,255,0.05)" />
           <Controls
             showInteractive={false}
-            className="bg-black/60! backdrop-blur-xl! border! border-white/10! fill-gray-400 stroke-gray-400 text-gray-400 [&>button]:bg-transparent! [&>button]:border-b! [&>button]:border-white/10! [&>button:hover]:bg-white/10!"
+            className="bg-black/90! backdrop-blur-sm! border! border-white/10! fill-gray-400 stroke-gray-400 text-gray-400 [&>button]:bg-transparent! [&>button]:border-b! [&>button]:border-white/10! [&>button:hover]:bg-white/10!"
           />
         </ReactFlow>
       </motion.div>

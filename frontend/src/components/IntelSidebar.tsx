@@ -52,7 +52,7 @@ export function IntelSidebar({ node, anchorX, anchorY, onClose, onDrillDown }: I
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.93, y: 8 }}
           transition={{ type: "spring", damping: 28, stiffness: 260 }}
-          className="rounded-xl bg-black/80 backdrop-blur-2xl border border-white/12 shadow-[0_8px_40px_rgba(0,0,0,0.9)] flex flex-col text-gray-200 overflow-hidden"
+          className="rounded-xl bg-black/90 backdrop-blur-md border border-white/12 shadow-[0_8px_40px_rgba(0,0,0,0.9)] flex flex-col text-gray-200 overflow-hidden"
         >
           {/* Header */}
           <div className="flex items-start justify-between px-4 py-3 border-b border-white/10">

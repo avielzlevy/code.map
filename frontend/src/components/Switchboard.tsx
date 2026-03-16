@@ -14,7 +14,7 @@ interface SwitchboardProps {
 
 export function Switchboard({ paths, selectedPath, onSelectPath, usingMockData }: SwitchboardProps) {
   return (
-    <div className="w-full h-12 border-b border-white/10 bg-black/90 backdrop-blur-xl flex items-center shrink-0 z-20 shadow-[0_4px_24px_rgba(0,0,0,0.6)]">
+    <div className="w-full h-12 border-b border-white/10 bg-black flex items-center shrink-0 z-20 shadow-[0_4px_24px_rgba(0,0,0,0.6)]">
       {/* Logo */}
       <div className="flex items-center gap-2.5 px-4 h-full border-r border-white/10 shrink-0">
         <motion.div

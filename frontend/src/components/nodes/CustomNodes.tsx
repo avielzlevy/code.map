@@ -10,7 +10,7 @@ export function GhostEntryPin({ data }: any) {
       <div className="w-px h-12 border-l-2 border-dashed border-white/15 transition-colors duration-200 group-hover:border-white/40" />
 
       {/* The chip */}
-      <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-white/4 backdrop-blur-sm transition-[border-color,background-color] duration-200 group-hover:border-white/30 group-hover:bg-white/9">
+      <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-zinc-950 transition-[border-color,background-color] duration-200 group-hover:border-white/30 group-hover:bg-white/6">
         <CornerLeftUp className="w-3 h-3 text-white/30 -scale-x-100 transition-colors duration-200 group-hover:text-white/70" />
         <span className="font-mono text-[11px] text-white/35 tracking-wide transition-colors duration-200 group-hover:text-white/70">
           called by: <span className="text-white/55 group-hover:text-white/90 transition-colors duration-200">{data.callerLabel}</span>
@@ -28,7 +28,7 @@ export function GhostEntryPin({ data }: any) {
 export function StandardNode({ data }: any) {
   return (
     <div
-      className={`px-5 py-4 rounded-xl bg-white/5 backdrop-blur-xl border w-112.5 group relative
+      className={`px-5 py-4 rounded-xl bg-zinc-950 border w-112.5 group relative
         ${data.hasDetail
           ? "border-white/20 hover:border-white/40 cursor-pointer transition-[border-color,box-shadow] duration-200 shadow-[0_4px_24px_rgba(0,0,0,0.6),0_0_15px_rgba(255,255,255,0.05)] hover:shadow-[0_4px_24px_rgba(0,0,0,0.6),0_0_15px_rgba(255,255,255,0.05),3px_4px_0_-1px_rgba(255,255,255,0.04),6px_8px_0_-2px_rgba(255,255,255,0.02)]"
           : "border-white/10 transition-colors shadow-[0_4px_24px_rgba(0,0,0,0.6)]"
@@ -75,7 +75,7 @@ export function StandardNode({ data }: any) {
 export function EnhancedNode({ data }: any) {
   return (
     <div
-      className={`px-5 py-4 rounded-xl bg-black/40 backdrop-blur-xl border w-112.5 relative group
+      className={`px-5 py-4 rounded-xl bg-zinc-950 border w-112.5 relative group
         ${data.hasDetail
           ? "border-amber-500/50 hover:border-amber-400 cursor-pointer transition-[border-color,box-shadow] duration-200 shadow-[0_4px_30px_rgba(245,158,11,0.15),0_0_15px_rgba(245,158,11,0.08)] hover:shadow-[0_4px_30px_rgba(245,158,11,0.15),0_0_15px_rgba(245,158,11,0.08),3px_4px_0_-1px_rgba(245,158,11,0.05),6px_8px_0_-2px_rgba(245,158,11,0.025)]"
           : "border-amber-500/30 hover:border-amber-500/40 transition-colors shadow-[0_4px_30px_rgba(245,158,11,0.1)]"
