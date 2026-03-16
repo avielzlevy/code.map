@@ -93,18 +93,15 @@ function Canvas({
   const { fitView } = useReactFlow();
   const [copied, setCopied] = useState(false);
   const [copiedBreadcrumb, setCopiedBreadcrumb] = useState(false);
-  const [hasInteracted, setHasInteracted] = useState(false);
+  const [hasInteracted, setHasInteracted] = useState(() => {
+    try { return sessionStorage.getItem("code-map:hint-dismissed") === "1"; } catch { return false; }
+  });
   const [isDrilling, setIsDrilling] = useState(false);
   const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Track drill direction: +1 = going deeper, -1 = going back
   const prevDrillDepthRef = useRef(drillStack.length);
   const drillEnterY = drillStack.length >= prevDrillDepthRef.current ? 10 : -10;
   prevDrillDepthRef.current = drillStack.length;
-
-  // Reset hint whenever the viewed graph changes (new endpoint or drill level)
-  useEffect(() => {
-    setHasInteracted(false);
-  }, [activeNodes]);
 
   const writeToClipboard = useCallback((text: string, onSuccess: () => void) => {
     navigator.clipboard.writeText(text).then(onSuccess).catch(() => {
@@ -196,6 +193,7 @@ function Canvas({
     (event: React.MouseEvent, node: Node) => {
       if (node.id === "__ghost_entry_pin__") return;
       setHasInteracted(true);
+      try { sessionStorage.setItem("code-map:hint-dismissed", "1"); } catch { /* ignore */ }
       // 150ms delay: short enough to feel instant, long enough to cancel if a
       // double-click follows — prevents the sidebar flash on double-click.
       if (clickTimerRef.current) clearTimeout(clickTimerRef.current);
@@ -265,10 +263,11 @@ function Canvas({
             <div className="flex-1 flex items-center gap-1 min-w-0 overflow-x-auto scrollbar-hide">
               <button
                 onClick={() => onBackTo(-1)}
-                className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-200 cursor-pointer transition-colors shrink-0"
+                title={endpointLabel}
+                className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-200 cursor-pointer transition-colors shrink-0 max-w-[160px]"
               >
-                <Home className="w-3 h-3" />
-                <span className="font-mono">{endpointLabel}</span>
+                <Home className="w-3 h-3 shrink-0" />
+                <span className="font-mono truncate">{endpointLabel}</span>
               </button>
 
               {drillStack.map((entry, idx) => {
