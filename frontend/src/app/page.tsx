@@ -114,7 +114,7 @@ export default function Home() {
   }
 
   return (
-    <div className="flex w-full h-screen bg-black text-foreground overflow-hidden">
+    <div className="flex flex-col w-full h-screen bg-black text-foreground overflow-hidden">
       <Switchboard
         paths={paths}
         selectedPath={activePath}
@@ -122,50 +122,52 @@ export default function Home() {
         usingMockData={usingMockData}
       />
 
-      <main className="flex-1 relative">
-        {activePath ? (
-          <FlowCanvas
-            path={activePath}
-            drillStack={drillStack}
-            sidebarOpen={selectedNode !== null}
-            onNodeClick={handleNodeClick}
-            onNodeDrillDown={handleNodeDrillDown}
-            onBackTo={handleBackTo}
-          />
-        ) : (
-          <div className="flex h-full flex-col items-center justify-center gap-7">
-            {/* Mini flow illustration */}
-            <div className="flex flex-col items-center select-none" aria-hidden="true">
-              {[0, 1, 2].map((i) => (
-                <div key={i} className="flex flex-col items-center">
-                  <div className="w-28 h-7 rounded-lg border border-white/5 bg-white/[2.5]" />
-                  {i < 2 && <div className="w-px h-4 border-l border-dashed border-white/8" />}
-                </div>
-              ))}
+      <div className="flex flex-1 overflow-hidden">
+        <main className="flex-1 relative">
+          {activePath ? (
+            <FlowCanvas
+              path={activePath}
+              drillStack={drillStack}
+              sidebarOpen={selectedNode !== null}
+              onNodeClick={handleNodeClick}
+              onNodeDrillDown={handleNodeDrillDown}
+              onBackTo={handleBackTo}
+            />
+          ) : (
+            <div className="flex h-full flex-col items-center justify-center gap-7">
+              {/* Mini flow illustration */}
+              <div className="flex flex-col items-center select-none" aria-hidden="true">
+                {[0, 1, 2].map((i) => (
+                  <div key={i} className="flex flex-col items-center">
+                    <div className="w-28 h-7 rounded-lg border border-white/5 bg-white/[2.5]" />
+                    {i < 2 && <div className="w-px h-4 border-l border-dashed border-white/8" />}
+                  </div>
+                ))}
+              </div>
+              {/* Copy + CTA */}
+              <div className="flex flex-col items-center gap-3">
+                <p className="text-[11px] font-mono text-gray-500 text-center max-w-[190px] leading-relaxed">
+                  Select an endpoint to visualize its execution path.
+                </p>
+                <button
+                  onClick={() => window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true, bubbles: true }))}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/8 bg-white/2 hover:bg-white/5 hover:border-white/12 active:bg-white/8 transition-colors text-gray-500 hover:text-gray-300 text-[11px] font-mono"
+                >
+                  Search endpoints
+                  <kbd className="text-[11px] bg-white/5 border border-white/10 px-1.5 py-0.5 rounded text-gray-600">⌘K</kbd>
+                </button>
+              </div>
             </div>
-            {/* Copy + CTA */}
-            <div className="flex flex-col items-center gap-3">
-              <p className="text-[11px] font-mono text-gray-500 text-center max-w-[190px] leading-relaxed">
-                Select an endpoint to visualize its execution path.
-              </p>
-              <button
-                onClick={() => window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true, bubbles: true }))}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/8 bg-white/2 hover:bg-white/5 hover:border-white/12 active:bg-white/8 transition-colors text-gray-500 hover:text-gray-300 text-[11px] font-mono"
-              >
-                Search endpoints
-                <kbd className="text-[11px] bg-white/5 border border-white/10 px-1.5 py-0.5 rounded text-gray-600">⌘K</kbd>
-              </button>
-            </div>
-          </div>
-        )}
-      </main>
+          )}
+        </main>
 
-      <IntelSidebar node={selectedNode} onClose={() => setSelectedNode(null)} onDrillDown={handleNodeDrillDown} />
-      
-      <CommandPalette 
-        paths={paths} 
+        <IntelSidebar node={selectedNode} onClose={() => setSelectedNode(null)} onDrillDown={handleNodeDrillDown} />
+      </div>
+
+      <CommandPalette
+        paths={paths}
         onSelectEndpoint={handleSelectEndpoint}
-        onSelectNode={handleSelectNodeFromSearch} 
+        onSelectNode={handleSelectNodeFromSearch}
       />
     </div>
   );

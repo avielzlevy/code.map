@@ -91,6 +91,15 @@ body {
   opacity: 1 !important;
 }
 
+/* Hide scrollbar while preserving scroll — used for horizontal tab bars */
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 /* Thin scrollbar — consistent across all scrollable panels */
 ::-webkit-scrollbar {
   width: 4px;

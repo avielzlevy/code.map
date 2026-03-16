@@ -200,45 +200,53 @@ function Canvas({
 
   return (
     <div className="w-full h-full bg-black relative flex flex-col">
-      {/* Breadcrumb bar */}
-      <div className="flex items-center gap-1 px-4 py-2 border-b border-white/10 bg-black/50 backdrop-blur-md shrink-0 min-h-10 justify-between z-20">
-        <button
-          onClick={() => onBackTo(-1)}
-          className={`flex items-center gap-1.5 text-xs transition-colors ${
-            isDetail ? "text-gray-500 hover:text-gray-300 cursor-pointer" : "text-gray-600 cursor-default"
-          }`}
-        >
-          <Home className="w-3 h-3" />
-          <span className="font-mono">{endpointLabel}</span>
-        </button>
+      {/* Breadcrumb bar — only shown when drilling into a node */}
+      <AnimatePresence>
+        {isDetail && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 40, opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ type: "spring", damping: 28, stiffness: 260 }}
+            className="flex items-center gap-1 px-4 border-b border-white/10 bg-black/50 backdrop-blur-md shrink-0 overflow-hidden z-20 justify-between"
+          >
+            <button
+              onClick={() => onBackTo(-1)}
+              className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-300 cursor-pointer transition-colors"
+            >
+              <Home className="w-3 h-3" />
+              <span className="font-mono">{endpointLabel}</span>
+            </button>
 
-        {drillStack.map((entry, idx) => {
-          const isLast = idx === drillStack.length - 1;
-          return (
-            <div key={entry.id} className="flex items-center gap-1">
-              <ChevronRight className="w-3 h-3 text-gray-700" />
-              <button
-                onClick={() => !isLast && onBackTo(idx)}
-                className={`text-xs transition-colors ${
-                  isLast
-                    ? "text-gray-200 cursor-default font-medium"
-                    : "text-gray-500 hover:text-gray-300 cursor-pointer"
-                }`}
-              >
-                {entry.label}
-              </button>
-            </div>
-          );
-        })}
+            {drillStack.map((entry, idx) => {
+              const isLast = idx === drillStack.length - 1;
+              return (
+                <div key={entry.id} className="flex items-center gap-1">
+                  <ChevronRight className="w-3 h-3 text-gray-700" />
+                  <button
+                    onClick={() => !isLast && onBackTo(idx)}
+                    className={`text-xs transition-colors ${
+                      isLast
+                        ? "text-gray-200 cursor-default font-medium"
+                        : "text-gray-500 hover:text-gray-300 cursor-pointer"
+                    }`}
+                  >
+                    {entry.label}
+                  </button>
+                </div>
+              );
+            })}
 
-        <button
-          onClick={handleCopyBreadcrumb}
-          aria-label="Copy breadcrumb path"
-          className="ml-auto text-gray-600 hover:text-gray-400 active:text-gray-300 transition-colors p-1 rounded"
-        >
-          {copiedBreadcrumb ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3" />}
-        </button>
-      </div>
+            <button
+              onClick={handleCopyBreadcrumb}
+              aria-label="Copy breadcrumb path"
+              className="ml-auto text-gray-600 hover:text-gray-400 active:text-gray-300 transition-colors p-1 rounded"
+            >
+              {copiedBreadcrumb ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3" />}
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Flow canvas — keyed on drill depth so each level fades in cleanly */}
       <motion.div
