@@ -50,7 +50,7 @@ export function StandardNode({ data }: any) {
           <FunctionSquare className="w-5 h-5 text-gray-300" />
         </div>
         <div className="flex flex-col flex-1 min-w-0">
-          <span className="text-[15px] font-semibold text-white tracking-wide truncate pr-6">{data.funcName}</span>
+          <span className="text-lg font-semibold text-white tracking-wide truncate pr-6">{data.funcName}</span>
           <span className="text-[11px] text-gray-400 font-mono truncate mt-0.5">
             {data.fileName.split("/").pop()}
           </span>
@@ -103,7 +103,7 @@ export function EnhancedNode({ data }: any) {
           <FunctionSquare className="w-5 h-5" />
         </div>
         <div className="flex flex-col flex-1">
-          <span className="text-[15px] font-semibold text-amber-300 tracking-wide">{data.funcName}</span>
+          <span className="text-lg font-semibold text-amber-300 tracking-wide">{data.funcName}</span>
           <span className="text-[11px] text-gray-400 font-mono truncate mt-0.5">
             {data.fileName.split("/").pop()}
           </span>
