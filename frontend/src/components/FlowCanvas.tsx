@@ -21,7 +21,7 @@ import { ChevronRight, Home, Copy, Check } from "lucide-react";
 
 import { ExecutionPath, FlowNode, FlowEdge } from "@/lib/mockData";
 import { StandardNode, EnhancedNode, GhostEntryPin } from "./nodes/CustomNodes";
-import { DrillEntry } from "@/app/page";
+import { DrillEntry } from "@/app/app/page";
 import { SPRING_DEFAULT, SPRING_BOUNCE, SPRING_GENTLE } from "@/lib/spring";
 
 const nodeTypes = { standard: StandardNode, enhanced: EnhancedNode, ghostEntryPin: GhostEntryPin };
