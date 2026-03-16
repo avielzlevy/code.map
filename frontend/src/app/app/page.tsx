@@ -63,6 +63,8 @@ export default function Home() {
     setDrillStack([]);
   };
 
+  const handleSelectEndpoint = handleSelectPath;
+
   const handleNodeDrillDown = (node: FlowNode) => {
     if (node.hasDetail) {
       setDrillStack((prev) => {
@@ -77,15 +79,10 @@ export default function Home() {
     setDrillStack((prev) => prev.slice(0, index + 1));
   };
 
-  const handleSelectEndpoint = (path: ExecutionPath) => {
-    setSelectedPath(path);
-    setDrillStack([]);
-  };
-
-const handleSelectNodeFromSearch = (path: ExecutionPath, _node: FlowNode, parentId: string | null) => {
+  const handleSelectNodeFromSearch = (path: ExecutionPath, _node: FlowNode, parentId: string | null) => {
     setSelectedPath(path);
     if (parentId) {
-      const parentNode = path.nodes.find(n => n.id === parentId);
+      const parentNode = path.nodes.find((n) => n.id === parentId);
       setDrillStack([{ id: parentId, label: parentNode ? parentNode.funcName : parentId }]);
     } else {
       setDrillStack([]);
@@ -108,7 +105,7 @@ const handleSelectNodeFromSearch = (path: ExecutionPath, _node: FlowNode, parent
       <div className="flex w-full h-screen bg-black items-center justify-center">
         <div className="flex flex-col items-center gap-3 text-center">
           <span className="text-[13px] font-mono font-semibold text-white/75">Sidecar unreachable.</span>
-          <span className="text-[11px] font-mono text-gray-500 max-w-[280px] leading-relaxed">
+          <span className="text-[11px] font-mono text-gray-500 max-w-70 leading-relaxed">
             Make sure your backend is running with the code-map plugin active on port&nbsp;4567, then refresh.
           </span>
           <button
@@ -155,7 +152,7 @@ const handleSelectNodeFromSearch = (path: ExecutionPath, _node: FlowNode, parent
               >
                 {[0, 1, 2].map((i) => (
                   <div key={i} className="flex flex-col items-center">
-                    <div className="w-28 h-7 rounded-lg border border-dashed border-white/10 bg-white/[0.02]" />
+                    <div className="w-28 h-7 rounded-lg border border-dashed border-white/10 bg-white/2" />
                     {i < 2 && <div className="w-px h-4 border-l border-dashed border-white/6" />}
                   </div>
                 ))}
@@ -169,7 +166,7 @@ const handleSelectNodeFromSearch = (path: ExecutionPath, _node: FlowNode, parent
                 <p className="text-[13px] font-mono font-semibold text-white/60">
                   No endpoints detected.
                 </p>
-                <p className="text-[11px] text-gray-600 max-w-[220px] leading-relaxed">
+                <p className="text-[11px] text-gray-600 max-w-55 leading-relaxed">
                   Your project may have no routes yet, or the plugin isn&apos;t receiving traffic.
                   Write an endpoint and restart your server.
                 </p>
@@ -193,7 +190,6 @@ const handleSelectNodeFromSearch = (path: ExecutionPath, _node: FlowNode, parent
             </motion.div>
           )}
         </main>
-
       </div>
 
       <CommandPalette
