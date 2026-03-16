@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useCallback, useState, useRef } from "react";
+import { useEffect, useCallback, useState, useRef, RefObject } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ReactFlow,
@@ -76,6 +76,7 @@ function Canvas({
   drillStack,
   endpointLabel,
   sidebarOpen,
+  containerRef,
   onNodeClick,
   onNodeDrillDown,
   onBackTo,
@@ -85,6 +86,7 @@ function Canvas({
   drillStack: DrillEntry[];
   endpointLabel: string;
   sidebarOpen: boolean;
+  containerRef: RefObject<HTMLDivElement | null>;
   onNodeClick: (node: FlowNode) => void;
   onNodeDrillDown: (node: FlowNode) => void;
   onBackTo: (index: number) => void;
@@ -191,15 +193,28 @@ function Canvas({
   const handleNodeDoubleClick = useCallback(
     (_: React.MouseEvent, node: Node) => {
       const flowNode = node.data as FlowNode;
-      if (flowNode.hasDetail) onNodeDrillDown(flowNode);
+      if (!flowNode.hasDetail) return;
+
+      // Zoom viewport into the clicked node, then switch graphs after animation
+      const vp = getViewport();
+      const nodeCenterX = node.position.x + 225; // half of NODE_W (450)
+      const nodeCenterY = node.position.y + 40;  // half of standard node height
+      const targetZoom = Math.min(vp.zoom * 3, 4);
+      const containerW = containerRef.current?.clientWidth ?? window.innerWidth;
+      const containerH = containerRef.current?.clientHeight ?? window.innerHeight;
+      const targetX = containerW / 2 - nodeCenterX * targetZoom;
+      const targetY = containerH / 2 - nodeCenterY * targetZoom;
+
+      setViewport({ x: targetX, y: targetY, zoom: targetZoom }, { duration: 350 });
+      setTimeout(() => onNodeDrillDown(flowNode), 370);
     },
-    [onNodeDrillDown],
+    [onNodeDrillDown, getViewport, setViewport, containerRef],
   );
 
   const isDetail = drillStack.length > 0;
 
   return (
-    <div className="w-full h-full bg-black relative flex flex-col">
+    <div ref={containerRef} className="w-full h-full bg-black relative flex flex-col">
       {/* Breadcrumb bar — only shown when drilling into a node */}
       <AnimatePresence>
         {isDetail && (
@@ -248,13 +263,13 @@ function Canvas({
         )}
       </AnimatePresence>
 
-      {/* Flow canvas — keyed on drill depth so each level fades in cleanly */}
+      {/* Flow canvas — keyed on drill depth; new graph springs in from slightly smaller scale */}
       <motion.div
         key={drillStack.length}
         className="flex-1 relative z-10"
-        initial={{ opacity: 0.4 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.2, ease: "easeOut" }}
+        initial={{ opacity: 0, scale: 0.94 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ type: "spring", damping: 26, stiffness: 240 }}
       >
         <ReactFlow
           nodes={nodes}
@@ -320,6 +335,7 @@ export function FlowCanvas({ path, drillStack, sidebarOpen, onNodeClick, onNodeD
   const activeEdges = currentDetail ? currentDetail.edges : path.edges;
 
   const endpointLabel = `${path.method} ${path.endpoint}`;
+  const containerRef = useRef<HTMLDivElement>(null);
 
   return (
     <ReactFlowProvider>
@@ -329,6 +345,7 @@ export function FlowCanvas({ path, drillStack, sidebarOpen, onNodeClick, onNodeD
         drillStack={drillStack}
         endpointLabel={endpointLabel}
         sidebarOpen={sidebarOpen}
+        containerRef={containerRef}
         onNodeClick={onNodeClick}
         onNodeDrillDown={onNodeDrillDown}
         onBackTo={onBackTo}
