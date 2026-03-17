@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="frontend/public/code.map-logo.png" alt="code.map" width="80" />
+</p>
+
 <h1 align="center">code.map</h1>
 
 <p align="center">
@@ -20,7 +24,9 @@
 
 ---
 
-<!-- TODO: Add a GIF/screenshot here once you have a good demo video -->
+<p align="center">
+  <video src="frontend/public/code.map-demo.mov" controls width="100%"></video>
+</p>
 
 ---
 
