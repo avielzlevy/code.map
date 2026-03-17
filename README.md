@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="frontend/public/code.map-logo.png" alt="code.map" width="140" />
+  <img src="frontend/public/code.map-logo.png" alt="code.map" width="220" />
 </p>
 
 <h1 align="center">code.map</h1>
