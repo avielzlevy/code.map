@@ -17,7 +17,7 @@ import {
 
 import "@xyflow/react/dist/style.css";
 import dagre from "dagre";
-import { ChevronRight, Home, Copy, Check } from "lucide-react";
+import { ChevronRight, ChevronDown, Home, Copy, Check } from "lucide-react";
 import { Tooltip } from "./Tooltip";
 
 import { ExecutionPath, FlowNode, FlowEdge } from "@/lib/mockData";
@@ -34,12 +34,22 @@ interface FlowCanvasProps {
   onBackTo: (index: number) => void;
 }
 
+const NODE_W = 450;
+
+/** Mirror the actual rendered node height so dagre spacing is accurate.
+ *  Base ~96px + intentTag row ~26px + docstring row ~32px */
+function nodeHeight(n: FlowNode): number {
+  let h = 96;
+  if (n.intentTag) h += 26;
+  if (n.docstring) h += 32;
+  return h;
+}
+
 function buildDagreLayout(nodes: FlowNode[], edges: FlowEdge[]) {
   const g = new dagre.graphlib.Graph();
   g.setGraph({ rankdir: "LR", nodesep: 80, ranksep: 120 });
   g.setDefaultEdgeLabel(() => ({}));
-  const NODE_W = 450;
-  nodes.forEach((n) => g.setNode(n.id, { width: NODE_W, height: (n.intentTag || n.docstring) ? 130 : 100 }));
+  nodes.forEach((n) => g.setNode(n.id, { width: NODE_W, height: nodeHeight(n) }));
   [...edges].sort((a, b) => a.callOrder - b.callOrder).forEach((e) => g.setEdge(e.source, e.target));
   dagre.layout(g);
   return g;
@@ -72,6 +82,7 @@ function buildReactFlowEdge(e: FlowEdge): Edge {
 function Canvas({
   activeNodes,
   activeEdges,
+  rootNodes,
   drillStack,
   endpointLabel,
   containerRef,
@@ -80,6 +91,7 @@ function Canvas({
 }: {
   activeNodes: FlowNode[];
   activeEdges: FlowEdge[];
+  rootNodes: FlowNode[];
   drillStack: DrillEntry[];
   endpointLabel: string;
   containerRef: RefObject<HTMLDivElement | null>;
@@ -90,6 +102,7 @@ function Canvas({
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const { fitView } = useReactFlow();
   const [copied, setCopied] = useState(false);
+  const [copyMenuOpen, setCopyMenuOpen] = useState(false);
   const [copiedBreadcrumb, setCopiedBreadcrumb] = useState(false);
   const [isDrilling, setIsDrilling] = useState(false);
   // Track drill direction: +1 = going deeper, -1 = going back
@@ -137,15 +150,27 @@ function Canvas({
     });
   }, []);
 
-  const handleCopy = useCallback(() => {
-    const text = activeNodes
-      .map((n) => `${n.funcName}(${n.fileName.split("/").pop() ?? n.fileName})`)
-      .join(" -> ");
-    writeToClipboard(text, () => {
+  const formatNodes = useCallback(
+    (ns: FlowNode[]) =>
+      ns.map((n) => `${n.funcName}(${n.fileName.split("/").pop() ?? n.fileName})`).join(" → "),
+    [],
+  );
+
+  const handleCopyFull = useCallback(() => {
+    writeToClipboard(formatNodes(rootNodes), () => {
       setCopied(true);
+      setCopyMenuOpen(false);
       setTimeout(() => setCopied(false), 1500);
     });
-  }, [activeNodes, writeToClipboard]);
+  }, [rootNodes, formatNodes, writeToClipboard]);
+
+  const handleCopyCurrent = useCallback(() => {
+    writeToClipboard(formatNodes(activeNodes), () => {
+      setCopied(true);
+      setCopyMenuOpen(false);
+      setTimeout(() => setCopied(false), 1500);
+    });
+  }, [activeNodes, formatNodes, writeToClipboard]);
 
   const handleCopyBreadcrumb = useCallback(() => {
     const parts = [endpointLabel, ...drillStack.map((e) => e.label)];
@@ -180,7 +205,7 @@ function Canvas({
           onToggleExpand: () => setExpandedNodeId((prev) => (prev === n.id ? null : n.id)),
           onDrillDown: () => onNodeDrillDownRef.current(n),
         },
-        position: { x: pos.x - 225, y: pos.y - ((n.intentTag || n.docstring) ? 65 : 50) },
+        position: { x: pos.x - NODE_W / 2, y: pos.y - nodeHeight(n) / 2 },
         style: { overflow: "visible" as const },
       };
     });
@@ -360,17 +385,44 @@ function Canvas({
           zoomOnDoubleClick={false}
         >
           <Panel position="top-right" style={{ margin: "8px" }}>
-            <Tooltip content={copied ? "Copied!" : "Copy call chain"}>
+            <div className="relative">
+              {copyMenuOpen && (
+                <div className="fixed inset-0 z-10" onClick={() => setCopyMenuOpen(false)} />
+              )}
               <motion.button
-                onClick={handleCopy}
-                aria-label="Copy flow as text"
-                animate={copied ? { scale: [1, 1.3, 1] } : { scale: 1 }}
+                onClick={() => setCopyMenuOpen((o) => !o)}
+                aria-label="Copy flow"
+                animate={copied ? { scale: [1, 1.2, 1] } : { scale: 1 }}
                 transition={SPRING_BOUNCE}
-                className={`p-1.5 rounded-md border transition-colors ${copied ? "text-white border-white/20 bg-white/8" : "text-gray-500 border-white/10 bg-black/40 hover:text-gray-300 hover:border-white/20 active:bg-white/5"}`}
+                className={`flex items-center gap-1 px-2 py-1.5 rounded-md border transition-colors ${
+                  copied
+                    ? "text-white border-white/20 bg-white/8"
+                    : "text-gray-500 border-white/10 bg-black/40 hover:text-gray-300 hover:border-white/20 active:bg-white/5"
+                }`}
               >
-                {copied ? <Check size={14} /> : <Copy size={14} />}
+                {copied ? <Check size={13} /> : <Copy size={13} />}
+                <ChevronDown
+                  size={10}
+                  className={`transition-transform duration-150 ${copyMenuOpen ? "rotate-180" : ""}`}
+                />
               </motion.button>
-            </Tooltip>
+              {copyMenuOpen && (
+                <div className="absolute top-full right-0 mt-1 z-20 bg-zinc-950 border border-white/12 rounded-lg overflow-hidden shadow-xl shadow-black/60 min-w-[130px]">
+                  <button
+                    onClick={handleCopyFull}
+                    className="w-full text-left px-3 py-2 text-[11px] font-mono text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
+                  >
+                    Full path
+                  </button>
+                  <button
+                    onClick={handleCopyCurrent}
+                    className="w-full text-left px-3 py-2 text-[11px] font-mono text-gray-400 hover:text-white hover:bg-white/5 border-t border-white/6 transition-colors"
+                  >
+                    Current view
+                  </button>
+                </div>
+              )}
+            </div>
           </Panel>
           <Controls showInteractive={false} />
         </ReactFlow>
@@ -379,12 +431,31 @@ function Canvas({
   );
 }
 
+/** DFS walk of every drill level, preserving call order within each level. */
+function collectAllNodes(
+  nodes: FlowNode[],
+  nodeDetails: Record<string, { nodes: FlowNode[] }>,
+  visited = new Set<string>(),
+): FlowNode[] {
+  const result: FlowNode[] = [];
+  for (const node of nodes) {
+    if (visited.has(node.id)) continue;
+    visited.add(node.id);
+    result.push(node);
+    if (node.hasDetail && nodeDetails[node.id]) {
+      result.push(...collectAllNodes(nodeDetails[node.id].nodes, nodeDetails, visited));
+    }
+  }
+  return result;
+}
+
 export function FlowCanvas({ path, drillStack, onNodeDrillDown, onBackTo }: FlowCanvasProps) {
   const currentNodeId = drillStack.length > 0 ? drillStack[drillStack.length - 1].id : null;
   const currentDetail = currentNodeId ? path.nodeDetails[currentNodeId] ?? null : null;
 
   const activeNodes = currentDetail ? currentDetail.nodes : path.nodes;
   const activeEdges = currentDetail ? currentDetail.edges : path.edges;
+  const fullNodes = collectAllNodes(path.nodes, path.nodeDetails);
 
   const endpointLabel = `${path.method} ${path.endpoint}`;
   const containerRef = useRef<HTMLDivElement>(null);
@@ -394,6 +465,7 @@ export function FlowCanvas({ path, drillStack, onNodeDrillDown, onBackTo }: Flow
       <Canvas
         activeNodes={activeNodes}
         activeEdges={activeEdges}
+        rootNodes={fullNodes}
         drillStack={drillStack}
         endpointLabel={endpointLabel}
         containerRef={containerRef}

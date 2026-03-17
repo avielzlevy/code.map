@@ -1,9 +1,19 @@
+import { useState, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { Handle, Position } from "@xyflow/react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FunctionSquare, Layers, CornerLeftUp, ChevronDown, Sparkles, ExternalLink } from "lucide-react";
+import { FunctionSquare, Layers, CornerLeftUp, ChevronDown, Sparkles, ExternalLink, Tag, Check } from "lucide-react";
 import type { FlowNode } from "@/lib/mockData";
-import { getVSCodeUrl } from "@/lib/deep-link";
+import { getEditorUrl, EDITORS, EDITOR_STORAGE_KEY, type EditorId } from "@/lib/deep-link";
 import { SPRING_STANDARD, SPRING_BADGE, SPRING_DEFAULT } from "@/lib/spring";
+
+/** Strip leading `//`, `*`, `/` characters and blank lines from a JSDoc/comment string. */
+function cleanDocstring(s: string): string {
+  return s
+    .split("\n")
+    .map((l) => l.replace(/^\s*[\/*]+\s?/, "").trim())
+    .join("\n");
+}
 
 type NodeProps = FlowNode & {
   hasIncoming: boolean;
@@ -40,8 +50,49 @@ export function GhostEntryPin({ data }: { data: GhostPinData }) {
   );
 }
 
+function EditorIcon({ id }: { id: EditorId }) {
+  return (
+    <img
+      src={`/editor-icons/${id}.svg`}
+      alt={id}
+      width={16}
+      height={16}
+      className="shrink-0"
+    />
+  );
+}
+
 /** Inline expansion panel — slides open below the node card. */
 function NodeExpansion({ data, amber }: { data: NodeProps; amber?: boolean }) {
+  const [editorMenuOpen, setEditorMenuOpen] = useState(false);
+  const [menuPos, setMenuPos] = useState<{ bottom: number; right: number; width: number } | null>(null);
+  const splitButtonRef = useRef<HTMLDivElement>(null);
+  const chevronRef = useRef<HTMLButtonElement>(null);
+  const [selectedEditor, setSelectedEditor] = useState<EditorId>(() => {
+    try {
+      return (localStorage.getItem(EDITOR_STORAGE_KEY) as EditorId) ?? "vscode";
+    } catch {
+      return "vscode";
+    }
+  });
+
+  const selectEditor = (id: EditorId) => {
+    setSelectedEditor(id);
+    setEditorMenuOpen(false);
+    try { localStorage.setItem(EDITOR_STORAGE_KEY, id); } catch { /* noop */ }
+  };
+
+  const openEditorMenu = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!editorMenuOpen && splitButtonRef.current) {
+      const rect = splitButtonRef.current.getBoundingClientRect();
+      setMenuPos({ bottom: window.innerHeight - rect.top + 4, right: window.innerWidth - rect.right, width: rect.width });
+    }
+    setEditorMenuOpen((o) => !o);
+  }, [editorMenuOpen]);
+
+  const editorLabel = EDITORS.find((e) => e.id === selectedEditor)?.label ?? "VS Code";
+
   return (
     <motion.div
       key="expansion"
@@ -53,68 +104,126 @@ function NodeExpansion({ data, amber }: { data: NodeProps; amber?: boolean }) {
       onClick={(e) => e.stopPropagation()}
       onDoubleClick={(e) => e.stopPropagation()}
     >
-      {/* Full file path + line — supplements the short filename in the header */}
-      <div className={`px-5 pt-3 pb-2 border-t ${amber ? "border-amber-500/15" : "border-white/8"}`}>
-        <span className="font-mono text-[11px] text-gray-500 break-all leading-snug">
-          {data.fileName}:{data.line}
-        </span>
-      </div>
-
-      {/* Docstring */}
-      {data.docstring && (
-        <div className="px-5 pb-3">
-          <pre
-            className={`text-[11px] font-mono whitespace-pre-wrap leading-relaxed border-l-2 pl-3 ${
-              amber ? "text-amber-300/70 border-amber-500/30" : "text-gray-400 border-white/15"
-            }`}
-          >
-            {data.docstring}
-          </pre>
-        </div>
-      )}
-
       {/* AI summary */}
       {data.aiSummary && (
-        <div className="px-5 pb-3">
+        <div className={`px-5 pt-3 pb-3 border-t ${amber ? "border-amber-500/15" : "border-white/8"}`}>
           <div
             className={`relative p-3 rounded-lg border ${
               amber ? "bg-amber-500/5 border-amber-500/15" : "bg-white/3 border-white/8"
             }`}
           >
             <Sparkles
-              className={`absolute top-2.5 right-2.5 w-3 h-3 ${
-                amber ? "text-amber-400/30" : "text-white/20"
-              }`}
+              className={`absolute top-2.5 right-2.5 w-3 h-3 ${amber ? "text-amber-400/30" : "text-white/20"}`}
             />
             <p className="text-[12px] text-gray-400 leading-relaxed pr-5 break-words">{data.aiSummary}</p>
           </div>
         </div>
       )}
 
-      <div className="flex gap-2 px-5 pb-3">
+      <div className={`flex gap-2 px-5 pb-3 ${!data.aiSummary ? `pt-3 border-t ${amber ? "border-amber-500/15" : "border-white/8"}` : ""}`}>
         {data.hasDetail && (
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              data.onDrillDown();
-            }}
+            onClick={(e) => { e.stopPropagation(); data.onDrillDown(); }}
             className="flex-1 flex items-center justify-center gap-1.5 bg-white text-black py-2 px-3 rounded-md text-[12px] font-semibold hover:bg-white/90 transition-colors"
           >
             <Layers className="w-3.5 h-3.5" />
             Drill into calls
           </button>
         )}
-        <a
-          href={getVSCodeUrl(data.fileName, data.line)}
-          rel="noopener"
-          onClick={(e) => e.stopPropagation()}
-          className="flex-1 flex items-center justify-center gap-1.5 border border-white/15 hover:border-white/40 text-gray-400 hover:text-white py-2 px-3 rounded-md text-[12px] font-medium hover:bg-white/5 transition-colors"
-        >
-          <ExternalLink className="w-3.5 h-3.5" />
-          Open in VS Code
-        </a>
+
+        {/* Open in — split button: left opens, right picks editor */}
+        <div ref={splitButtonRef} className="flex-1 flex">
+          <a
+            href={getEditorUrl(selectedEditor, data.fileName, data.line)}
+            rel="noopener"
+            onClick={(e) => e.stopPropagation()}
+            className="flex-1 flex items-center justify-center gap-1.5 border border-white/15 hover:border-white/30 text-gray-400 hover:text-white py-2 px-3 rounded-l-md text-[12px] font-medium hover:bg-white/5 transition-colors"
+          >
+            <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">Open in {editorLabel}</span>
+          </a>
+          <button
+            ref={chevronRef}
+            onClick={openEditorMenu}
+            className="px-2 border border-l-0 border-white/15 hover:border-white/30 text-gray-500 hover:text-white rounded-r-md hover:bg-white/5 transition-colors"
+            aria-label="Choose editor"
+          >
+            <ChevronDown size={12} className={`transition-transform duration-150 ${editorMenuOpen ? "rotate-180" : ""}`} />
+          </button>
+        </div>
+
+        {/* Portal dropdown — escapes overflow-hidden ancestors */}
+        {editorMenuOpen && menuPos && typeof document !== "undefined" && createPortal(
+          <>
+            <div className="fixed inset-0 z-[100]" onClick={() => setEditorMenuOpen(false)} />
+            <div
+              className="fixed z-[101] bg-zinc-950 border border-white/12 rounded-lg overflow-hidden shadow-xl shadow-black/60"
+              style={{ bottom: menuPos.bottom, right: menuPos.right, width: menuPos.width }}
+            >
+              {EDITORS.map((editor) => {
+                const active = editor.id === selectedEditor;
+                return (
+                  <button
+                    key={editor.id}
+                    onClick={(e) => { e.stopPropagation(); selectEditor(editor.id); }}
+                    className={`w-full flex items-center gap-2.5 px-3 h-9 text-[12px] transition-colors ${
+                      active ? "text-white bg-white/6" : "text-gray-400 hover:text-white hover:bg-white/5"
+                    }`}
+                  >
+                    <EditorIcon id={editor.id} />
+                    <span className="flex-1 text-left">{editor.label}</span>
+                    {active && <Check size={11} className="text-white/60 shrink-0" />}
+                  </button>
+                );
+              })}
+            </div>
+          </>,
+          document.body
+        )}
       </div>
     </motion.div>
+  );
+}
+
+/** Shared card body — identical layout for both Standard and Enhanced nodes. */
+function NodeContent({ data, amber }: { data: NodeProps; amber?: boolean }) {
+  return (
+    <div className="px-5 pt-4 pb-3">
+      {/* Header: icon + funcName + filename */}
+      <div className="flex items-center gap-3">
+        <div className={`p-2 rounded-lg border ${amber ? "bg-amber-500/10 border-amber-500/30" : "bg-white/5 border-white/10"}`}>
+          <FunctionSquare className={`w-5 h-5 ${amber ? "text-amber-400" : "text-gray-400"}`} />
+        </div>
+        <div className="flex flex-col flex-1 min-w-0">
+          <span className={`text-base font-semibold truncate pr-7 ${amber ? "text-amber-300" : "text-white"}`} title={data.funcName}>
+            {data.funcName}
+          </span>
+          <span className="text-[11px] text-gray-400 font-mono truncate mt-0.5" title={data.fileName}>
+            {data.fileName.split("/").pop() ?? data.fileName}
+          </span>
+        </div>
+      </div>
+
+      {/* FlowStep descriptor — tag icon + label, always visible when present */}
+      {data.intentTag && (
+        <div className="mt-2.5 flex items-center gap-1.5 overflow-hidden">
+          <Tag className="w-3 h-3 shrink-0 text-amber-400/70" />
+          <span className="text-[10px] font-mono text-amber-400/70 truncate">{data.intentTag}</span>
+        </div>
+      )}
+
+      {/* JSDoc — same container regardless of node type; truncated closed, full expanded */}
+      {data.docstring && (
+        <div className="mt-3 text-[11px] font-mono bg-white/5 border border-white/8 text-gray-400 px-2.5 py-1.5 rounded-md">
+          <span
+            className={data.isExpanded ? "whitespace-pre-wrap break-words" : "truncate block"}
+            title={!data.isExpanded ? cleanDocstring(data.docstring) : undefined}
+          >
+            {cleanDocstring(data.docstring)}
+          </span>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -157,43 +266,7 @@ export function StandardNode({ data }: { data: NodeProps }) {
         className="w-2.5! h-2.5! border-2! border-black! bg-white! shadow-[0_0_6px_rgba(255,255,255,0.3)]"
       />
 
-      {/* Main content */}
-      <div className="px-5 pt-4 pb-3">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-white/5 rounded-lg border border-white/10">
-            <FunctionSquare className="w-5 h-5 text-gray-400" />
-          </div>
-          <div className="flex flex-col flex-1 min-w-0">
-            <span className="text-base font-semibold text-white truncate pr-7" title={data.funcName}>{data.funcName}</span>
-            <span className="text-[11px] text-gray-400 font-mono truncate mt-0.5" title={data.fileName}>
-              {data.fileName.split("/").pop() ?? data.fileName}
-            </span>
-          </div>
-        </div>
-        {data.docstring && (
-          <div className={`mt-3 text-[11px] font-mono font-medium bg-white/5 border border-white/10 text-gray-400 px-2 py-1 rounded-md flex items-start gap-1.5 ${data.isExpanded ? "" : "overflow-hidden"}`}>
-            <span className="w-1.5 h-1.5 shrink-0 rounded-full bg-white/60 mt-0.75" />
-            <span className={data.isExpanded ? "whitespace-pre-wrap wrap-break-word" : "truncate"} title={data.isExpanded ? undefined : data.docstring}>
-              {data.isExpanded ? data.docstring : data.docstring.split("\n")[0].replace(/^\s*\/?\*+\s*/, "").trim()}
-            </span>
-          </div>
-        )}
-      </div>
-
-      {/* Drill hint — fades in on hover for drillable nodes; absolute so it doesn't affect node height */}
-      {data.hasDetail && !data.isExpanded && (
-        <motion.div
-          variants={{
-            rest: { opacity: 0 },
-            hover: { opacity: 1 },
-          }}
-          transition={SPRING_STANDARD}
-          className="absolute bottom-7 left-0 right-0 px-5 pb-2 flex items-center gap-1.5 pointer-events-none"
-        >
-          <Layers className="w-3 h-3 text-white/25" />
-          <span className="text-[10px] font-mono text-white/25 tracking-wide">double-click to drill</span>
-        </motion.div>
-      )}
+      <NodeContent data={data} />
 
       <AnimatePresence>
         {data.isExpanded && <NodeExpansion data={data} />}
@@ -266,41 +339,9 @@ export function EnhancedNode({ data }: { data: NodeProps }) {
         className="w-2.5! h-2.5! border-2! border-black! bg-amber-400! shadow-[0_0_8px_rgba(245,158,11,0.5)] z-20"
       />
 
-      {/* Main content */}
-      <div className="px-5 pt-4 pb-3 relative z-10">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-amber-500/10 rounded-lg border border-amber-500/30 text-amber-400">
-            <FunctionSquare className="w-5 h-5" />
-          </div>
-          <div className="flex flex-col flex-1 min-w-0">
-            <span className="text-base font-semibold text-amber-300 truncate pr-7" title={data.funcName}>{data.funcName}</span>
-            <span className="text-[11px] text-gray-400 font-mono truncate mt-0.5" title={data.fileName}>
-              {data.fileName.split("/").pop() ?? data.fileName}
-            </span>
-          </div>
-        </div>
-        {data.intentTag && (
-          <div className={`mt-3 text-[11px] font-mono font-medium bg-amber-500/10 border border-amber-500/20 text-amber-300 px-2 py-1 rounded-md flex items-start gap-1.5 ${data.isExpanded ? "" : "overflow-hidden"}`}>
-            <span className="w-1.5 h-1.5 shrink-0 rounded-full bg-amber-400 shadow-[0_0_4px_rgba(245,158,11,0.4)] mt-0.75" />
-            <span className={data.isExpanded ? "wrap-break-word" : "truncate"} title={data.isExpanded ? undefined : data.intentTag}>{data.intentTag}</span>
-          </div>
-        )}
+      <div className="relative z-10">
+        <NodeContent data={data} amber />
       </div>
-
-      {/* Drill hint — fades in on hover for drillable enhanced nodes; absolute so it doesn't affect node height */}
-      {data.hasDetail && !data.isExpanded && (
-        <motion.div
-          variants={{
-            rest: { opacity: 0 },
-            hover: { opacity: 1 },
-          }}
-          transition={SPRING_STANDARD}
-          className="absolute bottom-7 left-0 right-0 px-5 pb-2 flex items-center gap-1.5 z-10 pointer-events-none"
-        >
-          <Layers className="w-3 h-3 text-amber-500/35" />
-          <span className="text-[10px] font-mono text-amber-500/35 tracking-wide">double-click to drill</span>
-        </motion.div>
-      )}
 
       <AnimatePresence>
         {data.isExpanded && <NodeExpansion data={data} amber />}
