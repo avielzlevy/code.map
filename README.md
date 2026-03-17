@@ -24,9 +24,7 @@
 
 ---
 
-<p align="center">
-  <img src="frontend/public/code.map-demo.gif" alt="code.map demo" width="100%" />
-</p>
+https://github.com/user-attachments/assets/127de087-012c-4e6b-a568-7e234b3af33a
 
 ---
 
