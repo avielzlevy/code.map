@@ -52,7 +52,7 @@ export class FlowMap {
     const astParser = new AstParserService();
     const cache = new CacheService(config.cachePath);
     const sidecar = new SidecarService();
-    const nanoAgent = config.enableAI ? new NanoAgentService(config.apiKey, config.provider) : null;
+    const nanoAgent = config.enableAI ? new NanoAgentService(config.apiKey, config.provider as AIProvider) : null;
     const service = new FlowMapService(config, astParser, cache, sidecar, nanoAgent);
 
     FlowLogger.info(LOGGER_CONTEXT, 'Initializing FlowMap', {
