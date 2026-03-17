@@ -54,8 +54,7 @@
 
 
 ## Prefered stack
-- Python
-- FastAPI
+- FastAPI (Python)
 - NestJS
 - NextJS
 - TailwindCSS
