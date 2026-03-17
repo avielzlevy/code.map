@@ -310,7 +310,7 @@ export class FlowMapperService {
   ): FrontendNode {
     return {
       id: node.id,
-      type: node.customTag || node.aiSummary ? 'enhanced' : 'standard',
+      type: node.customTag ? 'enhanced' : 'standard',
       funcName: node.methodName,
       fileName: node.filePath,
       line: node.lineNumber,

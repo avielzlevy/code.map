@@ -5,7 +5,7 @@
 <h1 align="center">code.map</h1>
 
 <p align="center">
-  <em>Interactive API execution graph for NestJS and FastAPI — see your full call chain in seconds</em>
+  <em>Interactive API execution graph for Typescript and Python frameworks — see your full call chain in seconds</em>
 </p>
 
 <p align="center">
@@ -30,7 +30,7 @@
 
 ---
 
-code-map instruments your API and renders the full execution path — from route handler down to every service call — as an interactive call graph. Drop it into a NestJS or FastAPI app, open your browser, and your codebase becomes a map.
+code-map instruments your API and renders the full execution path — from route handler down to every service call — as an interactive call graph. Drop it into any framework supported, open your browser, and your codebase becomes a map.
 
 It's a zero-configuration sidecar: add one module, get a live visualization at `localhost:4567`. No rebuild, no separate process. Optional AI summaries (powered by Claude Haiku) annotate each node with a plain-English intent label, cached after first run.
 
@@ -152,7 +152,7 @@ FlowMap.bind(app, config={
 })
 ```
 
-AI-enriched nodes are highlighted with an amber border to distinguish them from standard nodes. You can also set the key via the `FLOW_MAP_API_KEY` environment variable instead of passing it in config.
+`@FlowStep`-tagged nodes are highlighted with an amber border to distinguish them from standard nodes. You can also set your Anthropic API key via the `FLOW_MAP_API_KEY` environment variable instead of passing it in config.
 
 ## Configuration
 

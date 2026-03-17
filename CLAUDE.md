@@ -1,7 +1,7 @@
 ## Design Context
 
 ### Users
-Open-source community — primarily backend developers (NestJS / FastAPI / TypeScript engineers) who discover code-map on GitHub and run it locally. They arrive during debugging, onboarding, or code review with limited time and high cognitive load. They are opinionated, will compare the tool to Linear, Datadog traces, or profilers, and will share it if it impresses them. First impression is critical.
+Open-source community — primarily backend developers (NestJS / FastAPI / TypeScript engineers) who discover code.map on GitHub and run it locally. They arrive during debugging, onboarding, or code review with limited time and high cognitive load. They are opinionated, will compare the tool to Linear, Datadog traces, or profilers, and will share it if it impresses them. First impression is critical.
 
 ### Brand Personality
 **Sharp · Confident · Precise**

@@ -153,7 +153,7 @@ class FlowMap:
     def _to_frontend_node(self, node) -> dict:
         return {
             "id": node.id,
-            "type": "enhanced" if (node.custom_tag or node.ai_summary) else "standard",
+            "type": "enhanced" if node.custom_tag else "standard",
             "funcName": node.method_name,
             "fileName": node.file_path,
             "line": node.line_number,
