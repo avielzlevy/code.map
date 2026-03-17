@@ -61,7 +61,7 @@ class FlowMap:
         ast_parser = AstParserService()
         cache = CacheService(resolved["cache_path"])
         sidecar = SidecarService()
-        nano_agent = NanoAgentService(resolved["api_key"], resolved["provider"]) if resolved["enable_ai"] else None
+        nano_agent = NanoAgentService(resolved["api_key"], resolved["provider"], resolved["model"]) if resolved["enable_ai"] else None
 
         FlowLogger.info(
             LOGGER_CONTEXT,
@@ -177,6 +177,9 @@ class FlowMap:
         FlowLogger.info(
             LOGGER_CONTEXT, f"Enriching {len(graph.nodes)} nodes with AI summaries"
         )
+        attempted = 0
+        failed = 0
+
         for node in graph.nodes:
             body_hash = self._cache.hash_body(node.raw_body)
             cached = self._cache.get(node.id, body_hash)
@@ -185,16 +188,25 @@ class FlowMap:
                 node.ai_summary = cached
                 continue
 
+            attempted += 1
             try:
                 summary = await self._nano_agent.summarize(node)  # type: ignore[union-attr]
                 node.ai_summary = summary
                 self._cache.set(node.id, body_hash, summary)
             except Exception as err:
+                failed += 1
                 FlowLogger.warn(
                     LOGGER_CONTEXT,
                     "AI summary failed for node, skipping",
                     {"node_id": node.id, "error": str(err)},
                 )
+
+        if attempted > 0 and failed == attempted:
+            FlowLogger.error(
+                LOGGER_CONTEXT,
+                "All AI summary requests failed — check your provider, model, and API key",
+                {"attempted": attempted, "failed": failed},
+            )
 
     def _graph_to_dict(self, graph: FlowGraph) -> dict[str, Any]:
         return {
@@ -212,6 +224,7 @@ class FlowMap:
             "enable_ai": user_config.get("enable_ai", False),
             "api_key": user_config.get("api_key") or env_config.api_key or "",
             "provider": user_config.get("provider") or env_config.provider or "",
+            "model": user_config.get("model") or None,
             "cache_path": user_config.get("cache_path")
             or os.path.join(os.getcwd(), FLOW_CACHE_DIR),
             "source_root": user_config.get("source_root") or os.getcwd(),

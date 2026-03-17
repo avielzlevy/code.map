@@ -15,10 +15,12 @@ const LOGGER_CONTEXT = 'NanoAgentService';
 export class NanoAgentService {
   private readonly apiKey: string;
   private readonly provider: AIProvider;
+  private readonly model: string | undefined;
 
-  constructor(apiKey: string, provider: AIProvider = 'anthropic') {
+  constructor(apiKey: string, provider: AIProvider = 'anthropic', model?: string) {
     this.apiKey = apiKey;
     this.provider = provider;
+    this.model = model;
   }
 
   async summarize(node: FlowNode): Promise<string> {
@@ -42,11 +44,12 @@ export class NanoAgentService {
 
   private buildRequest(prompt: string): { url: string; body: object; headers: Record<string, string> } {
     const config = PROVIDER_CONFIGS[this.provider];
+    const model = this.model ?? config.defaultModel;
 
     if (this.provider === 'anthropic') {
       return {
         url: config.apiUrl,
-        body: { model: config.defaultModel, max_tokens: NANO_AGENT_MAX_TOKENS, messages: [{ role: 'user', content: prompt }] },
+        body: { model, max_tokens: NANO_AGENT_MAX_TOKENS, messages: [{ role: 'user', content: prompt }] },
         headers: { 'x-api-key': this.apiKey, 'anthropic-version': config.anthropicVersion!, 'content-type': 'application/json' },
       };
     }
@@ -62,7 +65,7 @@ export class NanoAgentService {
     // openai and openrouter share the OpenAI-compatible format
     return {
       url: config.apiUrl,
-      body: { model: config.defaultModel, max_tokens: NANO_AGENT_MAX_TOKENS, messages: [{ role: 'user', content: prompt }] },
+      body: { model, max_tokens: NANO_AGENT_MAX_TOKENS, messages: [{ role: 'user', content: prompt }] },
       headers: { 'Authorization': `Bearer ${this.apiKey}`, 'content-type': 'application/json' },
     };
   }

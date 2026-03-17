@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Optional
 
 import httpx
 
@@ -19,9 +19,10 @@ LOGGER_CONTEXT = "NanoAgentService"
 
 
 class NanoAgentService:
-    def __init__(self, api_key: str, provider: str = "anthropic") -> None:
+    def __init__(self, api_key: str, provider: str = "anthropic", model: Optional[str] = None) -> None:
         self._api_key = api_key
         self._provider = provider
+        self._model = model
 
     async def summarize(self, node: FlowNode) -> str:
         prompt = self._build_prompt(node)
@@ -51,11 +52,12 @@ class NanoAgentService:
 
     def _build_request(self, prompt: str) -> tuple[str, dict[str, Any], dict[str, str]]:
         config = PROVIDER_CONFIGS[self._provider]
+        model = self._model or config["default_model"]
 
         if self._provider == "anthropic":
             return (
                 config["api_url"],
-                {"model": config["default_model"], "max_tokens": NANO_AGENT_MAX_TOKENS, "messages": [{"role": "user", "content": prompt}]},
+                {"model": model, "max_tokens": NANO_AGENT_MAX_TOKENS, "messages": [{"role": "user", "content": prompt}]},
                 {"x-api-key": self._api_key, "anthropic-version": config["anthropic_version"], "content-type": "application/json"},
             )
 
@@ -70,7 +72,7 @@ class NanoAgentService:
         # openai and openrouter share the OpenAI-compatible format
         return (
             config["api_url"],
-            {"model": config["default_model"], "max_tokens": NANO_AGENT_MAX_TOKENS, "messages": [{"role": "user", "content": prompt}]},
+            {"model": model, "max_tokens": NANO_AGENT_MAX_TOKENS, "messages": [{"role": "user", "content": prompt}]},
             {"Authorization": f"Bearer {self._api_key}", "content-type": "application/json"},
         )
 

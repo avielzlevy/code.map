@@ -5,6 +5,7 @@ FLOW_STEP_ATTR: str = "_flow_step_description"
 SIDECAR_API_PREFIX: str = "/api/flow-map"
 
 NANO_AGENT_MAX_TOKENS: int = 50
+NANO_AGENT_ALL_FAILED_THRESHOLD: float = 1.0  # 100% failure rate triggers config error log
 
 from typing import Literal
 

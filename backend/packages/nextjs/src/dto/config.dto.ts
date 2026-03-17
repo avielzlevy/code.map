@@ -11,8 +11,8 @@ type FlowMapBaseConfig = {
 
 export type FlowMapConfig = FlowMapBaseConfig &
   (
-    | { enableAI: true; apiKey: string; provider: AIProvider }
-    | { enableAI?: false; apiKey?: string; provider?: AIProvider }
+    | { enableAI: true; apiKey: string; provider: AIProvider; model?: string }
+    | { enableAI?: false; apiKey?: string; provider?: AIProvider; model?: string }
   );
 
 export interface ResolvedFlowMapConfig {
@@ -20,6 +20,7 @@ export interface ResolvedFlowMapConfig {
   enableAI: boolean;
   apiKey: string;
   provider: AIProvider | '';
+  model: string | undefined;
   cachePath: string;
   sourceRoot: string;
 }

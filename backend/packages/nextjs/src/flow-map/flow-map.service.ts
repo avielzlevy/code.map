@@ -309,6 +309,9 @@ export class FlowMapService {
   private async enrichWithAiSummaries(graph: FlowGraph): Promise<void> {
     FlowLogger.info(LOGGER_CONTEXT, `Enriching ${graph.nodes.length} nodes with AI summaries`);
 
+    let attempted = 0;
+    let failed = 0;
+
     for (const node of graph.nodes) {
       const hash = this.cache.hashBody(node.rawBody);
       const cached = this.cache.get(node.id, hash);
@@ -318,16 +321,25 @@ export class FlowMapService {
         continue;
       }
 
+      attempted++;
       try {
         const summary = await this.nanoAgent!.summarize(node);
         node.aiSummary = summary;
         this.cache.set(node.id, hash, summary);
       } catch (err) {
+        failed++;
         FlowLogger.warn(LOGGER_CONTEXT, 'AI summary failed for node, skipping', {
           nodeId: node.id,
           error: (err as Error).message,
         });
       }
+    }
+
+    if (attempted > 0 && failed === attempted) {
+      FlowLogger.error(LOGGER_CONTEXT, 'All AI summary requests failed — check your provider, model, and API key', {
+        attempted,
+        failed,
+      });
     }
   }
 }

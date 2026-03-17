@@ -11,8 +11,8 @@ type FlowMapperBaseConfig = {
 
 export type FlowMapperConfig = FlowMapperBaseConfig &
   (
-    | { enableAI: true; apiKey: string; provider: AIProvider }
-    | { enableAI?: false; apiKey?: string; provider?: AIProvider }
+    | { enableAI: true; apiKey: string; provider: AIProvider; model?: string }
+    | { enableAI?: false; apiKey?: string; provider?: AIProvider; model?: string }
   );
 
 export interface ResolvedFlowMapperConfig {
@@ -20,6 +20,7 @@ export interface ResolvedFlowMapperConfig {
   enableAI: boolean;
   apiKey: string;
   provider: AIProvider | '';
+  model: string | undefined;
   cachePath: string;
   sourceRoot: string;
 }
