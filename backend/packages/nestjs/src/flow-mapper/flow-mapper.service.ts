@@ -298,10 +298,10 @@ export class FlowMapperService {
   }
 
   private resolveEndpoint(controller: FlowNode): string {
-    if (controller.routePath) return controller.routePath;
-    // Derive a readable path from the method name when no decorator path is present
-    const name = controller.methodName;
-    return `/${name.replace(/([A-Z])/g, (c) => `-${c.toLowerCase()}`).replace(/^-/, '')}`;
+    const prefix = controller.controllerPrefix ?? '';
+    const methodPath = controller.routePath ?? controller.methodName;
+    const full = methodPath ? `${prefix}/${methodPath}` : prefix;
+    return full.startsWith('/') ? full : `/${full}`;
   }
 
   private toFrontendNode(

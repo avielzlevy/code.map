@@ -24,6 +24,7 @@ interface ParsedMethod {
   flowStepTag?: string;
   httpMethod?: string;
   routePath?: string;
+  controllerPrefix?: string;
   docstring?: string;
   rawBody: string;
   filePath: string;
@@ -113,6 +114,7 @@ export class AstParserService {
     const className = classNode.name?.getText(sourceFile) ?? 'AnonymousClass';
     const classDecorators = this.extractDecoratorNames(classNode, sourceFile);
     const nodeType = this.classifyNodeType(classDecorators);
+    const controllerPrefix = this.extractControllerPrefix(classNode, sourceFile);
     const methods: ParsedMethod[] = [];
 
     for (const member of classNode.members) {
@@ -135,6 +137,7 @@ export class AstParserService {
         flowStepTag,
         httpMethod,
         routePath,
+        controllerPrefix,
         docstring,
         rawBody,
         filePath,
@@ -216,6 +219,25 @@ export class AstParserService {
     return [...calls];
   }
 
+  private extractControllerPrefix(
+    classNode: ts.ClassDeclaration,
+    sourceFile: ts.SourceFile,
+  ): string | undefined {
+    if (!ts.canHaveDecorators(classNode)) return undefined;
+    const decorators = ts.getDecorators(classNode);
+    if (!decorators) return undefined;
+
+    for (const d of decorators) {
+      if (!ts.isCallExpression(d.expression)) continue;
+      const name = d.expression.expression.getText(sourceFile);
+      if (!NESTJS_CONTROLLER_DECORATORS.includes(name)) continue;
+      const firstArg = d.expression.arguments[0];
+      return firstArg && ts.isStringLiteral(firstArg) ? firstArg.text : '';
+    }
+
+    return undefined;
+  }
+
   private extractHttpDecorator(
     method: ts.MethodDeclaration,
     sourceFile: ts.SourceFile,
@@ -267,6 +289,7 @@ export class AstParserService {
         customTag: method.flowStepTag,
         httpMethod: method.httpMethod,
         routePath: method.routePath,
+        controllerPrefix: method.controllerPrefix,
       });
     }
 

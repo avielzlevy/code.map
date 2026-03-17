@@ -26,6 +26,7 @@ export interface FlowNode {
   customTag?: string;
   httpMethod?: string;
   routePath?: string;
+  controllerPrefix?: string;
 }
 
 /** Frontend-ready types — matches the shape expected by the React visualiser. */

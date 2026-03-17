@@ -180,15 +180,15 @@ export function StandardNode({ data }: { data: NodeProps }) {
         )}
       </div>
 
-      {/* Drill hint — fades in on hover for drillable nodes */}
+      {/* Drill hint — fades in on hover for drillable nodes; absolute so it doesn't affect node height */}
       {data.hasDetail && !data.isExpanded && (
         <motion.div
           variants={{
-            rest: { opacity: 0, y: 3 },
-            hover: { opacity: 1, y: 0 },
+            rest: { opacity: 0 },
+            hover: { opacity: 1 },
           }}
           transition={SPRING_STANDARD}
-          className="px-5 -mt-1 pb-2 flex items-center gap-1.5 pointer-events-none"
+          className="absolute bottom-7 left-0 right-0 px-5 pb-2 flex items-center gap-1.5 pointer-events-none"
         >
           <Layers className="w-3 h-3 text-white/25" />
           <span className="text-[10px] font-mono text-white/25 tracking-wide">double-click to drill</span>
@@ -287,15 +287,15 @@ export function EnhancedNode({ data }: { data: NodeProps }) {
         )}
       </div>
 
-      {/* Drill hint — fades in on hover for drillable enhanced nodes */}
+      {/* Drill hint — fades in on hover for drillable enhanced nodes; absolute so it doesn't affect node height */}
       {data.hasDetail && !data.isExpanded && (
         <motion.div
           variants={{
-            rest: { opacity: 0, y: 3 },
-            hover: { opacity: 1, y: 0 },
+            rest: { opacity: 0 },
+            hover: { opacity: 1 },
           }}
           transition={SPRING_STANDARD}
-          className="px-5 -mt-1 pb-2 flex items-center gap-1.5 relative z-10 pointer-events-none"
+          className="absolute bottom-7 left-0 right-0 px-5 pb-2 flex items-center gap-1.5 z-10 pointer-events-none"
         >
           <Layers className="w-3 h-3 text-amber-500/35" />
           <span className="text-[10px] font-mono text-amber-500/35 tracking-wide">double-click to drill</span>

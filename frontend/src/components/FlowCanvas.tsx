@@ -189,13 +189,16 @@ function Canvas({
     const layoutEdges: Edge[] = validEdges.map((e) => buildReactFlowEdge(e));
     if (drillStack.length > 0) {
       const leftmostNode = layoutNodes.reduce((a, b) => (a.position.x < b.position.x ? a : b));
+      // Use dagre's center Y for the leftmost node so the connecting edge is horizontal
+      const leftmostDagre = g.node(leftmostNode.id);
+      const GHOST_PIN_H = 30;
       const callerLabel = drillStack[drillStack.length - 1].label;
       const pinId = "__ghost_entry_pin__";
       layoutNodes.unshift({
         id: pinId,
         type: "ghostEntryPin",
         data: { callerLabel, onBack: () => onBackTo(drillStack.length - 2) },
-        position: { x: leftmostNode.position.x - 200, y: leftmostNode.position.y },
+        position: { x: leftmostNode.position.x - 200, y: leftmostDagre.y - GHOST_PIN_H / 2 },
         selectable: false,
         draggable: false,
       } as Node);
