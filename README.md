@@ -1,11 +1,11 @@
 <p align="center">
-  <img src="frontend/public/code.map-logo.png" alt="code.map" width="80" />
+  <img src="frontend/public/code.map-logo.png" alt="code.map" width="140" />
 </p>
 
 <h1 align="center">code.map</h1>
 
 <p align="center">
-  <em>Interactive API execution graph for backend developers — see your full call chain in seconds</em>
+  <em>Interactive API execution graph for NestJS and FastAPI — see your full call chain in seconds</em>
 </p>
 
 <p align="center">
@@ -25,14 +25,14 @@
 ---
 
 <p align="center">
-  <video src="frontend/public/code.map-demo.mov" controls width="100%"></video>
+  <img src="frontend/public/code.map-demo.gif" alt="code.map demo" width="100%" />
 </p>
 
 ---
 
-code-map instruments your API and renders the full execution path — from route handler down to every service call and database query — as an interactive call graph. Drop it into a NestJS or FastAPI app, open your browser, and your codebase becomes a map.
+code-map instruments your API and renders the full execution path — from route handler down to every service call — as an interactive call graph. Drop it into a NestJS or FastAPI app, open your browser, and your codebase becomes a map.
 
-It's a zero-configuration sidecar: add one module, get a live visualization at `localhost:7070`. No rebuild, no separate process management. Optional AI summaries (powered by Claude) annotate each node with a plain-English intent label.
+It's a zero-configuration sidecar: add one module, get a live visualization at `localhost:4567`. No rebuild, no separate process. Optional AI summaries (powered by Claude Haiku) annotate each node with a plain-English intent label, cached after first run.
 
 ## Features
 
@@ -40,9 +40,10 @@ It's a zero-configuration sidecar: add one module, get a live visualization at `
 - **Drill-down navigation** — Click any node to expand one level deeper; breadcrumbs let you navigate back up
 - **VS Code deep links** — Every node links directly to the exact source file and line number
 - **Command palette** — `Cmd+K` to search endpoints and functions across the entire graph
-- **AI intent summaries** — Optional Claude integration annotates each function with a 10-word plain-English summary, cached after first run
-- **@FlowStep decorator** — Tag critical functions with a business-intent label that appears inline in the graph
-- **Zero-config sidecar** — Spawns an Express server alongside your app; no separate process or infra needed
+- **AI intent summaries** — Optional Claude integration annotates each function with a 10-word plain-English summary, cached in `.flow-cache/` after first run
+- **`@FlowStep` decorator** — Tag critical functions with a business-intent label that appears inline on the graph node
+- **Zero-config sidecar** — Spawns an Express server alongside your app; no separate process or infrastructure needed
+- **Spring-physics UI** — Every transition uses spring curves — nothing snaps
 
 ## Quick Start
 
@@ -56,24 +57,24 @@ npm install @code-map/nestjs
 
 ```typescript
 // app.module.ts
-import { CodeMapModule } from '@code-map/nestjs';
+import { FlowMapperModule } from '@code-map/nestjs';
 
 @Module({
   imports: [
-    CodeMapModule.forRoot({ port: 7070 }),
+    FlowMapperModule.forRoot({ port: 4567 }),
     // ...your other modules
   ],
 })
 export class AppModule {}
 ```
 
-Start your app, then open **http://localhost:7070**.
+Start your app, then open **http://localhost:4567**.
 
 ---
 
 ### FastAPI
 
-Requires Python ≥ 3.9.
+Requires Python ≥ 3.9 and FastAPI ≥ 0.100.
 
 ```bash
 pip install code-map
@@ -85,14 +86,17 @@ from fastapi import FastAPI
 from code_map import FlowMap
 
 app = FastAPI()
-FlowMap.bind(app, config={"port": 7070})
+FlowMap.bind(app, config={"port": 4567})
 ```
 
-Start your app, then open **http://localhost:7070**.
+Start your app, then open **http://localhost:4567**.
 
 ---
 
 You'll see the code-map UI. Select an endpoint from the left panel — your full execution graph appears on the canvas.
+
+> [!NOTE]
+> code-map is a development tool. Guard the import behind `process.env.NODE_ENV !== 'production'` (NestJS) or an equivalent env check before deploying.
 
 ## Usage
 
@@ -126,49 +130,50 @@ async def process_checkout(cart_id: str):
 
 ### Enabling AI summaries
 
-Pass an Anthropic API key to have Claude generate plain-English summaries for every function in the graph. Summaries are cached in `.flow-cache/` after the first run.
+Pass an Anthropic API key to have Claude Haiku generate plain-English summaries for every function in the graph. Summaries are cached in `.flow-cache/` after the first run, keyed by function body hash.
+
+**NestJS:**
 
 ```typescript
-CodeMapModule.forRoot({
-  port: 7070,
+FlowMapperModule.forRoot({
+  port: 4567,
   enableAI: true,
   apiKey: process.env.ANTHROPIC_API_KEY,
 })
 ```
 
+**FastAPI:**
+
 ```python
 FlowMap.bind(app, config={
-    "port": 7070,
+    "port": 4567,
     "enable_ai": True,
     "api_key": os.environ["ANTHROPIC_API_KEY"],
 })
 ```
 
-AI-enriched nodes are highlighted with an amber border to distinguish them from standard nodes.
+AI-enriched nodes are highlighted with an amber border to distinguish them from standard nodes. You can also set the key via the `FLOW_MAP_API_KEY` environment variable instead of passing it in config.
 
 ## Configuration
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `port` | `number` | `7070` | Port for the sidecar server |
-| `enableAI` / `enable_ai` | `boolean` | `false` | Generate AI summaries via Claude |
-| `apiKey` / `api_key` | `string` | — | Anthropic API key (required when AI is enabled) |
+| `port` | `number` | `4567` | Port for the sidecar server |
+| `enableAI` / `enable_ai` | `boolean` | `false` | Generate AI summaries via Claude Haiku |
+| `apiKey` / `api_key` | `string` | `FLOW_MAP_API_KEY` env var | Anthropic API key (required when AI is enabled) |
 | `cachePath` / `cache_path` | `string` | `.flow-cache` | Directory for cached AI summaries |
 | `sourceRoot` / `source_root` | `string` | `process.cwd()` | Root directory scanned for source files |
-
-> [!NOTE]
-> The sidecar server is development-only. Guard the `CodeMapModule` import behind `process.env.NODE_ENV !== 'production'` before deploying.
 
 ## How It Works
 
 code-map runs as a lightweight sidecar alongside your application:
 
 1. **At startup** — The AST parser walks your source directory and builds a call graph by statically analyzing class declarations, method signatures, and decorators
-2. **At runtime** — The sidecar serves the graph over a local Express server on `/api/flow-map/paths`
-3. **In the browser** — The frontend fetches the graph, lays it out with dagre, and renders it using React Flow with spring-physics animations
+2. **At runtime** — The sidecar serves the graph over a local HTTP server on `/api/flow-map/paths`
+3. **In the browser** — The frontend fetches the graph, lays it out with dagre, and renders it with React Flow and spring-physics animations
 4. **On demand** — Clicking a node fetches its detail subgraph (one level deep); VS Code links open the source file at the exact line
 
-The maximum traced depth is 4 call levels. Excluded directories: `node_modules`, `dist`, `.git`, `coverage`, `__tests__`.
+The maximum traced depth is 4 call levels. Excluded from analysis: `node_modules`, `dist`, `.git`, `coverage`, `__tests__`.
 
 ## Contributing
 
