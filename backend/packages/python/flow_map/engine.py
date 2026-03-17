@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import dataclasses
 import os
 from typing import Any, Optional
@@ -7,7 +8,7 @@ from typing import Any, Optional
 from .ast_parser import AstParserService, FlowGraph
 from .cache import CacheService
 from .config import env_config
-from .constants import DEFAULT_SIDECAR_PORT, FLOW_CACHE_DIR
+from .constants import DEFAULT_SIDECAR_PORT, FLOW_CACHE_DIR, NANO_AGENT_BATCH_SIZE
 from .exceptions import FlowMapConfigError, FlowMapInitializationError
 from .logger import FlowLogger
 from .nano_agent import NanoAgentService
@@ -92,11 +93,8 @@ class FlowMap:
     async def _build_and_serve_graph(self) -> FlowGraph:
         graph = self._ast_parser.parse(self._config["source_root"])
 
-        if self._config["enable_ai"] and self._nano_agent:
-            await self._enrich_with_ai_summaries(graph)
-
+        # Serve immediately without AI so the frontend is never blocked
         paths = self._build_execution_paths(graph)
-
         self._sidecar.update_graph(self._graph_to_dict(graph))
         self._sidecar.update_paths(paths)
         FlowLogger.info(
@@ -104,7 +102,23 @@ class FlowMap:
             "Graph built and served",
             {"nodes": len(graph.nodes), "edges": len(graph.edges), "paths": len(paths)},
         )
+
+        if self._config["enable_ai"] and self._nano_agent:
+            asyncio.ensure_future(self._enrich_in_background(graph))
+
         return graph
+
+    async def _enrich_in_background(self, graph: FlowGraph) -> None:
+        self._sidecar.set_ai_enriching(True)
+        try:
+            await self._enrich_with_ai_summaries(graph)
+            enriched_paths = self._build_execution_paths(graph)
+            self._sidecar.update_graph(self._graph_to_dict(graph))
+            self._sidecar.update_paths(enriched_paths)
+        except Exception as err:
+            FlowLogger.error(LOGGER_CONTEXT, "Background AI enrichment failed", {"error": str(err)})
+        finally:
+            self._sidecar.set_ai_enriching(False)
 
     def _build_execution_paths(self, graph: FlowGraph) -> list[dict]:
         node_map = {n.id: n for n in graph.nodes}
@@ -174,25 +188,39 @@ class FlowMap:
         }
 
     async def _enrich_with_ai_summaries(self, graph: FlowGraph) -> None:
-        FlowLogger.info(
-            LOGGER_CONTEXT, f"Enriching {len(graph.nodes)} nodes with AI summaries"
-        )
-        attempted = 0
-        failed = 0
+        # Deduplicate: nodes sharing the same body hash need only one API call
+        hash_to_nodes: dict[str, list] = {}
+        to_fetch: list = []
 
         for node in graph.nodes:
             body_hash = self._cache.hash_body(node.raw_body)
             cached = self._cache.get(node.id, body_hash)
-
             if cached:
                 node.ai_summary = cached
                 continue
+            if body_hash in hash_to_nodes:
+                hash_to_nodes[body_hash].append(node)
+            else:
+                hash_to_nodes[body_hash] = [node]
+                to_fetch.append(node)
 
+        FlowLogger.info(
+            LOGGER_CONTEXT,
+            f"Enriching {len(to_fetch)} unique nodes with AI summaries ({len(graph.nodes)} total)",
+        )
+
+        attempted = 0
+        failed = 0
+
+        async def fetch_one(node: Any) -> None:
+            nonlocal attempted, failed
+            body_hash = self._cache.hash_body(node.raw_body)
             attempted += 1
             try:
                 summary = await self._nano_agent.summarize(node)  # type: ignore[union-attr]
-                node.ai_summary = summary
-                self._cache.set(node.id, body_hash, summary)
+                for n in hash_to_nodes.get(body_hash, [node]):
+                    n.ai_summary = summary
+                    self._cache.set(n.id, body_hash, summary)
             except Exception as err:
                 failed += 1
                 FlowLogger.warn(
@@ -200,6 +228,10 @@ class FlowMap:
                     "AI summary failed for node, skipping",
                     {"node_id": node.id, "error": str(err)},
                 )
+
+        for i in range(0, len(to_fetch), NANO_AGENT_BATCH_SIZE):
+            batch = to_fetch[i : i + NANO_AGENT_BATCH_SIZE]
+            await asyncio.gather(*[fetch_one(n) for n in batch])
 
         if attempted > 0 and failed == attempted:
             FlowLogger.error(

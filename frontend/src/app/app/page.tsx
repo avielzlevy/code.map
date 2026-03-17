@@ -20,7 +20,7 @@ const LOADING_MESSAGES = [
 ];
 
 export default function Home() {
-  const { paths, status, usingMockData } = useExecutionPaths();
+  const { paths, status, aiEnriching } = useExecutionPaths();
   const [selectedPath, setSelectedPath] = useState<ExecutionPath | null>(null);
   const [drillStack, setDrillStack] = useState<DrillEntry[]>([]);
   const [loadingMsgIdx, setLoadingMsgIdx] = useState(0);
@@ -161,7 +161,7 @@ export default function Home() {
         paths={paths}
         selectedPath={activePath}
         onSelectPath={handleSelectPath}
-        usingMockData={usingMockData}
+        aiEnriching={aiEnriching}
       />
 
       <div className="flex flex-1 overflow-hidden">
@@ -200,10 +200,10 @@ export default function Home() {
                 variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0, transition: SPRING_DEFAULT } }}
               >
                 <p className="text-[13px] font-mono font-semibold text-white/60">
-                  No endpoints traced yet.
+                  No endpoints found.
                 </p>
                 <p className="text-[11px] text-gray-600 max-w-55 leading-relaxed">
-                  Make a request to any endpoint in your app — code-map will trace the execution path and show it here.
+                  code-map scans your source files at startup. Make sure your controllers and routes are inside the configured source root.
                 </p>
               </motion.div>
 

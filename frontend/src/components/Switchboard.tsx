@@ -1,42 +1,37 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { Search } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Search, Sparkles } from "lucide-react";
 import { ExecutionPath } from "@/lib/mockData";
 import clsx from "clsx";
 import { SPRING_DEFAULT, SPRING_STANDARD } from "@/lib/spring";
+import Image from "next/image";
 
 interface SwitchboardProps {
   paths: ExecutionPath[];
   selectedPath: ExecutionPath | null;
   onSelectPath: (path: ExecutionPath) => void;
-  usingMockData?: boolean;
+  aiEnriching?: boolean;
 }
 
 export function Switchboard({
   paths,
   selectedPath,
   onSelectPath,
+  aiEnriching,
 }: SwitchboardProps) {
   return (
     <div className="w-full h-12 border-b border-white/10 bg-black flex items-center shrink-0 z-20 shadow-[0_4px_24px_rgba(0,0,0,0.6)]">
       {/* Logo */}
-      <div className="flex items-center gap-2.5 px-4 h-full border-r border-white/10 shrink-0">
-        <motion.div
-          className="w-7 h-7 rounded-md flex items-center justify-center shrink-0 border border-white/12 bg-white/5"
-          whileHover={{
-            borderColor: "rgba(255,255,255,0.3)",
-            backgroundColor: "rgba(255,255,255,0.09)",
-          }}
-          transition={SPRING_STANDARD}
-        >
-          <span className="font-mono text-[10px] font-bold text-white/70 tracking-tighter">
-            fn
-          </span>
-        </motion.div>
-        <span className="font-mono text-[13px] font-bold tracking-tight text-white leading-none select-none">
-          code<span className="text-white/35">.</span>map
-        </span>
+      <div className="flex items-center px-4 h-full border-r border-white/10 shrink-0">
+        <Image
+          src="/code.map-logo.png"
+          alt="code.map"
+          width={96}
+          height={24}
+          className="h-5 w-auto select-none"
+          priority
+        />
       </div>
 
       {/* Endpoint tabs — horizontally scrollable */}
@@ -95,6 +90,22 @@ export function Switchboard({
           );
         })}
       </div>
+
+      {/* AI enriching indicator */}
+      <AnimatePresence>
+        {aiEnriching && (
+          <motion.div
+            initial={{ opacity: 0, x: 8 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 8 }}
+            transition={SPRING_DEFAULT}
+            className="flex items-center gap-1.5 px-2.5 h-6 rounded-md border border-amber-500/20 bg-amber-500/5 shrink-0"
+          >
+            <Sparkles className="w-3 h-3 text-amber-400/70 animate-pulse" />
+            <span className="text-[10px] font-mono text-amber-400/70">Generating summaries…</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Right controls */}
       <div className="flex items-center gap-2 px-3 h-full border-l border-white/10 shrink-0">

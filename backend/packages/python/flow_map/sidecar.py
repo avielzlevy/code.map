@@ -27,6 +27,7 @@ class SidecarService:
         )
         self._current_graph: Optional[dict] = None
         self._current_paths: list[dict] = []
+        self._ai_enriching: bool = False
         self._server: Optional[uvicorn.Server] = None
         self._server_thread: Optional[threading.Thread] = None
         self._register_routes()
@@ -36,6 +37,9 @@ class SidecarService:
 
     def update_paths(self, paths: list[dict]) -> None:
         self._current_paths = paths
+
+    def set_ai_enriching(self, value: bool) -> None:
+        self._ai_enriching = value
 
     def start(self, port: int) -> None:
         if self._server_thread and self._server_thread.is_alive():
@@ -71,6 +75,10 @@ class SidecarService:
         @self._app.get(f"{SIDECAR_API_PREFIX}/health")
         def health() -> JSONResponse:
             return JSONResponse({"status": "success", "data": {"alive": True}})
+
+        @self._app.get(f"{SIDECAR_API_PREFIX}/status")
+        def status() -> JSONResponse:
+            return JSONResponse({"status": "success", "data": {"aiEnriching": self._ai_enriching}})
 
         self._mount_frontend()
 

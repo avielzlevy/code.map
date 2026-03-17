@@ -12,7 +12,7 @@ import { AstParserService } from '../ast/ast-parser.service';
 import { CacheService } from '../cache/cache.service';
 import { NanoAgentService } from '../nano-agent/nano-agent.service';
 import { SidecarService } from '../sidecar/sidecar.service';
-import { MAX_EXECUTION_DEPTH, DETAIL_EXPANSION_DEPTH } from '../constants';
+import { MAX_EXECUTION_DEPTH, DETAIL_EXPANSION_DEPTH, NANO_AGENT_BATCH_SIZE } from '../constants';
 
 type OrderedAdj = Map<string, string[]>;
 
@@ -42,12 +42,8 @@ export class FlowMapperService {
   async buildAndServeGraph(): Promise<FlowGraph> {
     const graph = this.astParser.parse(this.config.sourceRoot);
 
-    if (this.config.enableAI && this.nanoAgent) {
-      await this.enrichWithAiSummaries(graph);
-    }
-
+    // Serve immediately without AI so the frontend is never blocked
     const paths = this.buildExecutionPaths(graph);
-
     this.sidecar.updateGraph(graph);
     this.sidecar.updatePaths(paths);
 
@@ -56,6 +52,23 @@ export class FlowMapperService {
       edges: graph.edges.length,
       paths: paths.length,
     });
+
+    if (this.config.enableAI && this.nanoAgent) {
+      this.sidecar.setAiEnriching(true);
+      this.enrichWithAiSummaries(graph)
+        .then(() => {
+          const enrichedPaths = this.buildExecutionPaths(graph);
+          this.sidecar.updateGraph(graph);
+          this.sidecar.updatePaths(enrichedPaths);
+        })
+        .catch((err: Error) => {
+          FlowLogger.error(LOGGER_CONTEXT, 'Background AI enrichment failed', { error: err.message });
+        })
+        .finally(() => {
+          this.sidecar.setAiEnriching(false);
+        });
+    }
+
     return graph;
   }
 
@@ -341,32 +354,50 @@ export class FlowMapperService {
   }
 
   private async enrichWithAiSummaries(graph: FlowGraph): Promise<void> {
-    FlowLogger.info(LOGGER_CONTEXT, `Enriching ${graph.nodes.length} nodes with AI summaries`);
-
-    let attempted = 0;
-    let failed = 0;
+    // Deduplicate: nodes sharing the same body hash need only one API call
+    const hashToNodes = new Map<string, FlowNode[]>();
+    const toFetch: FlowNode[] = [];
 
     for (const node of graph.nodes) {
       const hash = this.cache.hashBody(node.rawBody);
       const cached = this.cache.get(node.id, hash);
-
       if (cached) {
         node.aiSummary = cached;
         continue;
       }
-
-      attempted++;
-      try {
-        const summary = await this.nanoAgent!.summarize(node);
-        node.aiSummary = summary;
-        this.cache.set(node.id, hash, summary);
-      } catch (err) {
-        failed++;
-        FlowLogger.warn(LOGGER_CONTEXT, 'AI summary failed for node, skipping', {
-          nodeId: node.id,
-          error: (err as Error).message,
-        });
+      const group = hashToNodes.get(hash);
+      if (group) {
+        group.push(node);
+      } else {
+        hashToNodes.set(hash, [node]);
+        toFetch.push(node);
       }
+    }
+
+    FlowLogger.info(LOGGER_CONTEXT, `Enriching ${toFetch.length} unique nodes with AI summaries (${graph.nodes.length} total)`);
+
+    let attempted = 0;
+    let failed = 0;
+
+    for (let i = 0; i < toFetch.length; i += NANO_AGENT_BATCH_SIZE) {
+      const batch = toFetch.slice(i, i + NANO_AGENT_BATCH_SIZE);
+      await Promise.all(batch.map(async (node) => {
+        const hash = this.cache.hashBody(node.rawBody);
+        attempted++;
+        try {
+          const summary = await this.nanoAgent!.summarize(node);
+          for (const n of hashToNodes.get(hash) ?? [node]) {
+            n.aiSummary = summary;
+            this.cache.set(n.id, hash, summary);
+          }
+        } catch (err) {
+          failed++;
+          FlowLogger.warn(LOGGER_CONTEXT, 'AI summary failed for node, skipping', {
+            nodeId: node.id,
+            error: (err as Error).message,
+          });
+        }
+      }));
     }
 
     if (attempted > 0 && failed === attempted) {

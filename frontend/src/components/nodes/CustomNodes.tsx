@@ -213,8 +213,15 @@ function NodeContent({ data, amber }: { data: NodeProps; amber?: boolean }) {
         </div>
       )}
 
-      {/* JSDoc — same container regardless of node type; truncated closed, full expanded */}
-      {data.docstring && (
+      {/* Closed: show AI summary if available, otherwise JSDoc */}
+      {!data.isExpanded && data.aiSummary && (
+        <div className={`mt-3 flex items-start gap-1.5 text-[11px] font-mono px-2.5 py-1.5 rounded-md ${amber ? "bg-amber-500/5 border border-amber-500/15 text-amber-300/70" : "bg-white/5 border border-white/8 text-gray-400"}`}>
+          <Sparkles className={`w-3 h-3 mt-0.5 shrink-0 ${amber ? "text-amber-400/50" : "text-white/30"}`} />
+          <span className="truncate">{data.aiSummary}</span>
+        </div>
+      )}
+      {/* Show JSDoc when: expanded (full text), or closed with no AI summary */}
+      {(data.isExpanded || !data.aiSummary) && data.docstring && (
         <div className="mt-3 text-[11px] font-mono bg-white/5 border border-white/8 text-gray-400 px-2.5 py-1.5 rounded-md">
           <span
             className={data.isExpanded ? "whitespace-pre-wrap break-words" : "truncate block"}

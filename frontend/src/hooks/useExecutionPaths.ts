@@ -1,42 +1,85 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { apiClient } from "@/lib/api-client";
 import { ExecutionPath } from "@/lib/mockData";
 
 type Status = "loading" | "success" | "error";
 
+const AI_POLL_INTERVAL_MS = 2000;
+
 interface UseExecutionPathsResult {
   paths: ExecutionPath[];
   status: Status;
-  usingMockData: boolean;
+  aiEnriching: boolean;
 }
 
 export function useExecutionPaths(): UseExecutionPathsResult {
   const [paths, setPaths] = useState<ExecutionPath[]>([]);
   const [status, setStatus] = useState<Status>("loading");
-  const [usingMockData, setUsingMockData] = useState(false);
+  const [aiEnriching, setAiEnriching] = useState(false);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const fetchPaths = async () => {
+    const fetched = await apiClient.getPaths();
+    setPaths(fetched);
+    setStatus("success");
+  };
+
+  const stopPolling = () => {
+    if (pollRef.current) {
+      clearInterval(pollRef.current);
+      pollRef.current = null;
+    }
+  };
+
+  const startPolling = () => {
+    stopPolling();
+    pollRef.current = setInterval(async () => {
+      try {
+        const { aiEnriching: enriching } = await apiClient.getStatus();
+        if (!enriching) {
+          setAiEnriching(false);
+          stopPolling();
+          await fetchPaths();
+        }
+      } catch {
+        // status endpoint unavailable — stop polling silently
+        stopPolling();
+        setAiEnriching(false);
+      }
+    }, AI_POLL_INTERVAL_MS);
+  };
 
   useEffect(() => {
     let cancelled = false;
 
-    apiClient
-      .getPaths()
-      .then((fetched) => {
+    const init = async () => {
+      try {
+        await fetchPaths();
         if (cancelled) return;
-        setPaths(fetched);
-        setStatus("success");
-      })
-      .catch(() => {
+
+        const { aiEnriching: enriching } = await apiClient.getStatus();
         if (cancelled) return;
-        setStatus("error");
-      });
+
+        if (enriching) {
+          setAiEnriching(true);
+          startPolling();
+        }
+      } catch {
+        if (!cancelled) setStatus("error");
+      }
+    };
+
+    init();
 
     return () => {
       cancelled = true;
+      stopPolling();
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return { paths, status, usingMockData };
+  return { paths, status, aiEnriching };
 }

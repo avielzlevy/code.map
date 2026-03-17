@@ -5,6 +5,7 @@ export const FLOW_STEP_DECORATOR_NAME = "FlowStep";
 export const SIDECAR_API_PREFIX = "/api/flow-map";
 
 export const NANO_AGENT_MAX_TOKENS = 50;
+export const NANO_AGENT_BATCH_SIZE = 5; // concurrent requests per batch — tune per provider
 export const NANO_AGENT_ALL_FAILED_THRESHOLD = 1.0; // 100% failure rate triggers config error log
 
 export type AIProvider = "anthropic" | "openai" | "gemini" | "openrouter";

@@ -16,6 +16,7 @@ export class SidecarService {
   private server: http.Server | null = null;
   private currentGraph: FlowGraph | null = null;
   private currentPaths: FrontendExecutionPath[] = [];
+  private aiEnriching = false;
 
   constructor() {
     this.app = express();
@@ -30,6 +31,10 @@ export class SidecarService {
 
   updatePaths(paths: FrontendExecutionPath[]): void {
     this.currentPaths = paths;
+  }
+
+  setAiEnriching(value: boolean): void {
+    this.aiEnriching = value;
   }
 
   async start(port: number): Promise<void> {
@@ -82,6 +87,14 @@ export class SidecarService {
       const response: ApiResponse<{ alive: boolean }> = {
         status: 'success',
         data: { alive: true },
+      };
+      res.json(response);
+    });
+
+    this.app.get(`${SIDECAR_API_PREFIX}/status`, (_req: Request, res: Response) => {
+      const response: ApiResponse<{ aiEnriching: boolean }> = {
+        status: 'success',
+        data: { aiEnriching: this.aiEnriching },
       };
       res.json(response);
     });

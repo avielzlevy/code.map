@@ -48,4 +48,8 @@ export const apiClient = {
   healthCheck(): Promise<{ alive: boolean }> {
     return request<{ alive: boolean }>("/api/flow-map/health");
   },
+
+  getStatus(): Promise<{ aiEnriching: boolean }> {
+    return request<{ aiEnriching: boolean }>("/api/flow-map/status");
+  },
 };
