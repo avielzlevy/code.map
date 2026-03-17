@@ -20,7 +20,7 @@ function DemoVideo() {
   return (
     <div className="relative w-full rounded-xl overflow-hidden border border-white/10 bg-black select-none">
       <video
-        src="/code.map_demo.mov"
+        src="/code.map-demo.mov"
         autoPlay
         muted
         loop
@@ -40,11 +40,11 @@ const CODE: Record<Framework, { label: string; lines: string[] }> = {
     label: "NestJS",
     lines: [
       "// app.module.ts",
-      "import { CodeMapModule } from '@code-map/nestjs';",
+      "import { FlowMapperModule } from '@code-map/nestjs';",
       "",
       "@Module({",
       "  imports: [",
-      "    CodeMapModule.forRoot({ port: 7070 }),",
+      "    FlowMapperModule.forRoot({ port: 4567 }),",
       "    // ... your other modules",
       "  ],",
       "})",
@@ -55,11 +55,11 @@ const CODE: Record<Framework, { label: string; lines: string[] }> = {
     label: "FastAPI",
     lines: [
       "# main.py",
-      "from code_map import CodeMapPlugin",
+      "from code_map import FlowMap",
       "",
       "app = FastAPI()",
       "",
-      "CodeMapPlugin(app, port=7070)",
+      "FlowMap.bind(app, config={'port': 4567})",
       "",
       "# That's it.",
     ],
@@ -704,7 +704,7 @@ export default function LandingPage() {
           >
             Then open{" "}
             <span className="text-gray-500 px-1.5 py-0.5 border border-white/8 rounded bg-white/3">
-              localhost:7070
+              localhost:4567
             </span>{" "}
             and select any endpoint.
           </motion.p>
