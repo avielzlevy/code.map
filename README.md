@@ -23,9 +23,9 @@
 </p>
 
 ---
-
-https://github.com/user-attachments/assets/127de087-012c-4e6b-a568-7e234b3af33a
-
+<div align="center">
+  <video src="https://github.com/user-attachments/assets/127de087-012c-4e6b-a568-7e234b3af33a" width="100%" controls muted></video>
+</div>
 ---
 
 code-map instruments your API and renders the full execution path — from route handler down to every service call — as an interactive call graph. Drop it into any framework supported, open your browser, and your codebase becomes a map.
