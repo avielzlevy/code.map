@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { Search } from "lucide-react";
 import { ExecutionPath } from "@/lib/mockData";
 import clsx from "clsx";
 import { SPRING_DEFAULT, SPRING_STANDARD } from "@/lib/spring";
@@ -108,9 +109,10 @@ export function Switchboard({
             )
           }
           aria-label="Search (⌘K)"
-          className="flex items-center px-2.5 py-1.5 rounded-md border border-white/8 bg-transparent hover:bg-white/5 hover:border-white/15 active:bg-white/8 transition-colors"
+          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-white/8 bg-transparent hover:bg-white/5 hover:border-white/15 active:bg-white/8 transition-colors"
         >
-          <kbd className="text-[11px] font-mono text-gray-400 hover:text-gray-200">
+          <Search className="w-3.5 h-3.5 text-gray-500" />
+          <kbd className="text-[11px] font-mono text-gray-400">
             ⌘K
           </kbd>
         </button>

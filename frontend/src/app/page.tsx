@@ -133,7 +133,7 @@ const STEPS = [
   {
     n: "03",
     title: "Jump to the exact line.",
-    desc: "Every node is a VS Code deep link. One click — the file opens at the exact line.",
+    desc: "Every node links directly to your editor. One click — the file opens at the exact line.",
   },
 ];
 

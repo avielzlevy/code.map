@@ -112,10 +112,11 @@ function NodeExpansion({ data, amber }: { data: NodeProps; amber?: boolean }) {
               amber ? "bg-amber-500/5 border-amber-500/15" : "bg-white/3 border-white/8"
             }`}
           >
-            <Sparkles
-              className={`absolute top-2.5 right-2.5 w-3 h-3 ${amber ? "text-amber-400/30" : "text-white/20"}`}
-            />
-            <p className="text-[12px] text-gray-400 leading-relaxed pr-5 break-words">{data.aiSummary}</p>
+            <div className={`flex items-center gap-1 mb-1.5 ${amber ? "text-amber-400/50" : "text-white/30"}`}>
+              <Sparkles className="w-3 h-3" />
+              <span className="text-[10px] font-mono">AI summary</span>
+            </div>
+            <p className="text-[12px] text-gray-400 leading-relaxed break-words">{data.aiSummary}</p>
           </div>
         </div>
       )}
@@ -247,17 +248,12 @@ export function StandardNode({ data }: { data: NodeProps }) {
       transition={SPRING_STANDARD}
     >
       {data.hasDetail && (
-        <motion.div
-          variants={{
-            rest: { scale: 1, opacity: 1 },
-            hover: { scale: 1.15, opacity: 1 },
-          }}
-          transition={SPRING_BADGE}
-          title="Double-click to drill into sub-calls"
+        <div
+          title="Has nested calls"
           className="absolute top-3 right-3 w-6 h-6 rounded-full bg-white/22 border border-white/45 flex items-center justify-center z-20"
         >
           <Layers className="w-3.5 h-3.5 text-white/80" />
-        </motion.div>
+        </div>
       )}
       <Handle
         type="target"
@@ -319,17 +315,12 @@ export function EnhancedNode({ data }: { data: NodeProps }) {
       </div>
 
       {data.hasDetail && (
-        <motion.div
-          variants={{
-            rest: { scale: 1, opacity: 1 },
-            hover: { scale: 1.15, opacity: 1 },
-          }}
-          transition={SPRING_BADGE}
-          title="Double-click to drill into sub-calls"
+        <div
+          title="Has nested calls"
           className="absolute top-3 right-3 w-6 h-6 rounded-full bg-amber-500/32 border border-amber-500/60 flex items-center justify-center z-20"
         >
           <Layers className="w-3.5 h-3.5 text-amber-400" />
-        </motion.div>
+        </div>
       )}
 
       <Handle

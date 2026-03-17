@@ -147,7 +147,7 @@ export default function Home() {
               href="/"
               className="px-4 py-2 rounded-lg border border-white/10 text-gray-400 font-medium text-[12px] hover:border-white/20 hover:text-white transition-colors"
             >
-              Setup guide
+              Back to home
             </a>
           </div>
         </div>
@@ -200,7 +200,7 @@ export default function Home() {
                 variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0, transition: SPRING_DEFAULT } }}
               >
                 <p className="text-[13px] font-mono font-semibold text-white/60">
-                  No traffic yet.
+                  No endpoints traced yet.
                 </p>
                 <p className="text-[11px] text-gray-600 max-w-55 leading-relaxed">
                   Make a request to any endpoint in your app — code-map will trace the execution path and show it here.
