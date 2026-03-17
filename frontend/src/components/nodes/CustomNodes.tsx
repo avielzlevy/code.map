@@ -273,10 +273,10 @@ export function StandardNode({ data }: { data: NodeProps }) {
         onClick={(e) => { e.stopPropagation(); data.onToggleExpand(); }}
         onDoubleClick={(e) => e.stopPropagation()}
         aria-label={data.isExpanded ? "Collapse details" : "Expand details"}
-        className="w-full h-7 border-t border-white/8 hover:bg-white/4 transition-colors rounded-b-xl flex items-center justify-center overflow-hidden"
+        className="w-full h-9 border-t border-white/8 hover:bg-white/4 transition-colors rounded-b-xl flex items-center justify-center overflow-hidden"
       >
         <motion.div animate={{ rotate: data.isExpanded ? 180 : 0 }} transition={SPRING_DEFAULT}>
-          <ChevronDown className={`w-3.5 h-3.5 transition-colors ${data.isExpanded ? "text-white/60" : "text-white/25"}`} />
+          <ChevronDown className={`w-3.5 h-3.5 transition-colors ${data.isExpanded ? "text-white/60" : "text-white/50"}`} />
         </motion.div>
       </button>
 
@@ -343,10 +343,10 @@ export function EnhancedNode({ data }: { data: NodeProps }) {
         onClick={(e) => { e.stopPropagation(); data.onToggleExpand(); }}
         onDoubleClick={(e) => e.stopPropagation()}
         aria-label={data.isExpanded ? "Collapse details" : "Expand details"}
-        className="relative z-10 w-full h-7 border-t border-amber-500/15 hover:bg-amber-500/5 transition-colors rounded-b-xl flex items-center justify-center overflow-hidden"
+        className="relative z-10 w-full h-9 border-t border-amber-500/15 hover:bg-amber-500/5 transition-colors rounded-b-xl flex items-center justify-center overflow-hidden"
       >
         <motion.div animate={{ rotate: data.isExpanded ? 180 : 0 }} transition={SPRING_DEFAULT}>
-          <ChevronDown className={`w-3.5 h-3.5 transition-colors ${data.isExpanded ? "text-amber-400/60" : "text-amber-500/30"}`} />
+          <ChevronDown className={`w-3.5 h-3.5 transition-colors ${data.isExpanded ? "text-amber-400/60" : "text-amber-500/55"}`} />
         </motion.div>
       </button>
 

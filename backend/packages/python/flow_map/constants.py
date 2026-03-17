@@ -4,10 +4,31 @@ FLOW_CACHE_INDEX_FILE: str = "index.json"
 FLOW_STEP_ATTR: str = "_flow_step_description"
 SIDECAR_API_PREFIX: str = "/api/flow-map"
 
-NANO_AGENT_MODEL: str = "claude-haiku-4-5-20251001"
 NANO_AGENT_MAX_TOKENS: int = 50
-NANO_AGENT_API_URL: str = "https://api.anthropic.com/v1/messages"
-NANO_AGENT_ANTHROPIC_VERSION: str = "2023-06-01"
+
+from typing import Literal
+
+AIProvider = Literal["anthropic", "openai", "gemini", "openrouter"]
+
+PROVIDER_CONFIGS: dict[str, dict[str, str]] = {
+    "anthropic": {
+        "api_url": "https://api.anthropic.com/v1/messages",
+        "default_model": "claude-haiku-4-5-20251001",
+        "anthropic_version": "2023-06-01",
+    },
+    "openai": {
+        "api_url": "https://api.openai.com/v1/chat/completions",
+        "default_model": "gpt-4o-mini",
+    },
+    "gemini": {
+        "api_url": "https://generativelanguage.googleapis.com/v1beta/models",
+        "default_model": "gemini-2.0-flash",
+    },
+    "openrouter": {
+        "api_url": "https://openrouter.ai/api/v1/chat/completions",
+        "default_model": "google/gemini-2.0-flash-001",
+    },
+}
 
 NANO_AGENT_PROMPT_TEMPLATE: str = (
     "You are a Nano-Agent analyzing source code. Provide a strict, concise (10-15 words max) "

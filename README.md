@@ -150,7 +150,7 @@ FlowMap.bind(app, config={
 })
 ```
 
-`@FlowStep`-tagged nodes are highlighted with an amber border to distinguish them from standard nodes. You can also set your Anthropic API key via the `FLOW_MAP_API_KEY` environment variable instead of passing it in config.
+`@FlowStep`-tagged nodes are highlighted with an amber border to distinguish them from standard nodes. You can also set your API key and provider via the `SUMMARIES_API_KEY` and `SUMMARIES_PROVIDER` environment variables instead of passing them in config.
 
 ## Configuration
 
@@ -158,7 +158,8 @@ FlowMap.bind(app, config={
 |--------|------|---------|-------------|
 | `port` | `number` | `4567` | Port for the sidecar server |
 | `enableAI` / `enable_ai` | `boolean` | `false` | Generate AI summaries via Claude Haiku |
-| `apiKey` / `api_key` | `string` | `FLOW_MAP_API_KEY` env var | Anthropic API key (required when AI is enabled) |
+| `apiKey` / `api_key` | `string` | `SUMMARIES_API_KEY` env var | API key for the chosen provider (required when AI is enabled) |
+| `provider` | `string` | `SUMMARIES_PROVIDER` env var | LLM provider: `anthropic`, `openai`, `gemini`, `openrouter` (required when AI is enabled) |
 | `cachePath` / `cache_path` | `string` | `.flow-cache` | Directory for cached AI summaries |
 | `sourceRoot` / `source_root` | `string` | `process.cwd()` | Root directory scanned for source files |
 

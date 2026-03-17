@@ -8,7 +8,7 @@ import { CacheService } from '../cache/cache.service';
 import { NanoAgentService } from '../nano-agent/nano-agent.service';
 import { SidecarService } from '../sidecar/sidecar.service';
 import { FlowMapService } from './flow-map.service';
-import { DEFAULT_SIDECAR_PORT, FLOW_CACHE_DIR } from '../constants';
+import { AIProvider, DEFAULT_SIDECAR_PORT, FLOW_CACHE_DIR } from '../constants';
 import envConfig from '../config/env-config';
 
 const LOGGER_CONTEXT = 'FlowMap';
@@ -52,7 +52,7 @@ export class FlowMap {
     const astParser = new AstParserService();
     const cache = new CacheService(config.cachePath);
     const sidecar = new SidecarService();
-    const nanoAgent = config.enableAI ? new NanoAgentService(config.apiKey) : null;
+    const nanoAgent = config.enableAI ? new NanoAgentService(config.apiKey, config.provider) : null;
     const service = new FlowMapService(config, astParser, cache, sidecar, nanoAgent);
 
     FlowLogger.info(LOGGER_CONTEXT, 'Initializing FlowMap', {
@@ -90,6 +90,7 @@ export class FlowMap {
       port: userConfig.port ?? portFromEnv ?? DEFAULT_SIDECAR_PORT,
       enableAI: userConfig.enableAI ?? false,
       apiKey: userConfig.apiKey ?? envConfig.apiKey ?? '',
+      provider: userConfig.provider ?? envConfig.provider ?? ('' as AIProvider),
       cachePath: userConfig.cachePath ?? path.join(process.cwd(), FLOW_CACHE_DIR),
       sourceRoot: userConfig.sourceRoot ?? process.cwd(),
     };
@@ -103,7 +104,14 @@ export class FlowMap {
     if (config.enableAI && !config.apiKey) {
       throw new FlowMapInitializationException(
         'enableAI is true but no apiKey was provided. ' +
-          'Set apiKey in config or the FLOW_MAP_API_KEY environment variable.',
+          'Set apiKey in config or the SUMMARIES_API_KEY environment variable.',
+      );
+    }
+
+    if (config.enableAI && !config.provider) {
+      throw new FlowMapInitializationException(
+        'enableAI is true but no provider was specified. ' +
+          'Set provider in config or the SUMMARIES_PROVIDER environment variable.',
       );
     }
   }

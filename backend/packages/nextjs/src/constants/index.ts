@@ -4,10 +4,32 @@ export const FLOW_CACHE_INDEX_FILE = 'index.json';
 export const FLOW_STEP_DECORATOR_NAME = 'FlowStep';
 export const SIDECAR_API_PREFIX = '/api/flow-map';
 
-export const NANO_AGENT_MODEL = 'claude-haiku-4-5-20251001';
 export const NANO_AGENT_MAX_TOKENS = 50;
-export const NANO_AGENT_API_URL = 'https://api.anthropic.com/v1/messages';
-export const NANO_AGENT_ANTHROPIC_VERSION = '2023-06-01';
+
+export type AIProvider = 'anthropic' | 'openai' | 'gemini' | 'openrouter';
+
+export const PROVIDER_CONFIGS: Record<
+  AIProvider,
+  { apiUrl: string; defaultModel: string; anthropicVersion?: string }
+> = {
+  anthropic: {
+    apiUrl: 'https://api.anthropic.com/v1/messages',
+    defaultModel: 'claude-haiku-4-5-20251001',
+    anthropicVersion: '2023-06-01',
+  },
+  openai: {
+    apiUrl: 'https://api.openai.com/v1/chat/completions',
+    defaultModel: 'gpt-4o-mini',
+  },
+  gemini: {
+    apiUrl: 'https://generativelanguage.googleapis.com/v1beta/models',
+    defaultModel: 'gemini-2.0-flash',
+  },
+  openrouter: {
+    apiUrl: 'https://openrouter.ai/api/v1/chat/completions',
+    defaultModel: 'google/gemini-2.0-flash-001',
+  },
+};
 
 export const NANO_AGENT_PROMPT_TEMPLATE =
   'You are a Nano-Agent analyzing source code. Provide a strict, concise (10-15 words max) ' +

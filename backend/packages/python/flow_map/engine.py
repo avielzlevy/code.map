@@ -61,7 +61,7 @@ class FlowMap:
         ast_parser = AstParserService()
         cache = CacheService(resolved["cache_path"])
         sidecar = SidecarService()
-        nano_agent = NanoAgentService(resolved["api_key"]) if resolved["enable_ai"] else None
+        nano_agent = NanoAgentService(resolved["api_key"], resolved["provider"]) if resolved["enable_ai"] else None
 
         FlowLogger.info(
             LOGGER_CONTEXT,
@@ -211,6 +211,7 @@ class FlowMap:
             "port": user_config.get("port", DEFAULT_SIDECAR_PORT),
             "enable_ai": user_config.get("enable_ai", False),
             "api_key": user_config.get("api_key") or env_config.api_key or "",
+            "provider": user_config.get("provider") or env_config.provider or "",
             "cache_path": user_config.get("cache_path")
             or os.path.join(os.getcwd(), FLOW_CACHE_DIR),
             "source_root": user_config.get("source_root") or os.getcwd(),
@@ -225,5 +226,11 @@ class FlowMap:
         if config["enable_ai"] and not config["api_key"]:
             raise FlowMapInitializationError(
                 "enable_ai is True but no api_key was provided. "
-                "Set api_key in config or the FLOW_MAP_API_KEY environment variable."
+                "Set api_key in config or the SUMMARIES_API_KEY environment variable."
+            )
+
+        if config["enable_ai"] and not config["provider"]:
+            raise FlowMapInitializationError(
+                "enable_ai is True but no provider was specified. "
+                "Set provider in config or the SUMMARIES_PROVIDER environment variable."
             )

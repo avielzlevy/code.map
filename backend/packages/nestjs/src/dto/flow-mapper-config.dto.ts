@@ -1,17 +1,28 @@
-export interface FlowMapperConfig {
+import { AIProvider } from '../constants';
+
+type FlowMapperBaseConfig = {
   /** Port for the sidecar visualization server. Defaults to 4567. */
   port?: number;
-  /** Enable AI-powered function summaries via the Nano-Agent engine. */
-  enableAI?: boolean;
-  /** API key for the LLM provider. Required when enableAI is true. */
-  apiKey?: string;
   /** File system path for the AI summary cache directory. Defaults to .flow-cache in cwd. */
   cachePath?: string;
   /** Root directory to scan for source files. Defaults to process.cwd(). */
   sourceRoot?: string;
-}
+};
 
-export interface ResolvedFlowMapperConfig extends Required<FlowMapperConfig> {}
+export type FlowMapperConfig = FlowMapperBaseConfig &
+  (
+    | { enableAI: true; apiKey: string; provider: AIProvider }
+    | { enableAI?: false; apiKey?: string; provider?: AIProvider }
+  );
+
+export interface ResolvedFlowMapperConfig {
+  port: number;
+  enableAI: boolean;
+  apiKey: string;
+  provider: AIProvider | '';
+  cachePath: string;
+  sourceRoot: string;
+}
 
 export interface FlowNode {
   id: string;
