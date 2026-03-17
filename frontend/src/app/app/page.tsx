@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { Sparkles } from "lucide-react";
 import { SPRING_DEFAULT, SPRING_SNAPPY } from "@/lib/spring";
 
 import { useExecutionPaths } from "@/hooks/useExecutionPaths";
@@ -161,11 +162,24 @@ export default function Home() {
         paths={paths}
         selectedPath={activePath}
         onSelectPath={handleSelectPath}
-        aiEnriching={aiEnriching}
       />
 
       <div className="flex flex-1 overflow-hidden">
         <main className="flex-1 relative">
+          <AnimatePresence>
+            {aiEnriching && (
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 12 }}
+                transition={SPRING_DEFAULT}
+                className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-3.5 py-2 rounded-full border border-amber-500/25 bg-black/80 backdrop-blur-sm shadow-[0_4px_24px_rgba(0,0,0,0.6)]"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-400/80 animate-pulse shrink-0" />
+                <span className="text-[11px] font-mono text-amber-400/80 whitespace-nowrap">Generating summaries…</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
           {activePath ? (
             <FlowCanvas
               path={activePath}

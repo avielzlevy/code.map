@@ -1,7 +1,7 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
-import { Search, Sparkles } from "lucide-react";
+import { motion } from "framer-motion";
+import { Search } from "lucide-react";
 import { ExecutionPath } from "@/lib/mockData";
 import clsx from "clsx";
 import { SPRING_DEFAULT, SPRING_STANDARD } from "@/lib/spring";
@@ -11,14 +11,12 @@ interface SwitchboardProps {
   paths: ExecutionPath[];
   selectedPath: ExecutionPath | null;
   onSelectPath: (path: ExecutionPath) => void;
-  aiEnriching?: boolean;
 }
 
 export function Switchboard({
   paths,
   selectedPath,
   onSelectPath,
-  aiEnriching,
 }: SwitchboardProps) {
   return (
     <div className="w-full h-12 border-b border-white/10 bg-black flex items-center shrink-0 z-20 shadow-[0_4px_24px_rgba(0,0,0,0.6)]">
@@ -90,22 +88,6 @@ export function Switchboard({
           );
         })}
       </div>
-
-      {/* AI enriching indicator */}
-      <AnimatePresence>
-        {aiEnriching && (
-          <motion.div
-            initial={{ opacity: 0, x: 8 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 8 }}
-            transition={SPRING_DEFAULT}
-            className="flex items-center gap-1.5 px-2.5 h-6 rounded-md border border-amber-500/20 bg-amber-500/5 shrink-0"
-          >
-            <Sparkles className="w-3 h-3 text-amber-400/70 animate-pulse" />
-            <span className="text-[10px] font-mono text-amber-400/70">Generating summaries…</span>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Right controls */}
       <div className="flex items-center gap-2 px-3 h-full border-l border-white/10 shrink-0">
