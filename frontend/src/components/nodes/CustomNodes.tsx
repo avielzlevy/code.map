@@ -105,21 +105,30 @@ function NodeExpansion({ data, amber }: { data: NodeProps; amber?: boolean }) {
       onDoubleClick={(e) => e.stopPropagation()}
     >
       {/* AI summary */}
-      {data.aiSummary && (
-        <div className={`px-5 pt-3 pb-3 border-t ${amber ? "border-amber-500/15" : "border-white/8"}`}>
-          <div
-            className={`relative p-3 rounded-lg border ${
-              amber ? "bg-amber-500/5 border-amber-500/15" : "bg-white/3 border-white/8"
-            }`}
+      <AnimatePresence>
+        {data.aiSummary && (
+          <motion.div
+            key={data.aiSummary}
+            initial={{ opacity: 0, y: -8, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.97 }}
+            transition={SPRING_DEFAULT}
+            className={`px-5 pt-3 pb-3 border-t ${amber ? "border-amber-500/15" : "border-white/8"}`}
           >
-            <div className={`flex items-center gap-1 mb-1.5 ${amber ? "text-amber-400/50" : "text-white/30"}`}>
-              <Sparkles className="w-3 h-3" />
-              <span className="text-[10px] font-mono">AI summary</span>
+            <div
+              className={`relative p-3 rounded-lg border ${
+                amber ? "bg-amber-500/5 border-amber-500/15" : "bg-white/3 border-white/8"
+              }`}
+            >
+              <div className={`flex items-center gap-1 mb-1.5 ${amber ? "text-amber-400/50" : "text-white/30"}`}>
+                <Sparkles className="w-3 h-3" />
+                <span className="text-[10px] font-mono">AI summary</span>
+              </div>
+              <p className="text-[12px] text-gray-400 leading-relaxed break-words">{data.aiSummary}</p>
             </div>
-            <p className="text-[12px] text-gray-400 leading-relaxed break-words">{data.aiSummary}</p>
-          </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className={`flex gap-2 px-5 pb-3 ${!data.aiSummary ? `pt-3 border-t ${amber ? "border-amber-500/15" : "border-white/8"}` : ""}`}>
         {data.hasDetail && (
@@ -214,12 +223,21 @@ function NodeContent({ data, amber }: { data: NodeProps; amber?: boolean }) {
       )}
 
       {/* Closed: show AI summary if available, otherwise JSDoc */}
-      {!data.isExpanded && data.aiSummary && (
-        <div className={`mt-3 flex items-start gap-1.5 text-[11px] font-mono px-2.5 py-1.5 rounded-md ${amber ? "bg-amber-500/5 border border-amber-500/15 text-amber-300/70" : "bg-white/5 border border-white/8 text-gray-400"}`}>
-          <Sparkles className={`w-3 h-3 mt-0.5 shrink-0 ${amber ? "text-amber-400/50" : "text-white/30"}`} />
-          <span className="truncate">{data.aiSummary}</span>
-        </div>
-      )}
+      <AnimatePresence mode="wait">
+        {!data.isExpanded && data.aiSummary && (
+          <motion.div
+            key={data.aiSummary}
+            initial={{ opacity: 0, y: -6, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -4, scale: 0.97 }}
+            transition={SPRING_DEFAULT}
+            className={`mt-3 flex items-start gap-1.5 text-[11px] font-mono px-2.5 py-1.5 rounded-md ${amber ? "bg-amber-500/5 border border-amber-500/15 text-amber-300/70" : "bg-white/5 border border-white/8 text-gray-400"}`}
+          >
+            <Sparkles className={`w-3 h-3 mt-0.5 shrink-0 ${amber ? "text-amber-400/50" : "text-white/30"}`} />
+            <span className="truncate">{data.aiSummary}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
       {/* Show JSDoc when: expanded (full text), or closed with no AI summary */}
       {(data.isExpanded || !data.aiSummary) && data.docstring && (
         <div className="mt-3 text-[11px] font-mono bg-white/5 border border-white/8 text-gray-400 px-2.5 py-1.5 rounded-md">
