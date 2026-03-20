@@ -12,7 +12,8 @@ function cleanDocstring(s: string): string {
   return s
     .split("\n")
     .map((l) => l.replace(/^\s*[\/*]+\s?/, "").trim())
-    .join("\n");
+    .join("\n")
+    .trim();
 }
 
 type NodeProps = FlowNode & {
