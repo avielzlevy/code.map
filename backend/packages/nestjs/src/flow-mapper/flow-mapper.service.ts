@@ -261,7 +261,6 @@ export class FlowMapperService {
     // If a child has exactly 1 sub-child it is a pass-through — inline its
     // single descendant into the same layer instead of creating a drill layer.
     const directChildren = orderedAdj.get(startId) ?? [];
-    resultNodes.push(this.toFrontendNode(startNode, { hasDetail: false }));
 
     let stepCounter = 0;
     let prevId = startId;

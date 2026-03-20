@@ -23,7 +23,7 @@ type NodeProps = FlowNode & {
   onToggleExpand: () => void;
   onDrillDown: () => void;
 };
-type GhostPinData = { callerLabel: string; onBack?: () => void };
+type GhostPinData = { callerLabel: string; callerFile?: string; onBack?: () => void };
 
 export function GhostEntryPin({ data }: { data: GhostPinData }) {
   const handleActivate = (e: React.MouseEvent | React.KeyboardEvent) => {
@@ -38,13 +38,17 @@ export function GhostEntryPin({ data }: { data: GhostPinData }) {
       onClick={handleActivate}
       onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && handleActivate(e)}
     >
-      {/* Callout box — React Flow's dashed edge provides the visual connector */}
-      <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/8 bg-zinc-950 group-hover:border-white/20 group-hover:bg-white/5 transition-[border-color,background-color] duration-150 max-w-xs overflow-hidden">
+      <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-white/8 bg-zinc-950 group-hover:border-white/20 group-hover:bg-white/5 transition-[border-color,background-color] duration-150 max-w-xs overflow-hidden">
         <CornerLeftUp className="w-3 h-3 -scale-x-100 text-white/25 group-hover:text-white/55 transition-colors duration-150 shrink-0" />
-        <span className="font-mono text-[11px] min-w-0 flex items-center gap-1 overflow-hidden">
-          <span className="text-white/30 group-hover:text-white/55 transition-colors duration-150 shrink-0">called by:</span>
-          <span className="text-white/45 group-hover:text-white/80 transition-colors duration-150 truncate max-w-40" title={data.callerLabel}>{data.callerLabel}</span>
-        </span>
+        <div className="font-mono min-w-0 flex flex-col gap-0.5 overflow-hidden">
+          <div className="flex items-center gap-1 overflow-hidden">
+            <span className="text-[11px] text-white/30 group-hover:text-white/55 transition-colors duration-150 shrink-0">called by:</span>
+            <span className="text-[11px] text-white/45 group-hover:text-white/80 transition-colors duration-150 truncate max-w-40" title={data.callerLabel}>{data.callerLabel}</span>
+          </div>
+          {data.callerFile && (
+            <span className="text-[10px] text-white/20 group-hover:text-white/40 transition-colors duration-150 truncate" title={data.callerFile}>{data.callerFile}</span>
+          )}
+        </div>
       </div>
       <Handle type="source" position={Position.Right} style={{ opacity: 0, pointerEvents: "none" }} />
     </div>

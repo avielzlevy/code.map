@@ -11,7 +11,7 @@ import { Switchboard } from "@/components/Switchboard";
 import { FlowCanvas } from "@/components/FlowCanvas";
 import { CommandPalette } from "@/components/CommandPalette";
 
-export type DrillEntry = { id: string; label: string };
+export type DrillEntry = { id: string; label: string; fileName: string };
 
 const LOADING_MESSAGES = [
   "Connecting to your backend…",
@@ -70,7 +70,7 @@ export default function Home() {
     if (node.hasDetail) {
       setDrillStack((prev) => {
         if (prev.some((e) => e.id === node.id)) return prev;
-        return [...prev, { id: node.id, label: node.funcName }];
+        return [...prev, { id: node.id, label: node.funcName, fileName: node.fileName }];
       });
     }
   };
@@ -84,7 +84,7 @@ export default function Home() {
     setSelectedPath(path);
     if (parentId) {
       const parentNode = path.nodes.find((n) => n.id === parentId);
-      setDrillStack([{ id: parentId, label: parentNode ? parentNode.funcName : parentId }]);
+      setDrillStack([{ id: parentId, label: parentNode ? parentNode.funcName : parentId, fileName: parentNode?.fileName ?? '' }]);
     } else {
       setDrillStack([]);
     }
