@@ -354,6 +354,10 @@ export class AstParserService {
     for (const method of methods) {
       const nodeId = `${method.filePath}:${method.methodName}:${method.lineNumber}`;
       methodIndex.set(method.methodName, nodeId);
+      // Also index by bare method name (e.g. "create" for "OrdersService#create")
+      // so that call expressions like `this.ordersService.create(...)` resolve correctly.
+      const bareName = method.methodName.includes('#') ? method.methodName.split('#')[1] : null;
+      if (bareName) methodIndex.set(bareName, nodeId);
 
       nodes.push({
         id: nodeId,
