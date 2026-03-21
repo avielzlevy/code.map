@@ -24,7 +24,7 @@ export class FileWatcherService {
         (_event: fs.WatchEventType, filename: string | Buffer | null) => {
           if (!filename) return;
 
-          const name = filename instanceof Buffer ? filename.toString() : filename;
+          const name = filename.toString();
           const ext = path.extname(name);
 
           if (!SUPPORTED_EXTENSIONS.includes(ext)) return;
