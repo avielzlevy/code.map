@@ -240,6 +240,8 @@ function Canvas({
       // Use dagre's center Y for the leftmost node so the connecting edge is horizontal
       const leftmostDagre = g.node(leftmostNode.id);
       const GHOST_PIN_H = 30;
+      // max-w-xs on the pin card = 320px; add 40px gap so the edge never goes backwards.
+      const GHOST_PIN_OFFSET = 360;
       const callerEntry = drillStack[drillStack.length - 1];
       const callerLabel = callerEntry.label;
       const callerFile = callerEntry.fileName.split("/").pop() ?? callerEntry.fileName;
@@ -248,7 +250,7 @@ function Canvas({
         id: pinId,
         type: "ghostEntryPin",
         data: { callerLabel, callerFile, onBack: () => onBackTo(drillStack.length - 2) },
-        position: { x: leftmostNode.position.x - 200, y: leftmostDagre.y - GHOST_PIN_H / 2 },
+        position: { x: leftmostNode.position.x - GHOST_PIN_OFFSET, y: leftmostDagre.y - GHOST_PIN_H / 2 },
         selectable: false,
         draggable: false,
       } as Node);

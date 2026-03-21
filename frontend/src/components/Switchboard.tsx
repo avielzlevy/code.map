@@ -254,7 +254,7 @@ export function Switchboard({ paths, selectedPath, onSelectPath, onStartGuide }:
   const scheduleClose = useCallback(() => {
     closeTimerRef.current = setTimeout(() => {
       setOpenMenu(null);
-    }, 60);
+    }, 200);
   }, []);
 
   const cancelClose = useCallback(() => {
@@ -285,7 +285,7 @@ export function Switchboard({ paths, selectedPath, onSelectPath, onStartGuide }:
   return (
     <div
       ref={barRef}
-      className="relative w-full h-12 border-b border-white/10 bg-black flex items-center shrink-0 z-20 shadow-[0_4px_24px_rgba(0,0,0,0.6)]"
+      className="relative w-full h-12 border-b border-white/10 bg-black flex items-center shrink-0 z-50 shadow-[0_4px_24px_rgba(0,0,0,0.6)]"
     >
       {/* Logo */}
       <div className="flex items-center px-4 h-full border-r border-white/10 shrink-0">
@@ -366,6 +366,8 @@ export function Switchboard({ paths, selectedPath, onSelectPath, onStartGuide }:
           <div
             className="absolute top-full pt-2 z-50"
             style={{ left: cardLeft }}
+            onMouseEnter={cancelClose}
+            onMouseLeave={scheduleClose}
           >
             <CascadeMenu
               menuType={openMenu}
