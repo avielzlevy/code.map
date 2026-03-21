@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   ReactFlow,
   Controls,
+  MiniMap,
   Panel,
   useNodesState,
   useEdgesState,
@@ -582,6 +583,22 @@ function Canvas({
             </div>
           </Panel>
           <Controls showInteractive={false} />
+          {activeNodes.length > 4 && (
+            <MiniMap
+              position="bottom-right"
+              nodeColor={(node) => {
+                if (node.type === "ghostEntryPin") return "transparent";
+                if (node.type === "enhanced") return "rgba(245,158,11,0.35)";
+                return "rgba(255,255,255,0.2)";
+              }}
+              maskColor="rgba(0,0,0,0.6)"
+              style={{
+                backgroundColor: "#050505",
+                border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: "8px",
+              }}
+            />
+          )}
         </ReactFlow>
       </motion.div>
     </div>

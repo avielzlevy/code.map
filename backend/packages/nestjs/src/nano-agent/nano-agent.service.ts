@@ -6,6 +6,8 @@ import { NanoAgentException } from '../exceptions/flow-mapper.exceptions';
 import {
   AIProvider,
   NANO_AGENT_MAX_TOKENS,
+  NANO_AGENT_MAX_RETRIES,
+  NANO_AGENT_RETRY_BASE_MS,
   NANO_AGENT_PROMPT_TEMPLATE,
   PROVIDER_CONFIGS,
 } from '../constants';
@@ -30,7 +32,7 @@ export class NanoAgentService {
     const { url, body, headers } = this.buildRequest(prompt);
 
     try {
-      const response = await axios.post(url, body, { headers });
+      const response = await this.withRetry(() => axios.post(url, body, { headers }), node.id);
       const summary = this.parseResponse(response.data);
       FlowLogger.debug(LOGGER_CONTEXT, 'Received AI summary', { nodeId: node.id, summary });
       return summary;
@@ -40,6 +42,40 @@ export class NanoAgentService {
         : (err as Error).message;
       throw new NanoAgentException(node.id, message);
     }
+  }
+
+  /**
+   * Runs `fn` with exponential backoff + jitter, retrying only on transient
+   * errors (network failure, 429 rate-limit, 5xx server errors).
+   * Hard failures (4xx except 429) are re-thrown immediately.
+   */
+  private async withRetry<T>(fn: () => Promise<T>, nodeId: string): Promise<T> {
+    for (let attempt = 0; attempt <= NANO_AGENT_MAX_RETRIES; attempt++) {
+      try {
+        return await fn();
+      } catch (err) {
+        const isLast = attempt === NANO_AGENT_MAX_RETRIES;
+        if (isLast) throw err;
+
+        if (axios.isAxiosError(err)) {
+          const status = err.response?.status;
+          // 4xx errors other than 429 are permanent (bad auth, bad request) — don't retry
+          const isTransient = !status || status === 429 || status >= 500;
+          if (!isTransient) throw err;
+        }
+
+        // Exponential backoff: 500ms, 1000ms, 2000ms + up to 200ms jitter
+        const delayMs = NANO_AGENT_RETRY_BASE_MS * Math.pow(2, attempt) + Math.random() * 200;
+        FlowLogger.debug(LOGGER_CONTEXT, 'Transient error — retrying', {
+          nodeId,
+          attempt: attempt + 1,
+          maxRetries: NANO_AGENT_MAX_RETRIES,
+          delayMs: Math.round(delayMs),
+        });
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+      }
+    }
+    throw new Error('unreachable');
   }
 
   private buildRequest(prompt: string): { url: string; body: object; headers: Record<string, string> } {

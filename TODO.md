@@ -32,10 +32,10 @@
 
 - [x] **Group and filter endpoints in Switchboard** — With 40+ endpoints the tab bar becomes unusable. Add grouping by controller/module and HTTP method toggles (GET / POST / PUT / DELETE). Show a count badge per group.
 - [x] **"Explain this flow" AI feature** — Let the user select an endpoint and ask the AI to explain the full execution path in plain English. Huge onboarding accelerator for new team members.
-- [ ] **Search AI summaries in command palette** — Index `aiSummary` text in the ⌘K search so developers can navigate by business intent (e.g. "authenticate", "token") not just function names.
+- [x] **Search AI summaries in command palette** — Index `aiSummary` text in the ⌘K search so developers can navigate by business intent (e.g. "authenticate", "token") not just function names.
 - [ ] **Graph diff / "what changed"** — Compare the current graph against a git commit or last snapshot. Highlight changed nodes, mark new nodes with a `+` badge, and show removed paths. Valuable for code review.
 - [x] **"Open in GitHub" in editor picker** — Auto-detect the git remote and current commit SHA and add a `https://github.com/<org>/<repo>/blob/<sha>/<file>#L<line>` option alongside the local editor links.
-- [ ] **Minimap for large graphs** — React Flow has a built-in `MiniMap` component. Enable it when the active layer has more than ~10 nodes.
+- [x] **Minimap for large graphs** — React Flow has a built-in `MiniMap` component. Enable it when the active layer has more than ~10 nodes.
 
 ---
 
@@ -45,7 +45,7 @@
 - [x] **Prominent step-number badge on `@FlowStep` nodes** — `stepNumber` is already tracked but not visually prominent. Render it as a numbered pill badge (1, 2, 3…) directly on the node card.
 - [ ] **Snapshot / export mode** — A CLI command that runs the AST scan without a running server and outputs a shareable static HTML file, a PNG/SVG of the graph, and raw JSON (for CI consumption).
 - [ ] **Auto-suggest `@FlowStep` candidates** — Use the AI (or heuristics — JSDoc present, called from a controller, DB-adjacent name) to recommend which functions would benefit from a `@FlowStep` annotation. Surface these in a "Suggested annotations" panel.
-- [ ] **No retry/backoff in NanoAgent** — Add exponential backoff with jitter for transient provider errors so a flaky network doesn't permanently lose summaries for a batch.
+- [x] **No retry/backoff in NanoAgent** — Add exponential backoff with jitter for transient provider errors so a flaky network doesn't permanently lose summaries for a batch.
 
 ---
 

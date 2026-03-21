@@ -7,6 +7,8 @@ export const SIDECAR_API_PREFIX = '/api/flow-map';
 export const NANO_AGENT_MAX_TOKENS = 50;
 export const NANO_AGENT_BATCH_SIZE = 5; // concurrent requests per batch — tune per provider
 export const NANO_AGENT_ALL_FAILED_THRESHOLD = 1.0; // 100% failure rate triggers config error log
+export const NANO_AGENT_MAX_RETRIES = 3;
+export const NANO_AGENT_RETRY_BASE_MS = 500; // doubles each attempt: 500 → 1000 → 2000ms
 
 export type AIProvider = 'anthropic' | 'openai' | 'gemini' | 'openrouter';
 

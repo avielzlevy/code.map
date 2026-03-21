@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef, Fragment } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Command, Network, FunctionSquare, GraduationCap } from "lucide-react";
+import { Search, Command, Network, FunctionSquare, GraduationCap, Sparkles } from "lucide-react";
 import { ExecutionPath, FlowNode } from "@/lib/flow-types";
 import clsx from "clsx";
 import { SPRING_STANDARD, SPRING_SNAPPY, SPRING_DEFAULT } from "@/lib/spring";
@@ -134,12 +134,17 @@ export function CommandPalette({
     const rankItem = (item: SearchResultItem): number => {
       const label = item.label.toLowerCase();
       const sublabel = item.sublabel.toLowerCase();
-      if (label === q) return 0;             // exact
-      if (label.startsWith(q)) return 1;     // prefix
-      if (label.includes(q)) return 2;       // substring
-      if (fuzzyMatch(label, q)) return 3;    // fuzzy label
-      if (sublabel.includes(q)) return 4;    // sublabel substring
-      if (fuzzyMatch(sublabel, q)) return 5; // fuzzy sublabel
+      const aiSummary = (item.type === "node" ? (item.node.aiSummary ?? "") : "").toLowerCase();
+      const intentTag = (item.type === "node" ? (item.node.intentTag ?? "") : "").toLowerCase();
+      if (label === q) return 0;                // exact function/endpoint name
+      if (label.startsWith(q)) return 1;        // prefix
+      if (label.includes(q)) return 2;          // substring
+      if (fuzzyMatch(label, q)) return 3;       // fuzzy label
+      if (intentTag.includes(q)) return 4;      // @FlowStep intent tag — business language
+      if (aiSummary.includes(q)) return 5;      // AI summary — semantic search
+      if (sublabel.includes(q)) return 6;       // file/endpoint path
+      if (fuzzyMatch(aiSummary, q)) return 7;   // fuzzy AI summary
+      if (fuzzyMatch(sublabel, q)) return 8;    // fuzzy sublabel
       return 99;
     };
 
@@ -209,8 +214,8 @@ export function CommandPalette({
                 value={query}
                 onChange={(e) => { setQuery(e.target.value); setSelectedIndex(0); }}
                 onKeyDown={handleKeyDown}
-                placeholder="Jump to endpoint or function..."
-                aria-label="Jump to endpoint or function"
+                placeholder="Jump to endpoint, function, or intent…"
+                aria-label="Jump to endpoint, function, or intent"
                 className="flex-1 appearance-none bg-transparent border-0 ring-0 outline-none focus:ring-0 focus-visible:outline-none text-white px-3 text-lg placeholder:text-gray-500"
               />
               <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-white/5 border border-white/10 text-gray-400 text-xs font-mono">
@@ -282,6 +287,14 @@ export function CommandPalette({
                             <span className="text-xs text-gray-500 truncate" title={item.sublabel}>
                               {item.sublabel}
                             </span>
+                            {/* Show AI summary when it's the reason this result matched */}
+                            {item.type === "node" && item.node.aiSummary && query.trim() &&
+                              item.node.aiSummary.toLowerCase().includes(query.toLowerCase().trim()) && (
+                              <span className="flex items-center gap-1 text-[11px] text-amber-400/60 font-mono truncate mt-0.5">
+                                <Sparkles className="w-2.5 h-2.5 shrink-0" />
+                                {item.node.aiSummary}
+                              </span>
+                            )}
                           </div>
                         </button>
                         {/* Right side: guide hat (endpoints only) or enter hint */}
