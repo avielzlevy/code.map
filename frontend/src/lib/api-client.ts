@@ -1,4 +1,4 @@
-import { ExecutionPath } from "@/lib/mockData";
+import { ExecutionPath } from "@/lib/flow-types";
 
 /**
  * Base URL of the FlowMap sidecar server.

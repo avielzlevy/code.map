@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Search } from "lucide-react";
-import { ExecutionPath } from "@/lib/mockData";
+import { ExecutionPath } from "@/lib/flow-types";
 import clsx from "clsx";
 import { SPRING_DEFAULT, SPRING_STANDARD } from "@/lib/spring";
 import Image from "next/image";

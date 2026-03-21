@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { Handle, Position } from "@xyflow/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FunctionSquare, Layers, CornerLeftUp, ChevronDown, Sparkles, ExternalLink, Tag, Check } from "lucide-react";
-import type { FlowNode } from "@/lib/mockData";
+import type { FlowNode } from "@/lib/flow-types";
 import { getEditorUrl, EDITORS, EDITOR_STORAGE_KEY, type EditorId } from "@/lib/deep-link";
 import { SPRING_STANDARD, SPRING_BADGE, SPRING_DEFAULT } from "@/lib/spring";
 

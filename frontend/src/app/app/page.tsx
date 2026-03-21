@@ -6,7 +6,7 @@ import { Sparkles } from "lucide-react";
 import { SPRING_DEFAULT, SPRING_SNAPPY } from "@/lib/spring";
 
 import { useExecutionPaths } from "@/hooks/useExecutionPaths";
-import { ExecutionPath, FlowNode } from "@/lib/mockData";
+import { ExecutionPath, FlowNode } from "@/lib/flow-types";
 import { Switchboard } from "@/components/Switchboard";
 import { FlowCanvas } from "@/components/FlowCanvas";
 import { CommandPalette } from "@/components/CommandPalette";

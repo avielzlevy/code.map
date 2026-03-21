@@ -56,7 +56,7 @@ export class NanoAgentService {
 
     if (this.provider === 'gemini') {
       return {
-        url: `${config.apiUrl}/${config.defaultModel}:generateContent?key=${this.apiKey}`,
+        url: `${config.apiUrl}/${model}:generateContent?key=${this.apiKey}`,
         body: { contents: [{ parts: [{ text: prompt }] }] },
         headers: { 'content-type': 'application/json' },
       };

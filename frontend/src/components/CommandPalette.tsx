@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useRef, Fragment } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Command, Network, FunctionSquare } from "lucide-react";
-import { ExecutionPath, FlowNode } from "@/lib/mockData";
+import { ExecutionPath, FlowNode } from "@/lib/flow-types";
 import clsx from "clsx";
 import { SPRING_STANDARD, SPRING_SNAPPY, SPRING_DEFAULT } from "@/lib/spring";
 

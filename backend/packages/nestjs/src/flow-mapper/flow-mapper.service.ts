@@ -169,62 +169,9 @@ export class FlowMapperService {
       if (childHasDetail) {
         this.buildDetail(child.id, orderedAdj, nodeMap, nodeDetails);
       }
-
-      // Collect @FlowStep-tagged descendants of this child, in DFS source order
-      const flowSteps = this.collectFlowSteps(child.id, orderedAdj, nodeMap, new Set(visited));
-      for (const step of flowSteps) {
-        if (visited.has(step.id)) continue;
-        visited.add(step.id);
-
-        const stepHasDetail = (orderedAdj.get(step.id) ?? []).length > 0;
-        rootNodes.push(
-          this.toFrontendNode(step, {
-            hasDetail: stepHasDetail,
-            stepNumber: ++globalStepCounter,
-          }),
-        );
-        rootEdges.push({
-          id: `${prevId}→${step.id}`,
-          source: prevId,
-          target: step.id,
-          callOrder: globalStepCounter,
-          edgeType: 'step',
-        });
-        prevId = step.id;
-
-        if (stepHasDetail) {
-          this.buildDetail(step.id, orderedAdj, nodeMap, nodeDetails);
-        }
-      }
     }
 
     return { nodes: rootNodes, edges: rootEdges };
-  }
-
-  /**
-   * Collect all @FlowStep-annotated nodes reachable from startId in DFS source order.
-   * Does not re-visit already-visited nodes.
-   */
-  private collectFlowSteps(
-    startId: string,
-    orderedAdj: OrderedAdj,
-    nodeMap: Map<string, FlowNode>,
-    visited: Set<string>,
-  ): FlowNode[] {
-    const steps: FlowNode[] = [];
-
-    for (const childId of orderedAdj.get(startId) ?? []) {
-      if (visited.has(childId)) continue;
-      visited.add(childId);
-
-      const child = nodeMap.get(childId);
-      if (!child) continue;
-
-      if (child.customTag) steps.push(child);
-      steps.push(...this.collectFlowSteps(childId, orderedAdj, nodeMap, visited));
-    }
-
-    return steps;
   }
 
   /**

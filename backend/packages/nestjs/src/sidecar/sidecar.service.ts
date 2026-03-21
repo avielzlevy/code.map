@@ -44,6 +44,11 @@ export class SidecarService {
           port,
           url: `http://localhost:${port}`,
         });
+        FlowLogger.warn(
+          LOGGER_CONTEXT,
+          'SECURITY: The sidecar binds to all interfaces by default. ' +
+          'Ensure port ' + port + ' is not reachable from outside localhost in shared or staging environments.',
+        );
         resolve();
       });
 
@@ -79,7 +84,12 @@ export class SidecarService {
         return;
       }
 
-      const response: ApiResponse<FlowGraph> = { status: 'success', data: this.currentGraph };
+      // Strip rawBody before serving — function source code must not be exposed over HTTP
+      const sanitizedGraph = {
+        ...this.currentGraph,
+        nodes: this.currentGraph.nodes.map(({ rawBody: _rawBody, ...safeNode }) => safeNode),
+      };
+      const response: ApiResponse<typeof sanitizedGraph> = { status: 'success', data: sanitizedGraph };
       res.json(response);
     });
 

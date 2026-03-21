@@ -271,11 +271,18 @@ export class AstParserService {
   private buildGraph(methods: ParsedMethod[]): FlowGraph {
     const nodes: FlowNode[] = [];
     const edges: FlowEdge[] = [];
+    // Primary index: collision-free — className#methodName → nodeId
     const methodIndex = new Map<string, string>();
+    // Secondary index: unqualified methodName → all nodeIds sharing that name (for call resolution)
+    const methodNameIndex = new Map<string, string[]>();
 
     for (const method of methods) {
       const nodeId = `${method.filePath}:${method.className}#${method.methodName}:${method.lineNumber}`;
-      methodIndex.set(method.methodName, nodeId);
+      methodIndex.set(`${method.className}#${method.methodName}`, nodeId);
+
+      const candidates = methodNameIndex.get(method.methodName) ?? [];
+      candidates.push(nodeId);
+      methodNameIndex.set(method.methodName, candidates);
 
       nodes.push({
         id: nodeId,
@@ -297,7 +304,9 @@ export class AstParserService {
       const fromId = `${method.filePath}:${method.className}#${method.methodName}:${method.lineNumber}`;
 
       for (let i = 0; i < method.calls.length; i++) {
-        const toId = methodIndex.get(method.calls[i]);
+        const candidates = methodNameIndex.get(method.calls[i]) ?? [];
+        // Only resolve when unambiguous — multiple candidates means we cannot determine the target class
+        const toId = candidates.length === 1 ? candidates[0] : undefined;
         if (toId && toId !== fromId) {
           edges.push({ from: fromId, to: toId, callOrder: i });
         }

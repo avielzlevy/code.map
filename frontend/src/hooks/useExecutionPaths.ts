@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { apiClient } from "@/lib/api-client";
-import { ExecutionPath } from "@/lib/mockData";
+import { ExecutionPath } from "@/lib/flow-types";
 
 type Status = "loading" | "success" | "error";
 

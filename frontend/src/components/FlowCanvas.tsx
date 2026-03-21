@@ -20,7 +20,7 @@ import dagre from "dagre";
 import { ChevronRight, ChevronDown, Home, Copy, Check } from "lucide-react";
 import { Tooltip } from "./Tooltip";
 
-import { ExecutionPath, FlowNode, FlowEdge } from "@/lib/mockData";
+import { ExecutionPath, FlowNode, FlowEdge } from "@/lib/flow-types";
 import { StandardNode, EnhancedNode, GhostEntryPin } from "./nodes/CustomNodes";
 import { DrillEntry } from "@/app/app/page";
 import { SPRING_DEFAULT, SPRING_BOUNCE } from "@/lib/spring";
