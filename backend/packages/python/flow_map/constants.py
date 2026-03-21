@@ -49,3 +49,8 @@ EXCLUDED_DIRS: frozenset[str] = frozenset(
     {"__pycache__", ".git", "node_modules", ".venv", "venv", "dist", "build", ".pytest_cache", "spec"}
 )
 SUPPORTED_EXTENSIONS: frozenset[str] = frozenset({".py"})
+
+# File-watcher / SSE
+FILE_WATCHER_DEBOUNCE_S: float = 0.5
+FILE_WATCHER_POLL_INTERVAL_S: float = 1.0
+SSE_HEARTBEAT_INTERVAL_S: float = 30.0

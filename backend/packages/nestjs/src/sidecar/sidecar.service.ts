@@ -7,9 +7,11 @@ import * as fs from 'fs';
 import { FlowLogger } from '../logger/flow-logger';
 import { FlowGraph, FrontendExecutionPath, ApiResponse } from '../dto/flow-mapper-config.dto';
 import { SidecarException } from '../exceptions/flow-mapper.exceptions';
-import { SIDECAR_API_PREFIX } from '../constants';
+import { SIDECAR_API_PREFIX, SSE_HEARTBEAT_INTERVAL_MS } from '../constants';
 
 const LOGGER_CONTEXT = 'SidecarService';
+
+type SseEventType = 'status' | 'paths-updated' | 'rebuild-start';
 
 export class SidecarService {
   private readonly app: Application;
@@ -17,6 +19,10 @@ export class SidecarService {
   private currentGraph: FlowGraph | null = null;
   private currentPaths: FrontendExecutionPath[] = [];
   private aiEnriching = false;
+
+  /** Active SSE response objects — one per connected browser tab. */
+  private readonly sseClients = new Set<Response>();
+  private heartbeatTimer: ReturnType<typeof setInterval> | null = null;
 
   constructor() {
     this.app = express();
@@ -31,10 +37,17 @@ export class SidecarService {
 
   updatePaths(paths: FrontendExecutionPath[]): void {
     this.currentPaths = paths;
+    this.broadcast('paths-updated', paths);
   }
 
   setAiEnriching(value: boolean): void {
     this.aiEnriching = value;
+    this.broadcast('status', { aiEnriching: value });
+  }
+
+  /** Notify clients that a file-change rebuild is starting. */
+  broadcastRebuildStart(): void {
+    this.broadcast('rebuild-start', { reason: 'file-change' });
   }
 
   async start(port: number): Promise<void> {
@@ -49,6 +62,7 @@ export class SidecarService {
           'SECURITY: The sidecar binds to all interfaces by default. ' +
           'Ensure port ' + port + ' is not reachable from outside localhost in shared or staging environments.',
         );
+        this.startHeartbeat();
         resolve();
       });
 
@@ -59,6 +73,10 @@ export class SidecarService {
   }
 
   async stop(): Promise<void> {
+    this.stopHeartbeat();
+    this.sseClients.forEach((res) => res.end());
+    this.sseClients.clear();
+
     if (!this.server) return;
     return new Promise((resolve, reject) => {
       this.server!.close((err) => {
@@ -68,7 +86,68 @@ export class SidecarService {
     });
   }
 
+  // ---------------------------------------------------------------------------
+  // Private — SSE helpers
+  // ---------------------------------------------------------------------------
+
+  private broadcast(event: SseEventType, data: unknown): void {
+    const payload = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
+    for (const client of this.sseClients) {
+      try {
+        client.write(payload);
+      } catch {
+        this.sseClients.delete(client);
+      }
+    }
+  }
+
+  private startHeartbeat(): void {
+    this.heartbeatTimer = setInterval(() => {
+      const comment = ': ping\n\n';
+      for (const client of this.sseClients) {
+        try {
+          client.write(comment);
+        } catch {
+          this.sseClients.delete(client);
+        }
+      }
+    }, SSE_HEARTBEAT_INTERVAL_MS);
+  }
+
+  private stopHeartbeat(): void {
+    if (this.heartbeatTimer) {
+      clearInterval(this.heartbeatTimer);
+      this.heartbeatTimer = null;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Private — routes
+  // ---------------------------------------------------------------------------
+
   private registerRoutes(): void {
+    this.app.get(`${SIDECAR_API_PREFIX}/events`, (req: Request, res: Response) => {
+      res.setHeader('Content-Type', 'text/event-stream');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Connection', 'keep-alive');
+      res.setHeader('X-Accel-Buffering', 'no'); // disable nginx buffering
+      res.flushHeaders();
+
+      this.sseClients.add(res);
+      FlowLogger.debug(LOGGER_CONTEXT, 'SSE client connected', { total: this.sseClients.size });
+
+      // Immediately push current state so the client is in sync.
+      res.write(`event: status\ndata: ${JSON.stringify({ aiEnriching: this.aiEnriching })}\n\n`);
+      if (this.currentPaths.length > 0) {
+        res.write(`event: paths-updated\ndata: ${JSON.stringify(this.currentPaths)}\n\n`);
+      }
+
+      req.on('close', () => {
+        this.sseClients.delete(res);
+        FlowLogger.debug(LOGGER_CONTEXT, 'SSE client disconnected', { total: this.sseClients.size });
+      });
+    });
+
     this.app.get(`${SIDECAR_API_PREFIX}/paths`, (_req: Request, res: Response) => {
       const response: ApiResponse<FrontendExecutionPath[]> = {
         status: 'success',

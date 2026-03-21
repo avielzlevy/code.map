@@ -52,4 +52,18 @@ export const apiClient = {
   getStatus(): Promise<{ aiEnriching: boolean }> {
     return request<{ aiEnriching: boolean }>("/api/flow-map/status");
   },
+
+  /**
+   * Opens a persistent SSE connection to the sidecar.
+   *
+   * The stream emits three named events:
+   *   - `status`        — `{ aiEnriching: boolean }` whenever enrichment state changes
+   *   - `paths-updated` — `ExecutionPath[]` whenever the graph is rebuilt
+   *   - `rebuild-start` — `{ reason: string }` when a file-change rebuild begins
+   *
+   * Caller is responsible for closing the returned `EventSource` on cleanup.
+   */
+  openEventStream(): EventSource {
+    return new EventSource(`${BASE_URL}/api/flow-map/events`);
+  },
 };

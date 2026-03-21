@@ -4,12 +4,12 @@
 
 ## Bugs
 
-- [ ] `buildRootLayer` in `flow-mapper.service.ts` incorrectly promotes `@FlowStep`-tagged nodes up to the root layer via `collectFlowSteps`. `@FlowStep` should have no structural effect on graph layout — it's only a label + visual marker. Remove the `collectFlowSteps` call and let the layer structure follow call graph depth naturally.
-- [ ] **Method-name collision in edge resolution** — `AstParserService.buildGraph()` uses a plain `Map<methodName, nodeId>`. Methods with the same name across different classes overwrite each other, producing wrong edges. Replace key with `className#methodName`.
-- [ ] **`engine.py` missing in Python package** — `flow_map/__init__.py` imports `FlowMap` from `.engine` but no `engine.py` exists. Blocks all Python users.
-- [ ] **Gemini custom model ignored** — `NanoAgentService.buildRequest()` constructs the Gemini URL using `config.defaultModel` directly in the string, ignoring the user-supplied `model` override.
-- [ ] **`rawBody` exposed on `/api/flow-map/graph`** — Full function bodies are served to any client that can reach port 4567. Add an auth token or IP-allowlist option and emit a loud warning when the sidecar is accessible from non-localhost addresses.
-- [ ] **`mockData.ts` filename is misleading** — The file contains live runtime types, not mock data. Rename to `types.ts` or `flow-types.ts`.
+- [x] `buildRootLayer` in `flow-mapper.service.ts` incorrectly promotes `@FlowStep`-tagged nodes up to the root layer via `collectFlowSteps`. `@FlowStep` should have no structural effect on graph layout — it's only a label + visual marker. Remove the `collectFlowSteps` call and let the layer structure follow call graph depth naturally.
+- [x] **Method-name collision in edge resolution** — `AstParserService.buildGraph()` uses a plain `Map<methodName, nodeId>`. Methods with the same name across different classes overwrite each other, producing wrong edges. Replace key with `className#methodName`.
+- [x] **`engine.py` missing in Python package** — already existed, no fix needed.
+- [x] **Gemini custom model ignored** — `NanoAgentService.buildRequest()` constructs the Gemini URL using `config.defaultModel` directly in the string, ignoring the user-supplied `model` override.
+- [x] **`rawBody` exposed on `/api/flow-map/graph`** — Full function bodies are served to any client that can reach port 4567. Add an auth token or IP-allowlist option and emit a loud warning when the sidecar is accessible from non-localhost addresses.
+- [x] **`mockData.ts` filename is misleading** — The file contains live runtime types, not mock data. Rename to `types.ts` or `flow-types.ts`.
 
 ---
 

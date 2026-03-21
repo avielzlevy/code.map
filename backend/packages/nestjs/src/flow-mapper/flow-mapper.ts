@@ -10,6 +10,7 @@ import { AstParserService } from '../ast/ast-parser.service';
 import { CacheService } from '../cache/cache.service';
 import { NanoAgentService } from '../nano-agent/nano-agent.service';
 import { SidecarService } from '../sidecar/sidecar.service';
+import { FileWatcherService } from '../file-watcher/file-watcher.service';
 import { FlowMapperService } from './flow-mapper.service';
 import { AIProvider, DEFAULT_SIDECAR_PORT, FLOW_CACHE_DIR } from '../constants';
 import envConfig from '../config/env-config';
@@ -21,10 +22,12 @@ export class FlowMapper {
 
   private readonly service: FlowMapperService;
   private readonly sidecar: SidecarService;
+  private readonly fileWatcher: FileWatcherService;
 
-  private constructor(service: FlowMapperService, sidecar: SidecarService) {
+  private constructor(service: FlowMapperService, sidecar: SidecarService, fileWatcher: FileWatcherService) {
     this.service = service;
     this.sidecar = sidecar;
+    this.fileWatcher = fileWatcher;
   }
 
   /**
@@ -63,7 +66,13 @@ export class FlowMapper {
       throw new FlowMapperInitializationException((err as Error).message);
     }
 
-    FlowMapper.instance = new FlowMapper(service, sidecar);
+    const fileWatcher = new FileWatcherService(config.sourceRoot, async () => {
+      sidecar.broadcastRebuildStart();
+      await service.buildAndServeGraph();
+    });
+    fileWatcher.start();
+
+    FlowMapper.instance = new FlowMapper(service, sidecar, fileWatcher);
     return FlowMapper.instance;
   }
 
@@ -72,8 +81,9 @@ export class FlowMapper {
     return this.service.buildAndServeGraph();
   }
 
-  /** Stops the sidecar server and resets the singleton. */
+  /** Stops the sidecar server and file watcher, then resets the singleton. */
   async shutdown(): Promise<void> {
+    this.fileWatcher.stop();
     await this.sidecar.stop();
     FlowMapper.instance = null;
     FlowLogger.info(LOGGER_CONTEXT, 'FlowMapper shut down');

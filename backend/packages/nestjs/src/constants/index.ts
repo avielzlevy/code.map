@@ -65,3 +65,9 @@ export const MAX_EXECUTION_DEPTH = 4;
 /** How many levels deep each drill-down detail layer expands.
  *  1 = only direct children of the clicked node — true progressive disclosure. */
 export const DETAIL_EXPANSION_DEPTH = 1;
+
+/** Milliseconds of quiet-time after the last file change before triggering a rebuild. */
+export const FILE_WATCHER_DEBOUNCE_MS = 500;
+
+/** Milliseconds between SSE keep-alive heartbeat comments (prevents proxy timeouts). */
+export const SSE_HEARTBEAT_INTERVAL_MS = 30_000;

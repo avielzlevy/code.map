@@ -10,6 +10,7 @@ from .cache import CacheService
 from .config import env_config
 from .constants import DEFAULT_SIDECAR_PORT, FLOW_CACHE_DIR, NANO_AGENT_BATCH_SIZE
 from .exceptions import FlowMapConfigError, FlowMapInitializationError
+from .file_watcher import FileWatcherService
 from .logger import FlowLogger
 from .nano_agent import NanoAgentService
 from .sidecar import SidecarService
@@ -26,12 +27,14 @@ class FlowMap:
         cache: CacheService,
         sidecar: SidecarService,
         nano_agent: Optional[NanoAgentService],
+        file_watcher: FileWatcherService,
         config: dict[str, Any],
     ) -> None:
         self._ast_parser = ast_parser
         self._cache = cache
         self._sidecar = sidecar
         self._nano_agent = nano_agent
+        self._file_watcher = file_watcher
         self._config = config
 
     @classmethod
@@ -70,12 +73,21 @@ class FlowMap:
             {"port": resolved["port"], "enable_ai": resolved["enable_ai"]},
         )
 
+        async def _rebuild() -> None:
+            sidecar.broadcast_rebuild_start()
+            await instance._build_and_serve_graph()
+
+        file_watcher = FileWatcherService(resolved["source_root"], _rebuild)
+
         try:
             sidecar.start(resolved["port"])
-            instance = cls(ast_parser, cache, sidecar, nano_agent, resolved)
+            instance = cls(ast_parser, cache, sidecar, nano_agent, file_watcher, resolved)
             await instance._build_and_serve_graph()
         except Exception as err:
             raise FlowMapInitializationError(str(err))
+
+        loop = asyncio.get_event_loop()
+        file_watcher.start(loop)
 
         cls._instance = instance
         return instance
@@ -85,7 +97,8 @@ class FlowMap:
         return await self._build_and_serve_graph()
 
     def shutdown(self) -> None:
-        """Stops the sidecar server and resets the singleton."""
+        """Stops the file watcher, sidecar server, and resets the singleton."""
+        self._file_watcher.stop()
         self._sidecar.stop()
         FlowMap._instance = None
         FlowLogger.info(LOGGER_CONTEXT, "FlowMap shut down")
