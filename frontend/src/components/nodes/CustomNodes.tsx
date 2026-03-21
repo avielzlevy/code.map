@@ -2,8 +2,8 @@ import { useState, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { Handle, Position } from "@xyflow/react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FunctionSquare, Layers, CornerLeftUp, ChevronDown, Sparkles, ExternalLink, Tag, Check } from "lucide-react";
-import type { FlowNode } from "@/lib/flow-types";
+import { FunctionSquare, Layers, CornerLeftUp, ChevronDown, Sparkles, ExternalLink, Tag, Check, Github } from "lucide-react";
+import type { FlowNode, GitInfo } from "@/lib/flow-types";
 import { getEditorUrl, EDITORS, EDITOR_STORAGE_KEY, type EditorId } from "@/lib/deep-link";
 import { SPRING_STANDARD, SPRING_BADGE, SPRING_DEFAULT } from "@/lib/spring";
 
@@ -21,6 +21,8 @@ type NodeProps = FlowNode & {
   hasOutgoing: boolean;
   isExpanded: boolean;
   isGuideActive?: boolean;
+  isKeyboardFocused?: boolean;
+  gitInfo?: GitInfo | null;
   onToggleExpand: () => void;
   onDrillDown: () => void;
 };
@@ -68,6 +70,15 @@ function EditorIcon({ id }: { id: EditorId }) {
   );
 }
 
+/** Build a GitHub blob URL from gitInfo + absolute file path + line. Returns null if unavailable. */
+function buildGithubUrl(gitInfo: GitInfo | null | undefined, fileName: string, line: number): string | null {
+  if (!gitInfo?.githubBaseUrl || !gitInfo.sha) return null;
+  const relPath = fileName.startsWith(gitInfo.root + '/')
+    ? fileName.slice(gitInfo.root.length + 1)
+    : fileName;
+  return `${gitInfo.githubBaseUrl}/blob/${gitInfo.sha}/${relPath}#L${line}`;
+}
+
 /** Inline expansion panel — slides open below the node card. */
 function NodeExpansion({ data, amber }: { data: NodeProps; amber?: boolean }) {
   const [editorMenuOpen, setEditorMenuOpen] = useState(false);
@@ -98,6 +109,7 @@ function NodeExpansion({ data, amber }: { data: NodeProps; amber?: boolean }) {
   }, [editorMenuOpen]);
 
   const editorLabel = EDITORS.find((e) => e.id === selectedEditor)?.label ?? "VS Code";
+  const githubUrl = buildGithubUrl(data.gitInfo, data.fileName, data.line);
 
   return (
     <motion.div
@@ -141,6 +153,21 @@ function NodeExpansion({ data, amber }: { data: NodeProps; amber?: boolean }) {
             <ChevronDown size={12} className={`transition-transform duration-150 ${editorMenuOpen ? "rotate-180" : ""}`} />
           </button>
         </div>
+
+        {/* Open in GitHub — icon-only button, shown when git remote is detectable */}
+        {githubUrl && (
+          <a
+            href={githubUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            title="Open in GitHub"
+            aria-label="Open in GitHub"
+            className="flex items-center justify-center w-9 shrink-0 border border-white/15 hover:border-white/30 text-gray-400 hover:text-white rounded-md hover:bg-white/5 transition-colors"
+          >
+            <Github className="w-3.5 h-3.5" />
+          </a>
+        )}
 
         {/* Portal dropdown — escapes overflow-hidden ancestors */}
         {editorMenuOpen && menuPos && typeof document !== "undefined" && createPortal(
@@ -194,10 +221,16 @@ function NodeContent({ data, amber }: { data: NodeProps; amber?: boolean }) {
         </div>
       </div>
 
-      {/* FlowStep descriptor — tag icon + label, always visible when present */}
+      {/* FlowStep descriptor — step-number pill (if present) or tag icon + label */}
       {data.intentTag && (
         <div className="mt-2.5 flex items-center gap-1.5 overflow-hidden">
-          <Tag className="w-3 h-3 shrink-0 text-amber-400/70" />
+          {data.stepNumber !== undefined ? (
+            <span className="flex items-center justify-center w-4 h-4 rounded-full bg-amber-500/20 border border-amber-400/40 text-[9px] font-mono font-bold text-amber-400 shrink-0 leading-none">
+              {data.stepNumber}
+            </span>
+          ) : (
+            <Tag className="w-3 h-3 shrink-0 text-amber-400/70" />
+          )}
           <span className="text-[10px] font-mono text-amber-400/70 truncate">{data.intentTag}</span>
         </div>
       )}
@@ -240,9 +273,11 @@ export function StandardNode({ data }: { data: NodeProps }) {
       className={`rounded-xl bg-zinc-950 border w-112.5 group relative
         ${data.isGuideActive
           ? "border-white/70 shadow-[0_0_0_3px_rgba(255,255,255,0.12),0_4px_24px_rgba(0,0,0,0.6)]"
-          : data.hasDetail
-            ? "border-white/20 hover:border-white/40 cursor-pointer transition-colors"
-            : "border-white/10 transition-colors shadow-[0_4px_24px_rgba(0,0,0,0.6)]"
+          : data.isKeyboardFocused
+            ? "border-white/40 shadow-[0_0_0_2px_rgba(255,255,255,0.06),0_4px_24px_rgba(0,0,0,0.6)]"
+            : data.hasDetail
+              ? "border-white/20 hover:border-white/40 cursor-pointer transition-colors"
+              : "border-white/10 transition-colors shadow-[0_4px_24px_rgba(0,0,0,0.6)]"
         }`}
       initial="rest"
       whileHover={data.hasDetail ? "hover" : undefined}
@@ -304,9 +339,11 @@ export function EnhancedNode({ data }: { data: NodeProps }) {
       className={`rounded-xl bg-zinc-950 border w-112.5 relative group
         ${data.isGuideActive
           ? "border-amber-400/90 shadow-[0_0_0_3px_rgba(245,158,11,0.15),0_4px_30px_rgba(245,158,11,0.18)]"
-          : data.hasDetail
-            ? "border-amber-500/50 hover:border-amber-400 cursor-pointer transition-colors"
-            : "border-amber-500/30 hover:border-amber-500/40 transition-colors shadow-[0_4px_24px_rgba(0,0,0,0.6)]"
+          : data.isKeyboardFocused
+            ? "border-amber-400/60 shadow-[0_0_0_2px_rgba(245,158,11,0.08),0_4px_30px_rgba(245,158,11,0.12)]"
+            : data.hasDetail
+              ? "border-amber-500/50 hover:border-amber-400 cursor-pointer transition-colors"
+              : "border-amber-500/30 hover:border-amber-500/40 transition-colors shadow-[0_4px_24px_rgba(0,0,0,0.6)]"
         }`}
       initial="rest"
       whileHover={data.hasDetail ? "hover" : undefined}

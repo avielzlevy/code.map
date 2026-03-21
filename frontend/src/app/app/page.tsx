@@ -7,7 +7,8 @@ import { SPRING_DEFAULT, SPRING_SNAPPY } from "@/lib/spring";
 
 import { useExecutionPaths } from "@/hooks/useExecutionPaths";
 import { useGuide } from "@/hooks/useGuide";
-import { ExecutionPath, FlowNode } from "@/lib/flow-types";
+import { ExecutionPath, FlowNode, GitInfo } from "@/lib/flow-types";
+import { apiClient } from "@/lib/api-client";
 import { Switchboard } from "@/components/Switchboard";
 import { FlowCanvas } from "@/components/FlowCanvas";
 import { CommandPalette } from "@/components/CommandPalette";
@@ -28,6 +29,12 @@ export default function Home() {
   const [selectedPath, setSelectedPath] = useState<ExecutionPath | null>(null);
   const [drillStack, setDrillStack] = useState<DrillEntry[]>([]);
   const [loadingMsgIdx, setLoadingMsgIdx] = useState(0);
+  const [gitInfo, setGitInfo] = useState<GitInfo | null>(null);
+
+  // Fetch git remote info once for "Open in GitHub" links
+  useEffect(() => {
+    apiClient.getGitInfo().then(setGitInfo).catch(() => {});
+  }, []);
 
   // Rotate loading messages while connecting
   useEffect(() => {
@@ -202,6 +209,7 @@ export default function Home() {
                 onNodeDrillDown={guide.active ? () => {} : handleNodeDrillDown}
                 onBackTo={guide.active ? () => {} : handleBackTo}
                 guideNodeId={guide.guideNodeId}
+                gitInfo={gitInfo}
               />
               <Guide guide={guide} />
             </>

@@ -20,7 +20,7 @@ import dagre from "dagre";
 import { ChevronRight, ChevronDown, Home, Copy, Check } from "lucide-react";
 import { Tooltip } from "./Tooltip";
 
-import { ExecutionPath, FlowNode, FlowEdge } from "@/lib/flow-types";
+import { ExecutionPath, FlowNode, FlowEdge, GitInfo } from "@/lib/flow-types";
 import { StandardNode, EnhancedNode, GhostEntryPin } from "./nodes/CustomNodes";
 import { DrillEntry } from "@/app/app/page";
 import { SPRING_DEFAULT, SPRING_BOUNCE } from "@/lib/spring";
@@ -33,6 +33,7 @@ interface FlowCanvasProps {
   onNodeDrillDown: (node: FlowNode) => void;
   onBackTo: (index: number) => void;
   guideNodeId?: string | null;
+  gitInfo?: GitInfo | null;
 }
 
 const NODE_W = 450;
@@ -90,6 +91,7 @@ function Canvas({
   onNodeDrillDown,
   onBackTo,
   guideNodeId,
+  gitInfo,
 }: {
   activeNodes: FlowNode[];
   activeEdges: FlowEdge[];
@@ -100,6 +102,7 @@ function Canvas({
   onNodeDrillDown: (node: FlowNode) => void;
   onBackTo: (index: number) => void;
   guideNodeId?: string | null;
+  gitInfo?: GitInfo | null;
 }) {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
@@ -118,6 +121,18 @@ function Canvas({
   // Stable ref so layout effect can capture latest onNodeDrillDown without re-running
   const onNodeDrillDownRef = useRef(onNodeDrillDown);
   onNodeDrillDownRef.current = onNodeDrillDown;
+
+  // Keyboard navigation
+  const [kbFocusNodeId, setKbFocusNodeId] = useState<string | null>(null);
+  const [kbHintVisible, setKbHintVisible] = useState(false);
+  const kbFocusNodeIdRef = useRef<string | null>(null);
+  kbFocusNodeIdRef.current = kbFocusNodeId;
+  const expandedNodeIdRef = useRef<string | null>(null);
+  expandedNodeIdRef.current = expandedNodeId;
+  const activeNodesRef = useRef(activeNodes);
+  activeNodesRef.current = activeNodes;
+  const kbHintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const kbHintShownRef = useRef(false);
 
   // Sync isExpanded flag + dimming style whenever expandedNodeId changes
   useEffect(() => {
@@ -194,6 +209,8 @@ function Canvas({
     const sources = new Set(validEdges.map((e) => e.source));
 
     setExpandedNodeId(null); // reset expansion on path/drill change
+    setKbFocusNodeId(null);  // reset keyboard focus on path/drill change
+    kbHintShownRef.current = false;
 
     const layoutNodes: Node[] = activeNodes.map((n) => {
       const pos = g.node(n.id);
@@ -206,6 +223,8 @@ function Canvas({
           hasOutgoing: sources.has(n.id),
           isExpanded: false,
           isGuideActive: false, // updated separately to avoid re-layout
+          isKeyboardFocused: false,
+          gitInfo: gitInfo ?? null,
           onToggleExpand: () => setExpandedNodeId((prev) => (prev === n.id ? null : n.id)),
           onDrillDown: () => onNodeDrillDownRef.current(n),
         },
@@ -270,10 +289,100 @@ function Canvas({
     }
   }, [guideNodeId]);
 
+  // Sync gitInfo into node data when it loads (without triggering a full re-layout)
+  useEffect(() => {
+    if (!gitInfo) return;
+    setNodes((prev) =>
+      prev.map((n) => ({ ...n, data: { ...n.data, gitInfo } })),
+    );
+  }, [gitInfo, setNodes]);
+
+  // Sync isKeyboardFocused flag onto nodes
+  useEffect(() => {
+    setNodes((prev) =>
+      prev.map((n) => ({
+        ...n,
+        data: { ...n.data, isKeyboardFocused: n.id === kbFocusNodeId },
+      })),
+    );
+  }, [kbFocusNodeId, setNodes]);
+
+  // Animate canvas to the keyboard-focused node
+  useEffect(() => {
+    if (!kbFocusNodeId) return;
+    const t = setTimeout(() => {
+      fitView({ nodes: [{ id: kbFocusNodeId }], padding: 0.4 });
+    }, 40);
+    return () => clearTimeout(t);
+  }, [kbFocusNodeId, fitView]);
+
+  // Keyboard navigation — ←/→ move focus, Enter expand, D drill, Escape dismiss
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      // Don't steal keys when guide is running
+      if (guideNodeId != null) return;
+      // Don't steal keys from inputs or open dialogs (e.g. command palette)
+      const target = e.target as HTMLElement;
+      if (
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable
+      ) return;
+      if (document.querySelector('[role="dialog"]')) return;
+
+      const navNodes = activeNodesRef.current;
+      const currentId = kbFocusNodeIdRef.current;
+
+      if (e.key === "ArrowRight") {
+        e.preventDefault();
+        const idx = navNodes.findIndex((n) => n.id === currentId);
+        const nextIdx = idx === -1 ? 0 : Math.min(idx + 1, navNodes.length - 1);
+        setKbFocusNodeId(navNodes[nextIdx]?.id ?? null);
+        // Show one-time hint
+        if (!kbHintShownRef.current) {
+          kbHintShownRef.current = true;
+          setKbHintVisible(true);
+          if (kbHintTimerRef.current) clearTimeout(kbHintTimerRef.current);
+          kbHintTimerRef.current = setTimeout(() => setKbHintVisible(false), 2500);
+        }
+      } else if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        const idx = navNodes.findIndex((n) => n.id === currentId);
+        const nextIdx = idx === -1 ? 0 : Math.max(idx - 1, 0);
+        setKbFocusNodeId(navNodes[nextIdx]?.id ?? null);
+        if (!kbHintShownRef.current) {
+          kbHintShownRef.current = true;
+          setKbHintVisible(true);
+          if (kbHintTimerRef.current) clearTimeout(kbHintTimerRef.current);
+          kbHintTimerRef.current = setTimeout(() => setKbHintVisible(false), 2500);
+        }
+      } else if (e.key === "Enter") {
+        const focusId = kbFocusNodeIdRef.current;
+        if (focusId) setExpandedNodeId((prev) => (prev === focusId ? null : focusId));
+      } else if (e.key === "d" || e.key === "D") {
+        const focusId = kbFocusNodeIdRef.current;
+        if (focusId) {
+          const node = activeNodesRef.current.find((n) => n.id === focusId);
+          if (node?.hasDetail) onNodeDrillDownRef.current(node);
+        }
+      } else if (e.key === "Escape") {
+        if (expandedNodeIdRef.current) {
+          setExpandedNodeId(null);
+        } else {
+          setKbFocusNodeId(null);
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [guideNodeId]);
+
   const handleNodeClick = useCallback(
     (_event: React.MouseEvent, node: Node) => {
       if (node.id === "__ghost_entry_pin__") return;
       setExpandedNodeId((prev) => (prev === node.id ? null : node.id));
+      setKbFocusNodeId(node.id);
     },
     [],
   );
@@ -384,6 +493,25 @@ function Canvas({
         )}
       </AnimatePresence>
 
+      {/* Keyboard nav hint — appears once on first ←/→ press, auto-hides */}
+      <AnimatePresence>
+        {kbHintVisible && (
+          <motion.div
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 6 }}
+            transition={SPRING_DEFAULT}
+            className="absolute bottom-14 left-1/2 -translate-x-1/2 z-50 flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/10 bg-black/80 backdrop-blur-sm pointer-events-none"
+          >
+            <span className="text-[10px] font-mono text-white/35">← → navigate</span>
+            <span className="text-white/15 text-[10px]">·</span>
+            <span className="text-[10px] font-mono text-white/35">Enter expand</span>
+            <span className="text-white/15 text-[10px]">·</span>
+            <span className="text-[10px] font-mono text-white/35">D drill</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Flow canvas — keyed on current node id so re-visiting a depth always remounts */}
       <motion.div
         key={drillStack.at(-1)?.id ?? "root"}
@@ -476,7 +604,7 @@ function collectAllNodes(
   return result;
 }
 
-export function FlowCanvas({ path, drillStack, onNodeDrillDown, onBackTo, guideNodeId }: FlowCanvasProps) {
+export function FlowCanvas({ path, drillStack, onNodeDrillDown, onBackTo, guideNodeId, gitInfo }: FlowCanvasProps) {
   const currentNodeId = drillStack.length > 0 ? drillStack[drillStack.length - 1].id : null;
   const currentDetail = currentNodeId ? path.nodeDetails[currentNodeId] ?? null : null;
 
@@ -499,6 +627,7 @@ export function FlowCanvas({ path, drillStack, onNodeDrillDown, onBackTo, guideN
         onNodeDrillDown={onNodeDrillDown}
         onBackTo={onBackTo}
         guideNodeId={guideNodeId}
+        gitInfo={gitInfo}
       />
     </ReactFlowProvider>
   );

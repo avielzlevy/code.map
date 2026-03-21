@@ -3,6 +3,7 @@ import cors from 'cors';
 import * as http from 'http';
 import * as path from 'path';
 import * as fs from 'fs';
+import { execSync } from 'child_process';
 
 import { FlowLogger } from '../logger/flow-logger';
 import { FlowGraph, FrontendExecutionPath, ApiResponse } from '../dto/flow-mapper-config.dto';
@@ -188,7 +189,40 @@ export class SidecarService {
       res.json(response);
     });
 
+    this.app.get(`${SIDECAR_API_PREFIX}/git-info`, (_req: Request, res: Response) => {
+      const info = this.resolveGitInfo();
+      const response: ApiResponse<typeof info> = { status: 'success', data: info };
+      res.json(response);
+    });
+
     this.serveStaticFrontend();
+  }
+
+  private resolveGitInfo(): { githubBaseUrl: string | null; sha: string | null; root: string } {
+    const root = process.cwd();
+    try {
+      const rawRemote = execSync('git remote get-url origin', {
+        encoding: 'utf8',
+        stdio: ['pipe', 'pipe', 'pipe'],
+        cwd: root,
+      }).trim();
+      const sha = execSync('git rev-parse HEAD', {
+        encoding: 'utf8',
+        stdio: ['pipe', 'pipe', 'pipe'],
+        cwd: root,
+      }).trim();
+
+      // SSH:   git@github.com:owner/repo.git
+      // HTTPS: https://github.com/owner/repo[.git]
+      const sshMatch = rawRemote.match(/git@github\.com:([^/]+\/[^.]+?)(?:\.git)?$/);
+      const httpsMatch = rawRemote.match(/https?:\/\/github\.com\/([^/]+\/[^/.]+?)(?:\.git)?$/);
+      const slug = sshMatch?.[1] ?? httpsMatch?.[1] ?? null;
+      const githubBaseUrl = slug ? `https://github.com/${slug}` : null;
+
+      return { githubBaseUrl, sha, root };
+    } catch {
+      return { githubBaseUrl: null, sha: null, root };
+    }
   }
 
   private serveStaticFrontend(): void {

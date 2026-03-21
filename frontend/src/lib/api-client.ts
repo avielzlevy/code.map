@@ -1,4 +1,4 @@
-import { ExecutionPath } from "@/lib/flow-types";
+import { ExecutionPath, GitInfo } from "@/lib/flow-types";
 
 /**
  * Base URL of the FlowMap sidecar server.
@@ -51,6 +51,10 @@ export const apiClient = {
 
   getStatus(): Promise<{ aiEnriching: boolean }> {
     return request<{ aiEnriching: boolean }>("/api/flow-map/status");
+  },
+
+  getGitInfo(): Promise<GitInfo> {
+    return request<GitInfo>('/api/flow-map/git-info');
   },
 
   /**

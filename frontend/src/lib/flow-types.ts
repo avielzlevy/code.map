@@ -31,3 +31,9 @@ export type ExecutionPath = {
   edges: FlowEdge[];
   nodeDetails: Record<string, NodeDetail>;
 };
+
+export type GitInfo = {
+  githubBaseUrl: string | null;
+  sha: string | null;
+  root: string;
+};
