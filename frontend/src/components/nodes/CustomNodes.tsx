@@ -20,6 +20,7 @@ type NodeProps = FlowNode & {
   hasIncoming: boolean;
   hasOutgoing: boolean;
   isExpanded: boolean;
+  isGuideActive?: boolean;
   onToggleExpand: () => void;
   onDrillDown: () => void;
 };
@@ -237,9 +238,11 @@ export function StandardNode({ data }: { data: NodeProps }) {
   return (
     <motion.div
       className={`rounded-xl bg-zinc-950 border w-112.5 group relative
-        ${data.hasDetail
-          ? "border-white/20 hover:border-white/40 cursor-pointer transition-colors"
-          : "border-white/10 transition-colors shadow-[0_4px_24px_rgba(0,0,0,0.6)]"
+        ${data.isGuideActive
+          ? "border-white/70 shadow-[0_0_0_3px_rgba(255,255,255,0.12),0_4px_24px_rgba(0,0,0,0.6)]"
+          : data.hasDetail
+            ? "border-white/20 hover:border-white/40 cursor-pointer transition-colors"
+            : "border-white/10 transition-colors shadow-[0_4px_24px_rgba(0,0,0,0.6)]"
         }`}
       initial="rest"
       whileHover={data.hasDetail ? "hover" : undefined}
@@ -299,9 +302,11 @@ export function EnhancedNode({ data }: { data: NodeProps }) {
   return (
     <motion.div
       className={`rounded-xl bg-zinc-950 border w-112.5 relative group
-        ${data.hasDetail
-          ? "border-amber-500/50 hover:border-amber-400 cursor-pointer transition-colors"
-          : "border-amber-500/30 hover:border-amber-500/40 transition-colors shadow-[0_4px_24px_rgba(0,0,0,0.6)]"
+        ${data.isGuideActive
+          ? "border-amber-400/90 shadow-[0_0_0_3px_rgba(245,158,11,0.15),0_4px_30px_rgba(245,158,11,0.18)]"
+          : data.hasDetail
+            ? "border-amber-500/50 hover:border-amber-400 cursor-pointer transition-colors"
+            : "border-amber-500/30 hover:border-amber-500/40 transition-colors shadow-[0_4px_24px_rgba(0,0,0,0.6)]"
         }`}
       initial="rest"
       whileHover={data.hasDetail ? "hover" : undefined}

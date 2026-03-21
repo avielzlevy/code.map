@@ -15,14 +15,14 @@
 
 ## Features
 
-- [ ] **Guide system** — graduation hat icon near the command palette. When clicked, starts an automatic guided tour that walks the user through the key interactions step by step (select a path, drill into a node, copy a flow, etc.)
+- [x] **Guide system** — graduation hat icon near the command palette. When clicked, starts an automatic guided tour that walks the user through the key interactions step by step (select a path, drill into a node, copy a flow, etc.)
 
 ---
 
 ## High Impact — Core Gaps
 
-- [ ] **Live file-watch mode (hot reload)** — Add a chokidar watcher that calls `FlowMapper.rebuild()` on `.ts` file saves and pushes the updated graph to the frontend. The graph should never be stale while the dev server is running.
-- [ ] **WebSocket / SSE push instead of polling** — Replace the 2-second `/status` poll with a Server-Sent Events stream so the UI reacts instantly when AI enrichment finishes. Also enables pushing graph updates from watch mode.
+- [x] **Live file-watch mode (hot reload)** — Add a chokidar watcher that calls `FlowMapper.rebuild()` on `.ts` file saves and pushes the updated graph to the frontend. The graph should never be stale while the dev server is running.
+- [x] **WebSocket / SSE push instead of polling** — Replace the 2-second `/status` poll with a Server-Sent Events stream so the UI reacts instantly when AI enrichment finishes. Also enables pushing graph updates from watch mode.
 - [ ] **Plain Express.js / Fastify / Hono adapters** — NestJS-only blocks the majority of Node.js backends. Add a `CodeMap.bind(app)` API (mirroring the FastAPI integration) for plain Express, Fastify, and Hono.
 - [ ] **Monorepo support** — Add a `sourceRoots: string[]` config option to scan multiple packages and stitch their graphs together. Required for NX, Turborepo, and pnpm workspace users.
 

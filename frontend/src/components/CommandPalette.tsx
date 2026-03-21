@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef, Fragment } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Command, Network, FunctionSquare } from "lucide-react";
+import { Search, Command, Network, FunctionSquare, GraduationCap } from "lucide-react";
 import { ExecutionPath, FlowNode } from "@/lib/flow-types";
 import clsx from "clsx";
 import { SPRING_STANDARD, SPRING_SNAPPY, SPRING_DEFAULT } from "@/lib/spring";
@@ -15,6 +15,7 @@ interface CommandPaletteProps {
     node: FlowNode,
     parentId: string | null,
   ) => void;
+  onStartGuide?: (path: ExecutionPath) => void;
 }
 
 type SearchResultItem =
@@ -32,6 +33,7 @@ export function CommandPalette({
   paths,
   onSelectEndpoint,
   onSelectNode,
+  onStartGuide,
 }: CommandPaletteProps) {
   "use no memo"; // React Compiler over-memoizes this component — query state changes must trigger re-renders
   const [isOpen, setIsOpen] = useState(false);
@@ -240,13 +242,7 @@ export function CommandPalette({
                           {item.type === "endpoint" ? "Endpoints" : "Functions"}
                         </div>
                       )}
-                      <button
-                        onClick={() => handleSelect(index)}
-                        className={clsx(
-                          "relative w-full flex items-center justify-between px-3 py-3 rounded-lg text-left overflow-hidden",
-                          !active && "hover:bg-white/5",
-                        )}
-                      >
+                      <div className={clsx("group relative flex items-center rounded-lg overflow-hidden", !active && "hover:bg-white/5")}>
                         {active && (
                           <motion.div
                             layoutId="active-palette-result"
@@ -254,7 +250,11 @@ export function CommandPalette({
                             transition={SPRING_SNAPPY}
                           />
                         )}
-                        <div className="relative z-10 flex items-center gap-3 min-w-0">
+                        {/* Main select area */}
+                        <button
+                          onClick={() => handleSelect(index)}
+                          className="relative z-10 flex-1 flex items-center gap-3 px-3 py-3 text-left min-w-0"
+                        >
                           <div
                             className={clsx(
                               "p-1.5 rounded-md border shrink-0",
@@ -283,13 +283,27 @@ export function CommandPalette({
                               {item.sublabel}
                             </span>
                           </div>
+                        </button>
+                        {/* Right side: guide hat (endpoints only) or enter hint */}
+                        <div className="relative z-10 flex items-center pr-3 shrink-0">
+                          {onStartGuide && item.type === "endpoint" ? (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onStartGuide(item.path);
+                                setIsOpen(false);
+                              }}
+                              title="Walk through this flow"
+                              aria-label="Start flow guide"
+                              className="w-7 h-7 flex items-center justify-center rounded-md text-transparent group-hover:text-white/30 hover:!text-white/70 hover:bg-white/5 transition-colors"
+                            >
+                              <GraduationCap className="w-4 h-4" />
+                            </button>
+                          ) : active ? (
+                            <span className="text-gray-400 text-xs">↵</span>
+                          ) : null}
                         </div>
-                        {active && (
-                          <div className="relative z-10 flex items-center gap-1 text-gray-400 text-xs">
-                            ↵
-                          </div>
-                        )}
-                      </button>
+                      </div>
                     </Fragment>
                   );
                 })

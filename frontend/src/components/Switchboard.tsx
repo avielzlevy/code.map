@@ -8,7 +8,7 @@ import {
   useEffect,
 } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, ChevronRight } from "lucide-react";
+import { Search, ChevronRight, GraduationCap } from "lucide-react";
 import { ExecutionPath } from "@/lib/flow-types";
 import clsx from "clsx";
 import Image from "next/image";
@@ -22,6 +22,7 @@ interface SwitchboardProps {
   paths: ExecutionPath[];
   selectedPath: ExecutionPath | null;
   onSelectPath: (path: ExecutionPath) => void;
+  onStartGuide?: (path: ExecutionPath) => void;
 }
 
 type MenuType = "resources" | "methods";
@@ -83,6 +84,7 @@ function CascadeMenu({
   groups,
   selectedPath,
   onSelect,
+  onStartGuide,
   onMouseEnter,
   onMouseLeave,
 }: {
@@ -90,6 +92,7 @@ function CascadeMenu({
   groups: Record<string, ExecutionPath[]>;
   selectedPath: ExecutionPath | null;
   onSelect: (path: ExecutionPath) => void;
+  onStartGuide?: (path: ExecutionPath) => void;
   onMouseEnter: () => void;
   onMouseLeave: () => void;
 }) {
@@ -175,30 +178,44 @@ function CascadeMenu({
                   selectedPath?.endpoint === path.endpoint &&
                   selectedPath?.method === path.method;
                 return (
-                  <button
+                  <div
                     key={`${path.method}:${path.endpoint}`}
-                    onClick={() => onSelect(path)}
                     className={clsx(
-                      "w-full flex items-center gap-2.5 px-3 h-9 text-left transition-colors",
-                      isSelected
-                        ? "bg-white/8 text-white"
-                        : "text-gray-400 hover:text-white hover:bg-white/5",
+                      "group flex items-center transition-colors",
+                      isSelected ? "bg-white/8" : "hover:bg-white/5",
                     )}
                   >
-                    <MethodBadge method={path.method} />
-                    <span
+                    {/* Main select area */}
+                    <button
+                      onClick={() => onSelect(path)}
                       className={clsx(
-                        "text-[12px] font-mono truncate",
-                        isSelected && "text-white",
+                        "flex-1 flex items-center gap-2.5 pl-3 pr-2 h-9 text-left min-w-0",
+                        isSelected ? "text-white" : "text-gray-400 hover:text-white",
                       )}
-                      title={path.endpoint}
                     >
-                      {path.endpoint}
-                    </span>
-                    {isSelected && (
-                      <span className="ml-auto shrink-0 w-1.5 h-1.5 rounded-full bg-white/60" />
+                      <MethodBadge method={path.method} />
+                      <span
+                        className={clsx(
+                          "text-[12px] font-mono truncate",
+                          isSelected && "text-white",
+                        )}
+                        title={path.endpoint}
+                      >
+                        {path.endpoint}
+                      </span>
+                    </button>
+                    {/* Guide hat — hidden until row is hovered */}
+                    {onStartGuide && (
+                      <button
+                        onClick={() => onStartGuide(path)}
+                        title="Walk through this flow"
+                        aria-label="Start flow guide"
+                        className="shrink-0 w-8 h-9 flex items-center justify-center text-transparent group-hover:text-white/30 hover:!text-white/70 transition-colors"
+                      >
+                        <GraduationCap className="w-3.5 h-3.5" />
+                      </button>
                     )}
-                  </button>
+                  </div>
                 );
               })}
             </div>
@@ -213,7 +230,7 @@ function CascadeMenu({
 // Main component
 // ---------------------------------------------------------------------------
 
-export function Switchboard({ paths, selectedPath, onSelectPath }: SwitchboardProps) {
+export function Switchboard({ paths, selectedPath, onSelectPath, onStartGuide }: SwitchboardProps) {
   const barRef = useRef<HTMLDivElement>(null);
   const resourcesBtnRef = useRef<HTMLButtonElement>(null);
   const methodsBtnRef = useRef<HTMLButtonElement>(null);
@@ -283,7 +300,7 @@ export function Switchboard({ paths, selectedPath, onSelectPath }: SwitchboardPr
       </div>
 
       {/* Nav labels */}
-      <div className="flex items-center h-full px-3 gap-0.5 shrink-0">
+      <div data-guide="nav-labels" className="flex items-center h-full px-3 gap-0.5 shrink-0">
         {(
           [
             { menu: "resources" as MenuType, ref: resourcesBtnRef },
@@ -329,6 +346,7 @@ export function Switchboard({ paths, selectedPath, onSelectPath }: SwitchboardPr
       {/* Right controls */}
       <div className="flex items-center gap-2 px-3 h-full border-l border-white/10 shrink-0">
         <button
+          data-guide="search-button"
           onClick={() =>
             window.dispatchEvent(
               new KeyboardEvent("keydown", { key: "k", metaKey: true, bubbles: true }),
@@ -354,6 +372,7 @@ export function Switchboard({ paths, selectedPath, onSelectPath }: SwitchboardPr
               groups={groups}
               selectedPath={selectedPath}
               onSelect={handleSelect}
+              onStartGuide={onStartGuide ? (path) => { onStartGuide(path); setOpenMenu(null); } : undefined}
               onMouseEnter={cancelClose}
               onMouseLeave={scheduleClose}
             />

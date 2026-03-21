@@ -32,6 +32,7 @@ interface FlowCanvasProps {
   drillStack: DrillEntry[];
   onNodeDrillDown: (node: FlowNode) => void;
   onBackTo: (index: number) => void;
+  guideNodeId?: string | null;
 }
 
 const NODE_W = 450;
@@ -88,6 +89,7 @@ function Canvas({
   containerRef,
   onNodeDrillDown,
   onBackTo,
+  guideNodeId,
 }: {
   activeNodes: FlowNode[];
   activeEdges: FlowEdge[];
@@ -97,6 +99,7 @@ function Canvas({
   containerRef: RefObject<HTMLDivElement | null>;
   onNodeDrillDown: (node: FlowNode) => void;
   onBackTo: (index: number) => void;
+  guideNodeId?: string | null;
 }) {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
@@ -202,6 +205,7 @@ function Canvas({
           hasIncoming: targets.has(n.id),
           hasOutgoing: sources.has(n.id),
           isExpanded: false,
+          isGuideActive: false, // updated separately to avoid re-layout
           onToggleExpand: () => setExpandedNodeId((prev) => (prev === n.id ? null : n.id)),
           onDrillDown: () => onNodeDrillDownRef.current(n),
         },
@@ -244,6 +248,27 @@ function Canvas({
     const t = setTimeout(() => fitView({ padding: 0.25 }), 60);
     return () => clearTimeout(t);
   }, [activeNodes, activeEdges, drillStack, setNodes, setEdges, fitView]);
+
+  // Sync isGuideActive highlight without triggering a re-layout or fitView
+  useEffect(() => {
+    setNodes((prev) =>
+      prev.map((n) => ({
+        ...n,
+        data: { ...n.data, isGuideActive: guideNodeId ? n.id === guideNodeId : false },
+        style: {
+          ...n.style,
+          zIndex: guideNodeId && n.id === guideNodeId ? 10 : 0,
+        },
+      })),
+    );
+  }, [guideNodeId, setNodes]);
+
+  // Auto-expand the currently guided node; collapse when guide exits
+  useEffect(() => {
+    if (guideNodeId !== undefined) {
+      setExpandedNodeId(guideNodeId ?? null);
+    }
+  }, [guideNodeId]);
 
   const handleNodeClick = useCallback(
     (_event: React.MouseEvent, node: Node) => {
@@ -296,7 +321,7 @@ function Canvas({
   const isDetail = drillStack.length > 0;
 
   return (
-    <div ref={containerRef} className="w-full h-full bg-black relative flex flex-col">
+    <div ref={containerRef} data-guide="flow-canvas" className="w-full h-full bg-black relative flex flex-col">
       {/* Breadcrumb bar — only shown when drilling into a node */}
       <AnimatePresence>
         {isDetail && (
@@ -451,7 +476,7 @@ function collectAllNodes(
   return result;
 }
 
-export function FlowCanvas({ path, drillStack, onNodeDrillDown, onBackTo }: FlowCanvasProps) {
+export function FlowCanvas({ path, drillStack, onNodeDrillDown, onBackTo, guideNodeId }: FlowCanvasProps) {
   const currentNodeId = drillStack.length > 0 ? drillStack[drillStack.length - 1].id : null;
   const currentDetail = currentNodeId ? path.nodeDetails[currentNodeId] ?? null : null;
 
@@ -473,6 +498,7 @@ export function FlowCanvas({ path, drillStack, onNodeDrillDown, onBackTo }: Flow
         containerRef={containerRef}
         onNodeDrillDown={onNodeDrillDown}
         onBackTo={onBackTo}
+        guideNodeId={guideNodeId}
       />
     </ReactFlowProvider>
   );

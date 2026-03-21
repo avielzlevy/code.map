@@ -6,10 +6,12 @@ import { Sparkles } from "lucide-react";
 import { SPRING_DEFAULT, SPRING_SNAPPY } from "@/lib/spring";
 
 import { useExecutionPaths } from "@/hooks/useExecutionPaths";
+import { useGuide } from "@/hooks/useGuide";
 import { ExecutionPath, FlowNode } from "@/lib/flow-types";
 import { Switchboard } from "@/components/Switchboard";
 import { FlowCanvas } from "@/components/FlowCanvas";
 import { CommandPalette } from "@/components/CommandPalette";
+import { Guide } from "@/components/Guide";
 
 export type DrillEntry = { id: string; label: string; fileName: string };
 
@@ -22,6 +24,7 @@ const LOADING_MESSAGES = [
 
 export default function Home() {
   const { paths, status, aiEnriching } = useExecutionPaths();
+  const guide = useGuide();
   const [selectedPath, setSelectedPath] = useState<ExecutionPath | null>(null);
   const [drillStack, setDrillStack] = useState<DrillEntry[]>([]);
   const [loadingMsgIdx, setLoadingMsgIdx] = useState(0);
@@ -59,9 +62,19 @@ export default function Home() {
 
   const activePath = selectedPath ?? paths[0] ?? null;
 
+  // When guide is running it controls the drill level; otherwise use normal drillStack
+  const activeDrillStack = guide.active ? guide.drillStack : drillStack;
+
   const handleSelectPath = (path: ExecutionPath) => {
+    guide.exit();
     setSelectedPath(path);
     setDrillStack([]);
+  };
+
+  const handleStartGuide = (path: ExecutionPath) => {
+    setSelectedPath(path);
+    setDrillStack([]);
+    guide.start(path);
   };
 
   const handleSelectEndpoint = handleSelectPath;
@@ -162,6 +175,7 @@ export default function Home() {
         paths={paths}
         selectedPath={activePath}
         onSelectPath={handleSelectPath}
+        onStartGuide={handleStartGuide}
       />
 
       <div className="flex flex-1 overflow-hidden">
@@ -181,12 +195,16 @@ export default function Home() {
             )}
           </AnimatePresence>
           {activePath ? (
-            <FlowCanvas
-              path={activePath}
-              drillStack={drillStack}
-              onNodeDrillDown={handleNodeDrillDown}
-              onBackTo={handleBackTo}
-            />
+            <>
+              <FlowCanvas
+                path={activePath}
+                drillStack={activeDrillStack}
+                onNodeDrillDown={guide.active ? () => {} : handleNodeDrillDown}
+                onBackTo={guide.active ? () => {} : handleBackTo}
+                guideNodeId={guide.guideNodeId}
+              />
+              <Guide guide={guide} />
+            </>
           ) : (
             <motion.div
               className="flex h-full flex-col items-center justify-center gap-6"
@@ -245,6 +263,7 @@ export default function Home() {
         paths={paths}
         onSelectEndpoint={handleSelectEndpoint}
         onSelectNode={handleSelectNodeFromSearch}
+        onStartGuide={handleStartGuide}
       />
     </div>
   );
