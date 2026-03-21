@@ -1,0 +1,8 @@
+{
+  "name": "hono-ecommerce-fixture",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "hono": "^3.0.0"
+  }
+}

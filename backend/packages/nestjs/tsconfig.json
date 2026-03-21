@@ -20,10 +20,11 @@
     },
     "incremental": true,
     "skipLibCheck": true,
+    "resolveJsonModule": true,
     "strictNullChecks": false,
     "noImplicitAny": false,
     "lib": ["ES2020"]
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts", "src/**/*.json"],
   "exclude": ["node_modules", "dist", "**/*.spec.ts"]
 }

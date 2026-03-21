@@ -1,0 +1,216 @@
+{
+  "$schema": "https://code-map.dev/schemas/framework-descriptors/v1.json",
+  "version": "1",
+  "frameworks": {
+
+    "nestjs": {
+      "language": "typescript",
+      "displayName": "NestJS",
+      "detection": {
+        "manifestFile": "package.json",
+        "manifestKey": "@nestjs/core"
+      },
+      "routeStyle": "decorator",
+      "controllerDecorators": ["Controller"],
+      "serviceDecorators": ["Injectable"],
+      "routeDecorators": ["Get", "Post", "Put", "Delete", "Patch", "Options", "Head"],
+      "flowStepDecorator": "FlowStep",
+      "httpMethodMap": {
+        "Get": "GET",
+        "Post": "POST",
+        "Put": "PUT",
+        "Delete": "DELETE",
+        "Patch": "PATCH",
+        "Options": "OPTIONS",
+        "Head": "HEAD"
+      }
+    },
+
+    "express": {
+      "language": "typescript",
+      "displayName": "Express",
+      "detection": {
+        "manifestFile": "package.json",
+        "manifestKey": "express"
+      },
+      "routeStyle": "chained",
+      "controllerDecorators": [],
+      "serviceDecorators": [],
+      "routeDecorators": [],
+      "flowStepDecorator": "FlowStep",
+      "httpMethodMap": {
+        "get": "GET",
+        "post": "POST",
+        "put": "PUT",
+        "delete": "DELETE",
+        "patch": "PATCH",
+        "options": "OPTIONS",
+        "head": "HEAD",
+        "all": "ALL"
+      },
+      "chainedRoute": {
+        "receiverNames": ["app", "router", "Router"],
+        "methods": ["get", "post", "put", "delete", "patch", "options", "head", "all", "use"]
+      }
+    },
+
+    "fastify": {
+      "language": "typescript",
+      "displayName": "Fastify",
+      "detection": {
+        "manifestFile": "package.json",
+        "manifestKey": "fastify"
+      },
+      "routeStyle": "chained",
+      "controllerDecorators": [],
+      "serviceDecorators": [],
+      "routeDecorators": [],
+      "flowStepDecorator": "FlowStep",
+      "httpMethodMap": {
+        "get": "GET",
+        "post": "POST",
+        "put": "PUT",
+        "delete": "DELETE",
+        "patch": "PATCH",
+        "options": "OPTIONS",
+        "head": "HEAD",
+        "all": "ALL"
+      },
+      "chainedRoute": {
+        "receiverNames": ["fastify", "app", "server", "instance"],
+        "methods": ["get", "post", "put", "delete", "patch", "options", "head", "all", "route", "register"]
+      }
+    },
+
+    "hono": {
+      "language": "typescript",
+      "displayName": "Hono",
+      "detection": {
+        "manifestFile": "package.json",
+        "manifestKey": "hono"
+      },
+      "routeStyle": "chained",
+      "controllerDecorators": [],
+      "serviceDecorators": [],
+      "routeDecorators": [],
+      "flowStepDecorator": "FlowStep",
+      "httpMethodMap": {
+        "get": "GET",
+        "post": "POST",
+        "put": "PUT",
+        "delete": "DELETE",
+        "patch": "PATCH",
+        "options": "OPTIONS",
+        "head": "HEAD",
+        "all": "ALL"
+      },
+      "chainedRoute": {
+        "receiverNames": ["app", "router"],
+        "methods": ["get", "post", "put", "delete", "patch", "options", "head", "all", "on", "use", "route"]
+      }
+    },
+
+    "nextjs": {
+      "language": "typescript",
+      "displayName": "Next.js",
+      "detection": {
+        "manifestFile": "package.json",
+        "manifestKey": "next"
+      },
+      "routeStyle": "export",
+      "controllerDecorators": [],
+      "serviceDecorators": [],
+      "routeDecorators": [],
+      "flowStepDecorator": "FlowStep",
+      "httpMethodMap": {
+        "GET": "GET",
+        "POST": "POST",
+        "PUT": "PUT",
+        "DELETE": "DELETE",
+        "PATCH": "PATCH",
+        "OPTIONS": "OPTIONS",
+        "HEAD": "HEAD"
+      },
+      "exportRoute": {
+        "filePattern": "route.ts",
+        "exportedNames": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"]
+      }
+    },
+
+    "fastapi": {
+      "language": "python",
+      "displayName": "FastAPI",
+      "detection": {
+        "manifestFile": "pyproject.toml",
+        "manifestKey": "fastapi"
+      },
+      "routeStyle": "decorator",
+      "controllerDecorators": ["APIRouter", "FastAPI"],
+      "serviceDecorators": [],
+      "routeDecorators": ["get", "post", "put", "delete", "patch", "options", "head", "route", "api_route"],
+      "flowStepDecorator": "flow_step",
+      "httpMethodMap": {
+        "get": "GET",
+        "post": "POST",
+        "put": "PUT",
+        "delete": "DELETE",
+        "patch": "PATCH",
+        "options": "OPTIONS",
+        "head": "HEAD",
+        "route": "GET",
+        "api_route": "GET"
+      }
+    },
+
+    "flask": {
+      "language": "python",
+      "displayName": "Flask",
+      "detection": {
+        "manifestFile": "pyproject.toml",
+        "manifestKey": "flask"
+      },
+      "routeStyle": "decorator",
+      "controllerDecorators": ["Blueprint"],
+      "serviceDecorators": [],
+      "routeDecorators": ["route", "get", "post", "put", "delete", "patch"],
+      "flowStepDecorator": "flow_step",
+      "httpMethodMap": {
+        "route": "GET",
+        "get": "GET",
+        "post": "POST",
+        "put": "PUT",
+        "delete": "DELETE",
+        "patch": "PATCH"
+      }
+    },
+
+    "django_rest": {
+      "language": "python",
+      "displayName": "Django REST Framework",
+      "detection": {
+        "manifestFile": "pyproject.toml",
+        "manifestKey": "djangorestframework"
+      },
+      "routeStyle": "mixed",
+      "controllerDecorators": ["ViewSet", "ModelViewSet", "ReadOnlyModelViewSet", "GenericViewSet", "APIView"],
+      "serviceDecorators": [],
+      "routeDecorators": ["api_view", "action"],
+      "flowStepDecorator": "flow_step",
+      "httpMethodMap": {
+        "list": "GET",
+        "create": "POST",
+        "retrieve": "GET",
+        "update": "PUT",
+        "partial_update": "PATCH",
+        "destroy": "DELETE",
+        "get": "GET",
+        "post": "POST",
+        "put": "PUT",
+        "patch": "PATCH",
+        "delete": "DELETE"
+      },
+      "viewsetMethods": ["list", "create", "retrieve", "update", "partial_update", "destroy"]
+    }
+
+  }
+}
