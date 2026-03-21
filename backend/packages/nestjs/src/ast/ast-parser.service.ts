@@ -16,6 +16,16 @@ import {
 
 const LOGGER_CONTEXT = 'AstParserService';
 
+interface CallSite {
+  /** Unqualified method name, e.g. `findMany` */
+  method: string;
+  /**
+   * Object the method is called on, e.g. `deploymentService` from
+   * `this.deploymentService.findMany()`.  Undefined for plain function calls.
+   */
+  object?: string;
+}
+
 interface ParsedMethod {
   className: string;
   methodName: string;
@@ -29,7 +39,13 @@ interface ParsedMethod {
   rawBody: string;
   filePath: string;
   lineNumber: number;
-  calls: string[];
+  calls: CallSite[];
+  /**
+   * Constructor-injected dependencies of this method's class.
+   * Maps property name → declared TypeScript type name.
+   * e.g. `{ deploymentService: "DeploymentService" }`
+   */
+  constructorInjections: Map<string, string>;
   nodeType: 'controller' | 'service' | 'utility' | 'unknown';
 }
 
@@ -115,6 +131,7 @@ export class AstParserService {
     const classDecorators = this.extractDecoratorNames(classNode, sourceFile);
     const nodeType = this.classifyNodeType(classDecorators);
     const controllerPrefix = this.extractControllerPrefix(classNode, sourceFile);
+    const constructorInjections = this.extractConstructorInjections(classNode, sourceFile);
     const methods: ParsedMethod[] = [];
 
     for (const member of classNode.members) {
@@ -143,6 +160,7 @@ export class AstParserService {
         filePath,
         lineNumber,
         calls,
+        constructorInjections,
         nodeType,
       });
     }
@@ -201,22 +219,76 @@ export class AstParserService {
     return parts.join('\n').trim() || undefined;
   }
 
-  private extractCallExpressions(body: ts.Block, sourceFile: ts.SourceFile): string[] {
-    const calls = new Set<string>();
+  private extractCallExpressions(body: ts.Block, sourceFile: ts.SourceFile): CallSite[] {
+    // Use a map keyed on `object#method` to deduplicate while preserving object context.
+    const calls = new Map<string, CallSite>();
 
     const visit = (node: ts.Node): void => {
       if (ts.isCallExpression(node)) {
         if (ts.isPropertyAccessExpression(node.expression)) {
-          calls.add(node.expression.name.getText(sourceFile));
+          const method = node.expression.name.getText(sourceFile);
+          let object: string | undefined;
+
+          // `this.service.method()` → expr is PropertyAccessExpression (this.service)
+          // `service.method()`      → expr is Identifier (service)
+          const callee = node.expression.expression;
+          if (ts.isPropertyAccessExpression(callee)) {
+            // this.deploymentService → name = "deploymentService"
+            object = callee.name.getText(sourceFile);
+          } else if (ts.isIdentifier(callee)) {
+            const text = callee.getText(sourceFile);
+            // Exclude "this" itself — it means the call is on a local var, not a property
+            if (text !== 'this') object = text;
+          }
+
+          const key = `${object ?? ''}#${method}`;
+          if (!calls.has(key)) calls.set(key, { method, object });
         } else if (ts.isIdentifier(node.expression)) {
-          calls.add(node.expression.getText(sourceFile));
+          const method = node.expression.getText(sourceFile);
+          const key = `#${method}`;
+          if (!calls.has(key)) calls.set(key, { method });
         }
       }
       ts.forEachChild(node, visit);
     };
 
     ts.forEachChild(body, visit);
-    return [...calls];
+    return [...calls.values()];
+  }
+
+  /**
+   * Reads the constructor of a class and returns a map of
+   * `parameterName → TypeName` for every typed parameter.
+   *
+   * Example: `constructor(private readonly deploymentService: DeploymentService)`
+   *          → `{ deploymentService: "DeploymentService" }`
+   */
+  private extractConstructorInjections(
+    classNode: ts.ClassDeclaration,
+    sourceFile: ts.SourceFile,
+  ): Map<string, string> {
+    const injections = new Map<string, string>();
+
+    for (const member of classNode.members) {
+      if (!ts.isConstructorDeclaration(member)) continue;
+
+      for (const param of member.parameters) {
+        if (!param.type) continue;
+        const paramName = ts.isIdentifier(param.name) ? param.name.getText(sourceFile) : null;
+        if (!paramName) continue;
+
+        // Unwrap generic wrappers: e.g. `Inject<DeploymentService>` → still a TypeReference
+        if (ts.isTypeReferenceNode(param.type)) {
+          const typeName = ts.isIdentifier(param.type.typeName)
+            ? param.type.typeName.getText(sourceFile)
+            : param.type.typeName.getText(sourceFile);
+          injections.set(paramName, typeName);
+        }
+      }
+      break; // only one constructor
+    }
+
+    return injections;
   }
 
   private extractControllerPrefix(
@@ -304,9 +376,33 @@ export class AstParserService {
       const fromId = `${method.filePath}:${method.className}#${method.methodName}:${method.lineNumber}`;
 
       for (let i = 0; i < method.calls.length; i++) {
-        const candidates = methodNameIndex.get(method.calls[i]) ?? [];
-        // Only resolve when unambiguous — multiple candidates means we cannot determine the target class
-        const toId = candidates.length === 1 ? candidates[0] : undefined;
+        const call = method.calls[i];
+        const candidates = methodNameIndex.get(call.method) ?? [];
+
+        let toId: string | undefined;
+
+        if (candidates.length === 1) {
+          // Unambiguous — only one method with this name across the whole graph.
+          toId = candidates[0];
+        } else if (candidates.length > 1 && call.object) {
+          // Ambiguous but we know the object the method is called on.
+          // Look up which class that object is injected as via the constructor.
+          const injectedClassName = method.constructorInjections.get(call.object);
+          if (injectedClassName) {
+            // Try exact class#method key first (fastest path).
+            toId = methodIndex.get(`${injectedClassName}#${call.method}`);
+
+            if (!toId) {
+              // Some projects rename the constructor param (e.g. `svc` for `DeploymentService`).
+              // Fall back: filter candidates to those whose nodeId contains the class name.
+              const match = candidates.filter((id) => id.includes(`:${injectedClassName}#`));
+              if (match.length === 1) toId = match[0];
+            }
+          }
+        }
+        // If still unresolved (truly ambiguous, no injection context), skip the edge
+        // rather than connecting to the wrong target.
+
         if (toId && toId !== fromId) {
           edges.push({ from: fromId, to: toId, callOrder: i });
         }
