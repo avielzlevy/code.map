@@ -1,4 +1,4 @@
-import { ExecutionPath, GitInfo } from "@/lib/flow-types";
+import { ExecutionPath, GitInfo, GuideArtifact } from "@/lib/flow-types";
 
 /**
  * Base URL of the FlowMap sidecar server.
@@ -55,6 +55,16 @@ export const apiClient = {
 
   getGitInfo(): Promise<GitInfo> {
     return request<GitInfo>('/api/flow-map/git-info');
+  },
+
+  /**
+   * Builds a guide for the current branch (HEAD) against a base.
+   * Omit `base` to compare against the auto-detected trunk (origin default → main → master).
+   * Diffing/log can be slow on large ranges, so this uses a longer timeout.
+   */
+  getGuide(base?: string): Promise<GuideArtifact> {
+    const qs = base ? `?base=${encodeURIComponent(base)}` : "";
+    return request<GuideArtifact>(`/api/flow-map/guide${qs}`, 15000);
   },
 
   /**

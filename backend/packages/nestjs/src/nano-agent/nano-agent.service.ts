@@ -10,19 +10,39 @@ import {
   NANO_AGENT_RETRY_BASE_MS,
   NANO_AGENT_PROMPT_TEMPLATE,
   PROVIDER_CONFIGS,
+  OLLAMA_MODEL_PRIORITY,
 } from '../constants';
 
 const LOGGER_CONTEXT = 'NanoAgentService';
 
 export class NanoAgentService {
-  private readonly apiKey: string;
+  private readonly apiKey: string | undefined;
   private readonly provider: AIProvider;
   private readonly model: string | undefined;
+  private readonly ollamaHost: string | undefined;
 
-  constructor(apiKey: string, provider: AIProvider = 'anthropic', model?: string) {
+  constructor(apiKey: string | undefined, provider: AIProvider = 'anthropic', model?: string, ollamaHost?: string) {
     this.apiKey = apiKey;
     this.provider = provider;
     this.model = model;
+    this.ollamaHost = ollamaHost;
+  }
+
+  static async detectBestModel(host: string): Promise<string | null> {
+    try {
+      const response = await axios.get<{ models: Array<{ name: string }> }>(`${host}/api/tags`);
+      const models = response.data?.models;
+      if (!models || models.length === 0) return null;
+
+      for (const prefix of OLLAMA_MODEL_PRIORITY) {
+        const match = models.find((m) => m.name.startsWith(prefix));
+        if (match) return match.name;
+      }
+
+      return models[0].name;
+    } catch {
+      return null;
+    }
   }
 
   async summarize(node: FlowNode): Promise<string> {
@@ -79,6 +99,14 @@ export class NanoAgentService {
   }
 
   private buildRequest(prompt: string): { url: string; body: object; headers: Record<string, string> } {
+    if (this.provider === 'ollama') {
+      return {
+        url: `${this.ollamaHost}/v1/chat/completions`,
+        body: { model: this.model, max_tokens: NANO_AGENT_MAX_TOKENS, messages: [{ role: 'user', content: prompt }] },
+        headers: { 'content-type': 'application/json' },
+      };
+    }
+
     const config = PROVIDER_CONFIGS[this.provider];
     const model = this.model ?? config.defaultModel;
 
@@ -86,11 +114,11 @@ export class NanoAgentService {
       return {
         url: config.apiUrl,
         body: { model, max_tokens: NANO_AGENT_MAX_TOKENS, messages: [{ role: 'user', content: prompt }] },
-        headers: { 'x-api-key': this.apiKey, 'anthropic-version': config.anthropicVersion!, 'content-type': 'application/json' },
+        headers: { 'x-api-key': this.apiKey!, 'anthropic-version': config.anthropicVersion!, 'content-type': 'application/json' },
       };
     }
 
-    if (this.provider === 'gemini') {
+    if (this.provider === 'google') {
       return {
         url: `${config.apiUrl}/${model}:generateContent?key=${this.apiKey}`,
         body: { contents: [{ parts: [{ text: prompt }] }] },
@@ -110,10 +138,10 @@ export class NanoAgentService {
     if (this.provider === 'anthropic') {
       return ((data?.content as Array<{ text: string }>)?.[0]?.text ?? '').trim();
     }
-    if (this.provider === 'gemini') {
+    if (this.provider === 'google') {
       return ((data?.candidates as Array<{ content: { parts: Array<{ text: string }> } }>)?.[0]?.content?.parts?.[0]?.text ?? '').trim();
     }
-    // openai and openrouter
+    // openai, openrouter, and ollama share the OpenAI-compatible response shape
     return ((data?.choices as Array<{ message: { content: string } }>)?.[0]?.message?.content ?? '').trim();
   }
 

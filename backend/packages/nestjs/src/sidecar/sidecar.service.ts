@@ -6,9 +6,19 @@ import * as fs from 'fs';
 import { execSync } from 'child_process';
 
 import { FlowLogger } from '../logger/flow-logger';
-import { FlowGraph, FrontendExecutionPath, ApiResponse } from '../dto/flow-mapper-config.dto';
-import { SidecarException } from '../exceptions/flow-mapper.exceptions';
-import { SIDECAR_API_PREFIX, SSE_HEARTBEAT_INTERVAL_MS } from '../constants';
+import {
+  FlowGraph,
+  FrontendExecutionPath,
+  ApiResponse,
+  GuideArtifact,
+} from '../dto/flow-mapper-config.dto';
+import { SidecarException, GuideException } from '../exceptions/flow-mapper.exceptions';
+import {
+  SIDECAR_API_PREFIX,
+  SSE_HEARTBEAT_INTERVAL_MS,
+  GUIDE_DEFAULT_HEAD,
+} from '../constants';
+import { GuideService } from '../guide/guide.service';
 
 const LOGGER_CONTEXT = 'SidecarService';
 
@@ -24,6 +34,8 @@ export class SidecarService {
   /** Active SSE response objects — one per connected browser tab. */
   private readonly sseClients = new Set<Response>();
   private heartbeatTimer: ReturnType<typeof setInterval> | null = null;
+
+  private readonly guideService = new GuideService();
 
   constructor() {
     this.app = express();
@@ -193,6 +205,32 @@ export class SidecarService {
       const info = this.resolveGitInfo();
       const response: ApiResponse<typeof info> = { status: 'success', data: info };
       res.json(response);
+    });
+
+    this.app.get(`${SIDECAR_API_PREFIX}/guide`, (req: Request, res: Response) => {
+      if (!this.currentGraph) {
+        const response: ApiResponse<null> = { status: 'error', data: null };
+        res.status(503).json(response);
+        return;
+      }
+
+      const base = typeof req.query.base === 'string' ? req.query.base : undefined;
+      const head = typeof req.query.head === 'string' ? req.query.head : GUIDE_DEFAULT_HEAD;
+      const { root } = this.resolveGitInfo();
+
+      try {
+        const guide = this.guideService.build(this.currentGraph, root, base, head);
+        const response: ApiResponse<GuideArtifact> = { status: 'success', data: guide };
+        res.json(response);
+      } catch (err) {
+        if (err instanceof GuideException) {
+          FlowLogger.warn(LOGGER_CONTEXT, 'Guide build failed', { error: err.message });
+          const response: ApiResponse<null> = { status: 'error', data: null };
+          res.status(400).json(response);
+          return;
+        }
+        throw err;
+      }
     });
 
     this.serveStaticFrontend();

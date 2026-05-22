@@ -1,8 +1,12 @@
 "use client";
 
 import { useState, useCallback, useRef } from "react";
-import { ExecutionPath } from "@/lib/flow-types";
-import { buildGuideSequence, FlowGuideStep } from "@/lib/guide-steps";
+import { ExecutionPath, GuideArtifact } from "@/lib/flow-types";
+import {
+  buildGuideSequence,
+  buildSequenceFromArtifact,
+  FlowGuideStep,
+} from "@/lib/guide-steps";
 import { DrillEntry } from "@/app/app/page";
 
 export interface UseGuideResult {
@@ -14,7 +18,11 @@ export interface UseGuideResult {
   drillStack: DrillEntry[];
   /** Node id to ring-highlight in the canvas. */
   guideNodeId: string | null;
+  /** Commit narration for the current step (change-driven guides only). */
+  narration: string | null;
   start: (path: ExecutionPath) => void;
+  /** Start a change-driven guide from a diff artifact, latching onto loaded paths. */
+  startGuide: (artifact: GuideArtifact, paths: ExecutionPath[], repoRoot: string) => void;
   advance: () => void;
   back: () => void;
   exit: () => void;
@@ -37,6 +45,14 @@ export function useGuide(): UseGuideResult {
     const seq = buildGuideSequence(path);
     setState({ sequence: seq, stepIndex: seq.length > 0 ? 0 : null });
   }, []);
+
+  const startGuide = useCallback(
+    (artifact: GuideArtifact, paths: ExecutionPath[], repoRoot: string) => {
+      const seq = buildSequenceFromArtifact(paths, artifact, repoRoot);
+      setState({ sequence: seq, stepIndex: seq.length > 0 ? 0 : null });
+    },
+    [],
+  );
 
   const advance = useCallback(() => {
     setState((prev) => {
@@ -69,7 +85,9 @@ export function useGuide(): UseGuideResult {
     total: sequence.length,
     drillStack: currentStep?.drillStack ?? [],
     guideNodeId: currentStep?.node.id ?? null,
+    narration: currentStep?.narration ?? null,
     start,
+    startGuide,
     advance,
     back,
     exit,

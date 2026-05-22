@@ -10,10 +10,24 @@ export const NANO_AGENT_ALL_FAILED_THRESHOLD = 1.0; // 100% failure rate trigger
 export const NANO_AGENT_MAX_RETRIES = 3;
 export const NANO_AGENT_RETRY_BASE_MS = 500; // doubles each attempt: 500 → 1000 → 2000ms
 
-export type AIProvider = 'anthropic' | 'openai' | 'gemini' | 'openrouter';
+export type RemoteAIProvider = 'anthropic' | 'openai' | 'google' | 'openrouter';
+export type AIProvider = RemoteAIProvider | 'ollama';
+
+export const OLLAMA_DEFAULT_HOST = 'http://localhost:11434';
+
+export const OLLAMA_MODEL_PRIORITY = [
+  'qwen2.5-coder',
+  'deepseek-coder',
+  'codellama',
+  'qwen2.5',
+  'llama3.2',
+  'llama3.1',
+  'phi4',
+  'phi3',
+];
 
 export const PROVIDER_CONFIGS: Record<
-  AIProvider,
+  RemoteAIProvider,
   { apiUrl: string; defaultModel: string; anthropicVersion?: string }
 > = {
   anthropic: {
@@ -25,7 +39,7 @@ export const PROVIDER_CONFIGS: Record<
     apiUrl: 'https://api.openai.com/v1/chat/completions',
     defaultModel: 'gpt-4o-mini',
   },
-  gemini: {
+  google: {
     apiUrl: 'https://generativelanguage.googleapis.com/v1beta/models',
     defaultModel: 'gemini-2.0-flash',
   },
@@ -73,3 +87,12 @@ export const FILE_WATCHER_DEBOUNCE_MS = 500;
 
 /** Milliseconds between SSE keep-alive heartbeat comments (prevents proxy timeouts). */
 export const SSE_HEARTBEAT_INTERVAL_MS = 30_000;
+
+/** How many call-graph hops out from a changed node the guide pulls in as context. */
+export const GUIDE_SUBGRAPH_DEPTH = 1;
+
+/** Head ref for a guide is always the checked-out branch. */
+export const GUIDE_DEFAULT_HEAD = 'HEAD';
+
+/** Local trunk names to try when the remote default branch can't be resolved. */
+export const GUIDE_TRUNK_FALLBACKS = ['main', 'master'];

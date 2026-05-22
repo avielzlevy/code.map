@@ -1,4 +1,4 @@
-import { AIProvider } from '../constants';
+import { RemoteAIProvider, AIProvider } from '../constants';
 
 type FlowMapperBaseConfig = {
   /** Port for the sidecar visualization server. Defaults to 4567. */
@@ -11,18 +11,20 @@ type FlowMapperBaseConfig = {
 
 export type FlowMapperConfig = FlowMapperBaseConfig &
   (
-    | { enableAI: true; apiKey: string; provider: AIProvider; model?: string }
-    | { enableAI?: false; apiKey?: string; provider?: AIProvider; model?: string }
+    | { enableAI: true; provider: 'ollama'; ollamaHost?: string; model?: string }
+    | { enableAI: true; provider: RemoteAIProvider; apiKey: string; model?: string }
+    | { enableAI?: false }
   );
 
 export interface ResolvedFlowMapperConfig {
   port: number;
   enableAI: boolean;
-  apiKey: string;
+  apiKey: string | undefined;
   provider: AIProvider | '';
   model: string | undefined;
   cachePath: string;
   sourceRoot: string;
+  ollamaHost: string | undefined;
 }
 
 export interface FlowNode {
@@ -91,6 +93,57 @@ export interface FlowGraph {
   nodes: FlowNode[];
   edges: FlowEdge[];
   generatedAt: string;
+}
+
+// ── Guide artifact ──────────────────────────────────────────────────────────
+// A portable walkthrough of a branch/commit diff, mapped onto the live graph.
+// All ids and file paths are repo-relative so the file is shareable across
+// machines and consumable by an LLM with no tool access.
+
+export interface GuideCommit {
+  hash: string;
+  subject: string;
+}
+
+export interface GuideStep {
+  /** Repo-relative node id, matches a node in the live graph after normalization. */
+  nodeId: string;
+  methodName: string;
+  /** Repo-relative file path. */
+  file: string;
+  type: FlowNode['type'];
+  lineRange: [number, number];
+  status: 'modified';
+  /** Narration sourced from commit subjects in the range — no AI. */
+  narration: string;
+  /** The overlapping diff hunk text. Present on changed nodes only. */
+  diff: string;
+}
+
+export interface GuideSubgraphNode {
+  id: string;
+  label: string;
+  methodName: string;
+  type: FlowNode['type'];
+  file: string;
+  line: number;
+  role: 'changed' | 'context';
+}
+
+export interface GuideArtifact {
+  meta: {
+    base: string;
+    head: string;
+    generatedAt: string;
+    commits: GuideCommit[];
+  };
+  /** Ordered walkthrough — one step per changed node. */
+  steps: GuideStep[];
+  /** Changed nodes + their 1-hop neighbours, for the embedded standalone view. */
+  subgraph: {
+    nodes: GuideSubgraphNode[];
+    edges: FlowEdge[];
+  };
 }
 
 export interface CacheEntry {

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef, Fragment } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Command, Network, FunctionSquare, GraduationCap, Sparkles } from "lucide-react";
+import { Search, Command, Network, FunctionSquare, GraduationCap, Sparkles, GitBranch } from "lucide-react";
 import { ExecutionPath, FlowNode } from "@/lib/flow-types";
 import clsx from "clsx";
 import { SPRING_STANDARD, SPRING_SNAPPY, SPRING_DEFAULT } from "@/lib/spring";
@@ -16,9 +16,12 @@ interface CommandPaletteProps {
     parentId: string | null,
   ) => void;
   onStartGuide?: (path: ExecutionPath) => void;
+  /** Walk through what the current branch changed (vs trunk). */
+  onWalkChanges?: () => void;
 }
 
 type SearchResultItem =
+  | { type: "action"; id: string; label: string; sublabel: string; run: () => void }
   | { type: "endpoint"; path: ExecutionPath; label: string; sublabel: string }
   | {
       type: "node";
@@ -34,6 +37,7 @@ export function CommandPalette({
   onSelectEndpoint,
   onSelectNode,
   onStartGuide,
+  onWalkChanges,
 }: CommandPaletteProps) {
   "use no memo"; // React Compiler over-memoizes this component — query state changes must trigger re-renders
   const [isOpen, setIsOpen] = useState(false);
@@ -69,6 +73,16 @@ export function CommandPalette({
     const items: SearchResultItem[] = [];
     const seenEndpoints = new Set<string>();
     const seenNodes = new Set<string>();
+
+    if (onWalkChanges) {
+      items.push({
+        type: "action",
+        id: "walk-changes",
+        label: "Walk through changes on this branch",
+        sublabel: "Guide · branch diff vs trunk",
+        run: onWalkChanges,
+      });
+    }
 
     paths.forEach((path) => {
       const endpointKey = `${path.method}::${path.endpoint}`;
@@ -116,12 +130,16 @@ export function CommandPalette({
     });
 
     return items;
-  }, [paths]);
+  }, [paths, onWalkChanges]);
 
   const filteredItems = useMemo(() => {
     const q = query.toLowerCase().trim();
 
-    if (!q) return allItems.filter((item) => item.type === "endpoint");
+    if (!q)
+      return [
+        ...allItems.filter((item) => item.type === "action"),
+        ...allItems.filter((item) => item.type === "endpoint"),
+      ];
 
     const fuzzyMatch = (text: string, pattern: string): boolean => {
       let pi = 0;
@@ -158,7 +176,9 @@ export function CommandPalette({
     const item = filteredItems[index];
     if (!item) return;
 
-    if (item.type === "endpoint") {
+    if (item.type === "action") {
+      item.run();
+    } else if (item.type === "endpoint") {
       onSelectEndpoint(item.path);
     } else {
       onSelectNode(item.path, item.node, item.parentId);
@@ -234,17 +254,25 @@ export function CommandPalette({
                 filteredItems.map((item, index) => {
                   const active = index === selectedIndex;
                   const itemKey =
-                    item.type === "endpoint"
-                      ? `endpoint-${item.path.method}-${item.path.endpoint}`
-                      : `node-${item.path.endpoint}-${item.parentId ?? "root"}-${item.node.id}`;
+                    item.type === "action"
+                      ? `action-${item.id}`
+                      : item.type === "endpoint"
+                        ? `endpoint-${item.path.method}-${item.path.endpoint}`
+                        : `node-${item.path.endpoint}-${item.parentId ?? "root"}-${item.node.id}`;
                   const prevItem = index > 0 ? filteredItems[index - 1] : null;
                   const showGroupLabel =
                     !prevItem || prevItem.type !== item.type;
+                  const groupLabel =
+                    item.type === "action"
+                      ? "Actions"
+                      : item.type === "endpoint"
+                        ? "Endpoints"
+                        : "Functions";
                   return (
                     <Fragment key={itemKey}>
                       {showGroupLabel && (
                         <div className="px-3 pt-2 pb-1 text-[11px] text-gray-600 font-medium select-none">
-                          {item.type === "endpoint" ? "Endpoints" : "Functions"}
+                          {groupLabel}
                         </div>
                       )}
                       <div className={clsx("group relative flex items-center rounded-lg overflow-hidden", !active && "hover:bg-white/5")}>
@@ -263,12 +291,14 @@ export function CommandPalette({
                           <div
                             className={clsx(
                               "p-1.5 rounded-md border shrink-0",
-                              item.type === "endpoint"
-                                ? "bg-white/8 border-white/15 text-white/70"
-                                : "bg-white/5 border-white/10 text-gray-400",
+                              item.type === "node"
+                                ? "bg-white/5 border-white/10 text-gray-400"
+                                : "bg-white/8 border-white/15 text-white/70",
                             )}
                           >
-                            {item.type === "endpoint" ? (
+                            {item.type === "action" ? (
+                              <GitBranch className="w-4 h-4" />
+                            ) : item.type === "endpoint" ? (
                               <Network className="w-4 h-4" />
                             ) : (
                               <FunctionSquare className="w-4 h-4" />

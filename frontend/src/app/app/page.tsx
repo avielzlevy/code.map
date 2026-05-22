@@ -30,6 +30,7 @@ export default function Home() {
   const [drillStack, setDrillStack] = useState<DrillEntry[]>([]);
   const [loadingMsgIdx, setLoadingMsgIdx] = useState(0);
   const [gitInfo, setGitInfo] = useState<GitInfo | null>(null);
+  const [guideNotice, setGuideNotice] = useState<string | null>(null);
 
   // Fetch git remote info once for "Open in GitHub" links
   useEffect(() => {
@@ -83,6 +84,34 @@ export default function Home() {
     setDrillStack([]);
     guide.start(path);
   };
+
+  // Walk through what the current branch changed (vs auto-detected trunk).
+  const handleWalkChanges = async () => {
+    setGuideNotice("Building guide…");
+    try {
+      const artifact = await apiClient.getGuide();
+      if (artifact.steps.length === 0) {
+        setGuideNotice("No changes vs trunk on this branch.");
+        setTimeout(() => setGuideNotice(null), 3000);
+        return;
+      }
+      setGuideNotice(null);
+      setDrillStack([]);
+      guide.startGuide(artifact, paths, gitInfo?.root ?? "");
+    } catch {
+      setGuideNotice("Couldn't build guide — is this a git repo with a trunk?");
+      setTimeout(() => setGuideNotice(null), 4000);
+    }
+  };
+
+  // A change-driven guide spans endpoints — follow each step to its endpoint.
+  useEffect(() => {
+    if (!guide.active) return;
+    const endpoint = guide.currentStep?.endpoint;
+    if (!endpoint) return;
+    const match = paths.find((p) => p.endpoint === endpoint);
+    if (match && match !== activePath) setSelectedPath(match);
+  }, [guide.active, guide.currentStep, paths, activePath]);
 
   const handleSelectEndpoint = handleSelectPath;
 
@@ -201,6 +230,19 @@ export default function Home() {
               </motion.div>
             )}
           </AnimatePresence>
+          <AnimatePresence>
+            {guideNotice && (
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 12 }}
+                transition={SPRING_DEFAULT}
+                className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-3.5 py-2 rounded-full border border-white/15 bg-black/90 backdrop-blur-sm shadow-[0_4px_24px_rgba(0,0,0,0.6)]"
+              >
+                <span className="text-[11px] font-mono text-white/80 whitespace-nowrap">{guideNotice}</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
           {activePath ? (
             <>
               <FlowCanvas
@@ -272,6 +314,7 @@ export default function Home() {
         onSelectEndpoint={handleSelectEndpoint}
         onSelectNode={handleSelectNodeFromSearch}
         onStartGuide={handleStartGuide}
+        onWalkChanges={handleWalkChanges}
       />
     </div>
   );

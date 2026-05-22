@@ -12,7 +12,7 @@ import { NanoAgentService } from '../nano-agent/nano-agent.service';
 import { SidecarService } from '../sidecar/sidecar.service';
 import { FileWatcherService } from '../file-watcher/file-watcher.service';
 import { FlowMapperService } from './flow-mapper.service';
-import { AIProvider, DEFAULT_SIDECAR_PORT, FLOW_CACHE_DIR } from '../constants';
+import { AIProvider, RemoteAIProvider, DEFAULT_SIDECAR_PORT, FLOW_CACHE_DIR, OLLAMA_DEFAULT_HOST } from '../constants';
 import envConfig from '../config/env-config';
 
 const LOGGER_CONTEXT = 'FlowMapper';
@@ -50,7 +50,23 @@ export class FlowMapper {
     const astParser = new AstParserService();
     const cache = new CacheService(config.cachePath);
     const sidecar = new SidecarService();
-    const nanoAgent = config.enableAI ? new NanoAgentService(config.apiKey, config.provider as AIProvider, config.model) : null;
+
+    let nanoAgent: NanoAgentService | null = null;
+    if (config.enableAI) {
+      if (config.provider === 'ollama') {
+        const detectedModel = await NanoAgentService.detectBestModel(config.ollamaHost!);
+        if (detectedModel === null) {
+          FlowLogger.warn(LOGGER_CONTEXT, 'Ollama is not reachable or has no models installed — AI summaries disabled. Run `ollama serve` and pull a model to enable.');
+        } else {
+          const model = config.model ?? detectedModel;
+          FlowLogger.info(LOGGER_CONTEXT, 'Ollama model selected', { model });
+          nanoAgent = new NanoAgentService(undefined, 'ollama', model, config.ollamaHost);
+        }
+      } else {
+        nanoAgent = new NanoAgentService(config.apiKey, config.provider as RemoteAIProvider, config.model);
+      }
+    }
+
     const service = new FlowMapperService(config, astParser, cache, sidecar, nanoAgent);
 
     FlowLogger.info(LOGGER_CONTEXT, 'Initializing FlowMapper', {
@@ -90,14 +106,23 @@ export class FlowMapper {
   }
 
   private static resolveConfig(userConfig: FlowMapperConfig): ResolvedFlowMapperConfig {
+    const enableAI = userConfig.enableAI ?? false;
+    const anyConfig = userConfig as Record<string, unknown>;
+    const provider = anyConfig['provider'] as AIProvider | undefined;
+    const isOllama = enableAI && provider === 'ollama';
+    const isRemote = enableAI && provider !== 'ollama';
+
     return {
       port: userConfig.port ?? DEFAULT_SIDECAR_PORT,
-      enableAI: userConfig.enableAI ?? false,
-      apiKey: userConfig.apiKey ?? envConfig.apiKey ?? '',
-      provider: userConfig.provider ?? envConfig.provider ?? ('' as AIProvider),
-      model: userConfig.model,
+      enableAI,
+      apiKey: isRemote ? ((anyConfig['apiKey'] as string | undefined) ?? envConfig.apiKey ?? undefined) : undefined,
+      provider: enableAI ? provider! : (envConfig.provider ?? ('' as AIProvider)),
+      model: enableAI ? (anyConfig['model'] as string | undefined) : undefined,
       cachePath: userConfig.cachePath ?? path.join(process.cwd(), FLOW_CACHE_DIR),
       sourceRoot: userConfig.sourceRoot ?? process.cwd(),
+      ollamaHost: isOllama
+        ? ((anyConfig['ollamaHost'] as string | undefined) ?? envConfig.ollamaHost ?? OLLAMA_DEFAULT_HOST)
+        : undefined,
     };
   }
 
@@ -106,7 +131,7 @@ export class FlowMapper {
       throw new FlowMapperConfigException('port', `must be between 1 and 65535, got ${config.port}`);
     }
 
-    if (config.enableAI && !config.apiKey) {
+    if (config.enableAI && config.provider !== 'ollama' && !config.apiKey) {
       throw new FlowMapperInitializationException(
         'enableAI is true but no apiKey was provided. ' +
           'Set apiKey in config or the SUMMARIES_API_KEY environment variable.',

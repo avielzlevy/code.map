@@ -12,6 +12,7 @@ export function Guide({ guide }: { guide: UseGuideResult }) {
   const fileName = node.fileName.split("/").pop() ?? node.fileName;
   const isFirst = guide.stepIndex === 0;
   const isLast = guide.stepIndex === guide.total - 1;
+  const narration = guide.narration;
 
   return (
     <AnimatePresence>
@@ -29,7 +30,7 @@ export function Guide({ guide }: { guide: UseGuideResult }) {
         {/* Node info */}
         <div className="flex flex-col gap-0.5 min-w-0">
           <span
-            className="text-[12px] font-mono font-semibold text-white truncate max-w-48"
+            className="text-[12px] font-mono font-semibold text-white truncate max-w-64"
             title={node.funcName}
           >
             {node.funcName}
@@ -37,6 +38,14 @@ export function Guide({ guide }: { guide: UseGuideResult }) {
           <span className="text-[10px] font-mono text-gray-500 truncate" title={node.fileName}>
             {fileName}
           </span>
+          {narration && (
+            <span
+              className="text-[10px] text-gray-400 truncate max-w-64"
+              title={narration}
+            >
+              {narration}
+            </span>
+          )}
         </div>
 
         {/* Divider */}

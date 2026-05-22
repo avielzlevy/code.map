@@ -39,3 +39,10 @@ export class SidecarException extends Error {
     this.name = 'SidecarException';
   }
 }
+
+export class GuideException extends Error {
+  constructor(range: string, reason: string) {
+    super(`[Guide] Failed to build guide for range "${range}": ${reason}`);
+    this.name = 'GuideException';
+  }
+}
