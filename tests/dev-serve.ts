@@ -34,7 +34,7 @@ async function run(): Promise<void> {
   const cache = new CacheService('/tmp/flow-map-dev');
   const sidecar = new SidecarService();
   const flowMapper = new FlowMapperService(
-    { port: PORT, enableAI: false, apiKey: '', provider: '', model: undefined, cachePath: '/tmp/flow-map-dev', sourceRoot: fixtureDir },
+    { port: PORT, enableAI: false, apiKey: '', provider: '', model: undefined, cachePath: '/tmp/flow-map-dev', sourceRoot: fixtureDir, ollamaHost: undefined },
     astParser,
     cache,
     sidecar,
