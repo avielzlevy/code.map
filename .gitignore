@@ -4,6 +4,7 @@
 **/node_modules
 **/dist
 **/__pycache__
+.venv
 /.pnp
 .pnp.*
 .yarn/*
