@@ -82,15 +82,22 @@ that renders my API's execution graph at http://localhost:4567.
                   FastAPI: "enable_ai": True, "provider": "<provider>", "api_key": os.environ["<KEY>"]
                   and tell me which env var to set.
 
-5. Install the code-map skill globally so I can author guides from any project:
-   mkdir -p ~/.claude/skills/codemap-guide
+5. Install the code-map skills globally so I can use them from any project:
+   mkdir -p ~/.claude/skills/codemap-guide ~/.claude/skills/codemap-x
    curl -fsSL https://raw.githubusercontent.com/avielzlevy/code-map/main/.claude/skills/codemap-guide/SKILL.md \
      -o ~/.claude/skills/codemap-guide/SKILL.md
+   curl -fsSL https://raw.githubusercontent.com/avielzlevy/code-map/main/.claude/skills/codemap-x/SKILL.md \
+     -o ~/.claude/skills/codemap-x/SKILL.md
 
-6. Explain the skill to me: after we work through a change together I can run
-   /codemap-guide — it authors a step-by-step walkthrough of what we changed (which
-   functions, and why), saves it to .codemap/guides/, and opens it in code-map so I can
-   replay the change on the visual graph. It's shareable — commit it or send the URL.
+6. Explain the skills to me:
+   - /codemap-guide — after we work through a change together, it authors a step-by-step
+     walkthrough of what we changed (which functions, and why), saves it to .codemap/guides/,
+     and opens it in code-map so I can replay the change on the visual graph. It's shareable —
+     commit it or send the URL.
+   - /codemap-x — finds the important, under-documented functions using the live code-map graph
+     (not by reading my whole codebase), then proposes JSDoc/docstrings and @Dot intent labels
+     for the entry points and high-traffic functions that carry the most signal — so the map
+     reads like a story.
 
 Finally, start my app and tell me to open http://localhost:4567.
 ```
