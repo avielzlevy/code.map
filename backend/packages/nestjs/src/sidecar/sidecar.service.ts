@@ -11,6 +11,8 @@ import {
   FrontendExecutionPath,
   ApiResponse,
   GuideArtifact,
+  GuideAuthorInput,
+  GuideAuthorResult,
 } from '../dto/flow-mapper-config.dto';
 import { SidecarException, GuideException } from '../exceptions/flow-mapper.exceptions';
 import { SIDECAR_API_PREFIX, SSE_HEARTBEAT_INTERVAL_MS } from '../constants';
@@ -223,6 +225,49 @@ export class SidecarService {
           FlowLogger.warn(LOGGER_CONTEXT, 'Saved guide load failed', { error: err.message });
           const response: ApiResponse<null> = { status: 'error', data: null };
           res.status(404).json(response);
+          return;
+        }
+        throw err;
+      }
+    });
+
+    // Author a guide from SEMANTIC steps. The server resolves each step to a real
+    // graph node, validates, and writes the file — so the skill never builds ids.
+    this.app.post(`${SIDECAR_API_PREFIX}/guide`, (req: Request, res: Response) => {
+      if (!this.currentGraph) {
+        res.status(503).json({ status: 'error', data: null } as ApiResponse<null>);
+        return;
+      }
+      const body = req.body as Partial<GuideAuthorInput>;
+      if (!body || typeof body.slug !== 'string' || !Array.isArray(body.steps)) {
+        res.status(400).json({ status: 'error', data: null } as ApiResponse<null>);
+        return;
+      }
+      const { root } = this.resolveGitInfo();
+      try {
+        const { artifact, unresolved } = this.guideService.author(
+          this.currentGraph,
+          root,
+          body as GuideAuthorInput,
+        );
+        const result: GuideAuthorResult = {
+          slug: body.slug,
+          url: artifact.steps.length > 0 ? `/app?guide=${body.slug}` : '',
+          resolved: artifact.steps.length,
+          total: body.steps.length,
+          unresolved,
+        };
+        // Nothing resolved — don't write an empty guide; return the reasons so the LLM can fix.
+        if (artifact.steps.length === 0) {
+          res.status(422).json({ status: 'error', data: result } as ApiResponse<GuideAuthorResult>);
+          return;
+        }
+        this.guideService.save(root, body.slug, artifact);
+        res.json({ status: 'success', data: result } as ApiResponse<GuideAuthorResult>);
+      } catch (err) {
+        if (err instanceof GuideException) {
+          FlowLogger.warn(LOGGER_CONTEXT, 'Guide author failed', { error: err.message });
+          res.status(400).json({ status: 'error', data: null } as ApiResponse<null>);
           return;
         }
         throw err;

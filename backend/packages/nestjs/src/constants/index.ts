@@ -91,5 +91,8 @@ export const SSE_HEARTBEAT_INTERVAL_MS = 30_000;
 /** Directory (relative to repo root) where skill-authored guides are saved. */
 export const GUIDE_SAVE_DIR = '.codemap/guides';
 
+/** Valid guide step change types. */
+export const GUIDE_CHANGE_TYPES = ['added', 'edited', 'removed'] as const;
+
 /** Allowed guide slug characters — guards the saved-guide read against path traversal. */
 export const GUIDE_SLUG_PATTERN = /^[a-zA-Z0-9._-]+$/;

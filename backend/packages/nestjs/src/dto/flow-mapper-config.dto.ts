@@ -140,6 +140,43 @@ export interface GuideArtifact {
   };
 }
 
+// ── Guide authoring (POST /guide) ────────────────────────────────────────────
+// The skill sends SEMANTIC steps; the server resolves each to a real graph node,
+// relativizes ids, validates, and writes the artifact. This keeps the brittle
+// id-construction off the LLM.
+
+export interface GuideAuthorStep {
+  /** Function name to locate in the live graph. */
+  methodName: string;
+  /** A file path or basename to disambiguate (e.g. "orders.controller.ts"). */
+  file: string;
+  /** Optional class name to further disambiguate same-named methods. */
+  className?: string;
+  changeType: GuideChangeType;
+  explanation: string;
+}
+
+export interface GuideAuthorInput {
+  slug: string;
+  title?: string;
+  steps: GuideAuthorStep[];
+}
+
+/** A step the server could not resolve to exactly one live node, with the reason. */
+export interface GuideUnresolvedStep extends GuideAuthorStep {
+  reason: string;
+  /** When the match was ambiguous, the candidate files so the LLM can disambiguate. */
+  candidates?: string[];
+}
+
+export interface GuideAuthorResult {
+  slug: string;
+  url: string;
+  resolved: number;
+  total: number;
+  unresolved: GuideUnresolvedStep[];
+}
+
 export interface CacheEntry {
   bodyHash: string;
   summary: string;
