@@ -21,7 +21,7 @@ import dagre from "dagre";
 import { ChevronRight, ChevronDown, Home, Copy, Check } from "lucide-react";
 import { Tooltip } from "./Tooltip";
 
-import { ExecutionPath, FlowNode, FlowEdge, GitInfo } from "@/lib/flow-types";
+import { ExecutionPath, FlowNode, FlowEdge, GitInfo, GuideChangeType } from "@/lib/flow-types";
 import { StandardNode, EnhancedNode, GhostEntryPin } from "./nodes/CustomNodes";
 import { DrillEntry } from "@/app/app/page";
 import { SPRING_DEFAULT, SPRING_BOUNCE } from "@/lib/spring";
@@ -34,6 +34,8 @@ interface FlowCanvasProps {
   onNodeDrillDown: (node: FlowNode) => void;
   onBackTo: (index: number) => void;
   guideNodeId?: string | null;
+  guideExplanation?: string | null;
+  guideChanges?: Record<string, GuideChangeType>;
   gitInfo?: GitInfo | null;
 }
 
@@ -92,6 +94,8 @@ function Canvas({
   onNodeDrillDown,
   onBackTo,
   guideNodeId,
+  guideExplanation,
+  guideChanges,
   gitInfo,
 }: {
   activeNodes: FlowNode[];
@@ -103,6 +107,8 @@ function Canvas({
   onNodeDrillDown: (node: FlowNode) => void;
   onBackTo: (index: number) => void;
   guideNodeId?: string | null;
+  guideExplanation?: string | null;
+  guideChanges?: Record<string, GuideChangeType>;
   gitInfo?: GitInfo | null;
 }) {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
@@ -271,19 +277,28 @@ function Canvas({
     return () => clearTimeout(t);
   }, [activeNodes, activeEdges, drillStack, setNodes, setEdges, fitView]);
 
-  // Sync isGuideActive highlight without triggering a re-layout or fitView
+  // Sync guide overlay (highlight, change-status, explanation) without re-layout.
+  // guideMode flag lets nodes suppress their amber/FlowStep styling so change-status
+  // owns the border while a guide is playing.
   useEffect(() => {
+    const guideMode = guideNodeId != null;
     setNodes((prev) =>
       prev.map((n) => ({
         ...n,
-        data: { ...n.data, isGuideActive: guideNodeId ? n.id === guideNodeId : false },
+        data: {
+          ...n.data,
+          isGuideActive: guideNodeId ? n.id === guideNodeId : false,
+          guideMode,
+          changeType: guideChanges?.[n.id],
+          guideExplanation: n.id === guideNodeId ? guideExplanation ?? undefined : undefined,
+        },
         style: {
           ...n.style,
           zIndex: guideNodeId && n.id === guideNodeId ? 10 : 0,
         },
       })),
     );
-  }, [guideNodeId, setNodes]);
+  }, [guideNodeId, guideChanges, guideExplanation, setNodes]);
 
   // Auto-expand the currently guided node; collapse when guide exits
   useEffect(() => {
@@ -291,6 +306,15 @@ function Canvas({
       setExpandedNodeId(guideNodeId ?? null);
     }
   }, [guideNodeId]);
+
+  // Center the canvas on the guided node when it changes (after any drill re-layout).
+  useEffect(() => {
+    if (!guideNodeId) return;
+    const t = setTimeout(() => {
+      fitView({ nodes: [{ id: guideNodeId }], padding: 0.4, duration: 400 });
+    }, 150);
+    return () => clearTimeout(t);
+  }, [guideNodeId, drillStack, fitView]);
 
   // Sync gitInfo into node data when it loads (without triggering a full re-layout)
   useEffect(() => {
@@ -623,7 +647,7 @@ function collectAllNodes(
   return result;
 }
 
-export function FlowCanvas({ path, drillStack, onNodeDrillDown, onBackTo, guideNodeId, gitInfo }: FlowCanvasProps) {
+export function FlowCanvas({ path, drillStack, onNodeDrillDown, onBackTo, guideNodeId, guideExplanation, guideChanges, gitInfo }: FlowCanvasProps) {
   const currentNodeId = drillStack.length > 0 ? drillStack[drillStack.length - 1].id : null;
   const currentDetail = currentNodeId ? path.nodeDetails[currentNodeId] ?? null : null;
 
@@ -646,6 +670,8 @@ export function FlowCanvas({ path, drillStack, onNodeDrillDown, onBackTo, guideN
         onNodeDrillDown={onNodeDrillDown}
         onBackTo={onBackTo}
         guideNodeId={guideNodeId}
+        guideExplanation={guideExplanation}
+        guideChanges={guideChanges}
         gitInfo={gitInfo}
       />
     </ReactFlowProvider>

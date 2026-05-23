@@ -31,10 +31,16 @@ export default function Home() {
   const [loadingMsgIdx, setLoadingMsgIdx] = useState(0);
   const [gitInfo, setGitInfo] = useState<GitInfo | null>(null);
   const [guideNotice, setGuideNotice] = useState<string | null>(null);
+  const [savedGuides, setSavedGuides] = useState<string[]>([]);
 
   // Fetch git remote info once for "Open in GitHub" links
   useEffect(() => {
     apiClient.getGitInfo().then(setGitInfo).catch(() => {});
+  }, []);
+
+  // Fetch the list of skill-authored guides for the ⌘K picker
+  useEffect(() => {
+    apiClient.getSavedGuides().then(setSavedGuides).catch(() => {});
   }, []);
 
   // Rotate loading messages while connecting
@@ -85,13 +91,13 @@ export default function Home() {
     guide.start(path);
   };
 
-  // Walk through what the current branch changed (vs auto-detected trunk).
-  const handleWalkChanges = async () => {
-    setGuideNotice("Building guide…");
+  // Open and play a saved (skill-authored) guide by slug.
+  const handleOpenGuide = async (slug: string) => {
+    setGuideNotice("Loading guide…");
     try {
-      const artifact = await apiClient.getGuide();
+      const artifact = await apiClient.getSavedGuide(slug);
       if (artifact.steps.length === 0) {
-        setGuideNotice("No changes vs trunk on this branch.");
+        setGuideNotice("Guide has no steps.");
         setTimeout(() => setGuideNotice(null), 3000);
         return;
       }
@@ -99,7 +105,7 @@ export default function Home() {
       setDrillStack([]);
       guide.startGuide(artifact, paths, gitInfo?.root ?? "");
     } catch {
-      setGuideNotice("Couldn't build guide — is this a git repo with a trunk?");
+      setGuideNotice(`Couldn't load guide "${slug}".`);
       setTimeout(() => setGuideNotice(null), 4000);
     }
   };
@@ -277,6 +283,8 @@ export default function Home() {
                 onNodeDrillDown={guide.active ? () => {} : handleNodeDrillDown}
                 onBackTo={guide.active ? () => {} : handleBackTo}
                 guideNodeId={guide.guideNodeId}
+                guideExplanation={guide.explanation}
+                guideChanges={guide.changes}
                 gitInfo={gitInfo}
               />
               <Guide guide={guide} />
@@ -340,7 +348,8 @@ export default function Home() {
         onSelectEndpoint={handleSelectEndpoint}
         onSelectNode={handleSelectNodeFromSearch}
         onStartGuide={handleStartGuide}
-        onWalkChanges={handleWalkChanges}
+        guides={savedGuides}
+        onOpenGuide={handleOpenGuide}
       />
     </div>
   );

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef, Fragment } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Command, Network, FunctionSquare, GraduationCap, Sparkles, GitBranch } from "lucide-react";
+import { Search, Command, Network, FunctionSquare, GraduationCap, Sparkles } from "lucide-react";
 import { ExecutionPath, FlowNode } from "@/lib/flow-types";
 import clsx from "clsx";
 import { SPRING_STANDARD, SPRING_SNAPPY, SPRING_DEFAULT } from "@/lib/spring";
@@ -16,8 +16,10 @@ interface CommandPaletteProps {
     parentId: string | null,
   ) => void;
   onStartGuide?: (path: ExecutionPath) => void;
-  /** Walk through what the current branch changed (vs trunk). */
-  onWalkChanges?: () => void;
+  /** Saved guide slugs available to open. */
+  guides?: string[];
+  /** Open and play a saved guide by slug. */
+  onOpenGuide?: (slug: string) => void;
 }
 
 type SearchResultItem =
@@ -37,7 +39,8 @@ export function CommandPalette({
   onSelectEndpoint,
   onSelectNode,
   onStartGuide,
-  onWalkChanges,
+  guides,
+  onOpenGuide,
 }: CommandPaletteProps) {
   "use no memo"; // React Compiler over-memoizes this component — query state changes must trigger re-renders
   const [isOpen, setIsOpen] = useState(false);
@@ -74,13 +77,15 @@ export function CommandPalette({
     const seenEndpoints = new Set<string>();
     const seenNodes = new Set<string>();
 
-    if (onWalkChanges) {
-      items.push({
-        type: "action",
-        id: "walk-changes",
-        label: "Walk through changes on this branch",
-        sublabel: "Guide · branch diff vs trunk",
-        run: onWalkChanges,
+    if (onOpenGuide && guides) {
+      guides.forEach((slug) => {
+        items.push({
+          type: "action",
+          id: `guide-${slug}`,
+          label: slug,
+          sublabel: "Guide · walkthrough",
+          run: () => onOpenGuide(slug),
+        });
       });
     }
 
@@ -130,7 +135,7 @@ export function CommandPalette({
     });
 
     return items;
-  }, [paths, onWalkChanges]);
+  }, [paths, guides, onOpenGuide]);
 
   const filteredItems = useMemo(() => {
     const q = query.toLowerCase().trim();
@@ -264,7 +269,7 @@ export function CommandPalette({
                     !prevItem || prevItem.type !== item.type;
                   const groupLabel =
                     item.type === "action"
-                      ? "Actions"
+                      ? "Guides"
                       : item.type === "endpoint"
                         ? "Endpoints"
                         : "Functions";
@@ -297,7 +302,7 @@ export function CommandPalette({
                             )}
                           >
                             {item.type === "action" ? (
-                              <GitBranch className="w-4 h-4" />
+                              <GraduationCap className="w-4 h-4" />
                             ) : item.type === "endpoint" ? (
                               <Network className="w-4 h-4" />
                             ) : (

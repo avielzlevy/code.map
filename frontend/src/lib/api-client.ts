@@ -57,14 +57,9 @@ export const apiClient = {
     return request<GitInfo>('/api/flow-map/git-info');
   },
 
-  /**
-   * Builds a guide for the current branch (HEAD) against a base.
-   * Omit `base` to compare against the auto-detected trunk (origin default → main → master).
-   * Diffing/log can be slow on large ranges, so this uses a longer timeout.
-   */
-  getGuide(base?: string): Promise<GuideArtifact> {
-    const qs = base ? `?base=${encodeURIComponent(base)}` : "";
-    return request<GuideArtifact>(`/api/flow-map/guide${qs}`, 15000);
+  /** List skill-authored guides saved under .codemap/guides/. */
+  getSavedGuides(): Promise<string[]> {
+    return request<string[]>("/api/flow-map/guide/saved");
   },
 
   /** Load a skill-authored guide saved under .codemap/guides/<slug>.json. */

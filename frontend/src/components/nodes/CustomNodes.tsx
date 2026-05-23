@@ -2,10 +2,49 @@ import { useState, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { Handle, Position } from "@xyflow/react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FunctionSquare, Layers, CornerLeftUp, ChevronDown, Sparkles, ExternalLink, Tag, Check, Github } from "lucide-react";
-import type { FlowNode, GitInfo } from "@/lib/flow-types";
+import { FunctionSquare, Layers, CornerLeftUp, ChevronDown, Sparkles, ExternalLink, Tag, Check, Github, GraduationCap } from "lucide-react";
+import type { FlowNode, GitInfo, GuideChangeType } from "@/lib/flow-types";
 import { getEditorUrl, EDITORS, EDITOR_STORAGE_KEY, type EditorId } from "@/lib/deep-link";
 import { SPRING_STANDARD, SPRING_BADGE, SPRING_DEFAULT } from "@/lib/spring";
+
+/** Change-status visuals — only applied while a guide is playing (guideMode). */
+const CHANGE_ACCENT: Record<GuideChangeType, { active: string; rest: string; badge: string; badgeClass: string }> = {
+  added: {
+    active: "border-green-400/90 shadow-[0_0_0_3px_rgba(34,197,94,0.20),0_4px_30px_rgba(34,197,94,0.18)]",
+    rest: "border-green-500/50 shadow-[0_4px_24px_rgba(0,0,0,0.6)]",
+    badge: "+",
+    badgeClass: "bg-green-500/20 border-green-400/50 text-green-300",
+  },
+  edited: {
+    active: "border-orange-400/90 shadow-[0_0_0_3px_rgba(249,115,22,0.20),0_4px_30px_rgba(249,115,22,0.18)]",
+    rest: "border-orange-500/50 shadow-[0_4px_24px_rgba(0,0,0,0.6)]",
+    badge: "✎",
+    badgeClass: "bg-orange-500/20 border-orange-400/50 text-orange-300",
+  },
+  removed: {
+    active: "border-red-400/90 border-dashed shadow-[0_0_0_3px_rgba(239,68,68,0.20),0_4px_30px_rgba(239,68,68,0.18)]",
+    rest: "border-red-500/50 border-dashed shadow-[0_4px_24px_rgba(0,0,0,0.6)]",
+    badge: "−",
+    badgeClass: "bg-red-500/20 border-red-400/50 text-red-300",
+  },
+};
+
+function changeAccent(data: NodeProps): { border: string; badge: string; badgeClass: string } | null {
+  if (!data.guideMode || !data.changeType) return null;
+  const a = CHANGE_ACCENT[data.changeType];
+  return { border: data.isGuideActive ? a.active : a.rest, badge: a.badge, badgeClass: a.badgeClass };
+}
+
+function ChangeBadge({ accent }: { accent: { badge: string; badgeClass: string } }) {
+  return (
+    <div
+      className={`absolute top-3 left-3 z-20 w-6 h-6 rounded-full border flex items-center justify-center text-[13px] font-bold leading-none ${accent.badgeClass}`}
+      aria-hidden="true"
+    >
+      {accent.badge}
+    </div>
+  );
+}
 
 /** Strip leading `//`, `*`, `/` characters and blank lines from a JSDoc/comment string. */
 function cleanDocstring(s: string): string {
@@ -22,6 +61,12 @@ type NodeProps = FlowNode & {
   isExpanded: boolean;
   isGuideActive?: boolean;
   isKeyboardFocused?: boolean;
+  /** True while any guide is playing — suppresses amber so change-status owns the border. */
+  guideMode?: boolean;
+  /** This node's change status in the active guide. */
+  changeType?: GuideChangeType;
+  /** The guide's explanation for this node (set only on the current step's node). */
+  guideExplanation?: string;
   gitInfo?: GitInfo | null;
   onToggleExpand: () => void;
   onDrillDown: () => void;
@@ -203,7 +248,9 @@ function NodeExpansion({ data, amber }: { data: NodeProps; amber?: boolean }) {
 }
 
 /** Shared card body — identical layout for both Standard and Enhanced nodes. */
-function NodeContent({ data, amber }: { data: NodeProps; amber?: boolean }) {
+function NodeContent({ data, amber: amberProp }: { data: NodeProps; amber?: boolean }) {
+  // In guide mode, amber is suppressed so change-status owns the node's color.
+  const amber = amberProp && !data.guideMode;
   return (
     <div className="px-5 pt-4 pb-3">
       {/* Header: icon + funcName + filename */}
@@ -221,17 +268,29 @@ function NodeContent({ data, amber }: { data: NodeProps; amber?: boolean }) {
         </div>
       </div>
 
-      {/* FlowStep descriptor — step-number pill (if present) or tag icon + label */}
+      {/* Guide explanation — the LLM's note for this step, shown on the current node. */}
+      {data.guideExplanation && (
+        <div className="mt-3 flex items-start gap-2 px-3 py-2 rounded-md bg-white/8 border border-white/15">
+          <GraduationCap className="w-3.5 h-3.5 mt-0.5 shrink-0 text-white/50" />
+          <div className="flex flex-col gap-0.5 min-w-0">
+            <span className="text-[9px] font-mono uppercase tracking-[0.16em] text-white/30">Guide</span>
+            <p className="text-[12px] leading-relaxed text-gray-200 break-words">{data.guideExplanation}</p>
+          </div>
+        </div>
+      )}
+
+      {/* FlowStep descriptor — step-number pill (if present) or tag icon + label.
+          Neutralized in guide mode so amber doesn't compete with change-status. */}
       {data.intentTag && (
         <div className="mt-2.5 flex items-center gap-1.5 overflow-hidden">
           {data.stepNumber !== undefined ? (
-            <span className="flex items-center justify-center w-4 h-4 rounded-full bg-amber-500/20 border border-amber-400/40 text-[9px] font-mono font-bold text-amber-400 shrink-0 leading-none">
+            <span className={`flex items-center justify-center w-4 h-4 rounded-full text-[9px] font-mono font-bold shrink-0 leading-none ${amber ? "bg-amber-500/20 border border-amber-400/40 text-amber-400" : "bg-white/10 border border-white/20 text-gray-300"}`}>
               {data.stepNumber}
             </span>
           ) : (
-            <Tag className="w-3 h-3 shrink-0 text-amber-400/70" />
+            <Tag className={`w-3 h-3 shrink-0 ${amber ? "text-amber-400/70" : "text-gray-400"}`} />
           )}
-          <span className="text-[10px] font-mono text-amber-400/70 truncate">{data.intentTag}</span>
+          <span className={`text-[10px] font-mono truncate ${amber ? "text-amber-400/70" : "text-gray-400"}`}>{data.intentTag}</span>
         </div>
       )}
 
@@ -268,10 +327,13 @@ function NodeContent({ data, amber }: { data: NodeProps; amber?: boolean }) {
 }
 
 export function StandardNode({ data }: { data: NodeProps }) {
+  const accent = changeAccent(data);
   return (
     <motion.div
       className={`rounded-xl bg-zinc-950 border w-112.5 group relative
-        ${data.isGuideActive
+        ${accent
+          ? accent.border
+          : data.isGuideActive
           ? "border-white/70 shadow-[0_0_0_3px_rgba(255,255,255,0.12),0_4px_24px_rgba(0,0,0,0.6)]"
           : data.isKeyboardFocused
             ? "border-white/40 shadow-[0_0_0_2px_rgba(255,255,255,0.06),0_4px_24px_rgba(0,0,0,0.6)]"
@@ -290,6 +352,7 @@ export function StandardNode({ data }: { data: NodeProps }) {
       }}
       transition={SPRING_STANDARD}
     >
+      {accent && <ChangeBadge accent={accent} />}
       {data.hasDetail && (
         <div
           title="Has nested calls"
@@ -334,10 +397,13 @@ export function StandardNode({ data }: { data: NodeProps }) {
 }
 
 export function EnhancedNode({ data }: { data: NodeProps }) {
+  const accent = changeAccent(data);
   return (
     <motion.div
       className={`rounded-xl bg-zinc-950 border w-112.5 relative group
-        ${data.isGuideActive
+        ${accent
+          ? accent.border
+          : data.isGuideActive
           ? "border-amber-400/90 shadow-[0_0_0_3px_rgba(245,158,11,0.15),0_4px_30px_rgba(245,158,11,0.18)]"
           : data.isKeyboardFocused
             ? "border-amber-400/60 shadow-[0_0_0_2px_rgba(245,158,11,0.08),0_4px_30px_rgba(245,158,11,0.12)]"
@@ -356,17 +422,20 @@ export function EnhancedNode({ data }: { data: NodeProps }) {
       }}
       transition={SPRING_STANDARD}
     >
-      {/* Gradient tint — distinguishes enhanced nodes from standard */}
-      <div className="absolute inset-0 rounded-xl overflow-hidden pointer-events-none">
-        <div className="absolute inset-0 bg-linear-to-br from-amber-500/8 to-transparent" />
-      </div>
+      {/* Gradient tint — distinguishes enhanced nodes from standard. Suppressed in guide mode. */}
+      {!data.guideMode && (
+        <div className="absolute inset-0 rounded-xl overflow-hidden pointer-events-none">
+          <div className="absolute inset-0 bg-linear-to-br from-amber-500/8 to-transparent" />
+        </div>
+      )}
 
+      {accent && <ChangeBadge accent={accent} />}
       {data.hasDetail && (
         <div
           title="Has nested calls"
-          className="absolute top-3 right-3 w-6 h-6 rounded-full bg-amber-500/32 border border-amber-500/60 flex items-center justify-center z-20"
+          className={`absolute top-3 right-3 w-6 h-6 rounded-full flex items-center justify-center z-20 ${data.guideMode ? "bg-white/22 border border-white/45" : "bg-amber-500/32 border border-amber-500/60"}`}
         >
-          <Layers className="w-3.5 h-3.5 text-amber-400" />
+          <Layers className={`w-3.5 h-3.5 ${data.guideMode ? "text-white/80" : "text-amber-400"}`} />
         </div>
       )}
 
@@ -378,11 +447,11 @@ export function EnhancedNode({ data }: { data: NodeProps }) {
       />
 
       <div className="relative z-10">
-        <NodeContent data={data} amber />
+        <NodeContent data={data} amber={!data.guideMode} />
       </div>
 
       <AnimatePresence>
-        {data.isExpanded && <NodeExpansion data={data} amber />}
+        {data.isExpanded && <NodeExpansion data={data} amber={!data.guideMode} />}
       </AnimatePresence>
 
       {/* Chevron toggle */}

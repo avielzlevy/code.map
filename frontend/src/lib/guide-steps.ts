@@ -1,13 +1,13 @@
-import { ExecutionPath, FlowNode, GuideArtifact } from "./flow-types";
+import { ExecutionPath, FlowNode, GuideArtifact, GuideChangeType } from "./flow-types";
 import { DrillEntry } from "@/app/app/page";
 
 export interface FlowGuideStep {
   node: FlowNode;
   drillStack: DrillEntry[];
-  /** Commit narration for change-driven guides (the "why"). Absent for path tours. */
-  narration?: string;
-  /** The changed diff hunk for this step (the "what"). Absent for path tours. */
-  diff?: string;
+  /** The LLM's explanation for this step. Absent for path tours. */
+  explanation?: string;
+  /** What happened to this node (added/edited/removed). Absent for path tours. */
+  changeType?: GuideChangeType;
   endpoint?: string;
 }
 
@@ -88,8 +88,8 @@ export function buildSequenceFromArtifact(
       return {
         node: hit.node,
         drillStack: hit.drillStack,
-        narration: step.narration,
-        diff: step.diff,
+        explanation: step.explanation,
+        changeType: step.changeType,
         endpoint: hit.endpoint,
       };
     }
@@ -99,12 +99,12 @@ export function buildSequenceFromArtifact(
         type: "standard",
         funcName: step.methodName,
         fileName: step.file,
-        line: step.lineRange[0],
+        line: 0,
         hasDetail: false,
       },
       drillStack: [],
-      narration: step.narration,
-      diff: step.diff,
+      explanation: step.explanation,
+      changeType: step.changeType,
     };
   });
 }

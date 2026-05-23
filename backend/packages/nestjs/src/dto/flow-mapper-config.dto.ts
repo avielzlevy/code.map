@@ -96,14 +96,12 @@ export interface FlowGraph {
 }
 
 // ── Guide artifact ──────────────────────────────────────────────────────────
-// A portable walkthrough of a branch/commit diff, mapped onto the live graph.
+// A portable, LLM-authored walkthrough of a change, mapped onto the live graph.
+// Authored by the codemap-guide skill from the conversation (not a git diff).
 // All ids and file paths are repo-relative so the file is shareable across
 // machines and consumable by an LLM with no tool access.
 
-export interface GuideCommit {
-  hash: string;
-  subject: string;
-}
+export type GuideChangeType = 'added' | 'edited' | 'removed';
 
 export interface GuideStep {
   /** Repo-relative node id, matches a node in the live graph after normalization. */
@@ -112,12 +110,10 @@ export interface GuideStep {
   /** Repo-relative file path. */
   file: string;
   type: FlowNode['type'];
-  lineRange: [number, number];
-  status: 'modified';
-  /** Narration sourced from commit subjects in the range — no AI. */
-  narration: string;
-  /** The overlapping diff hunk text. Present on changed nodes only. */
-  diff: string;
+  /** What happened to this node in the change being explained. */
+  changeType: GuideChangeType;
+  /** The LLM's explanation of this step (what/why/how), authored from the conversation. */
+  explanation: string;
 }
 
 export interface GuideSubgraphNode {
@@ -132,15 +128,13 @@ export interface GuideSubgraphNode {
 
 export interface GuideArtifact {
   meta: {
-    base: string;
-    head: string;
+    title?: string;
     generatedAt: string;
-    commits: GuideCommit[];
   };
-  /** Ordered walkthrough — one step per changed node. */
+  /** Ordered walkthrough — one step per changed node, in the order the LLM curated. */
   steps: GuideStep[];
-  /** Changed nodes + their 1-hop neighbours, for the embedded standalone view. */
-  subgraph: {
+  /** Optional embedded subgraph for standalone/LLM use; the player latches onto the live graph. */
+  subgraph?: {
     nodes: GuideSubgraphNode[];
     edges: FlowEdge[];
   };

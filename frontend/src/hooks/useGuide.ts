@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef } from "react";
-import { ExecutionPath, GuideArtifact } from "@/lib/flow-types";
+import { ExecutionPath, GuideArtifact, GuideChangeType } from "@/lib/flow-types";
 import {
   buildGuideSequence,
   buildSequenceFromArtifact,
@@ -16,12 +16,16 @@ export interface UseGuideResult {
   total: number;
   /** The drillStack the canvas should show for the current step. */
   drillStack: DrillEntry[];
-  /** Node id to ring-highlight in the canvas. */
+  /** Node id to ring-highlight + center in the canvas. */
   guideNodeId: string | null;
-  /** Commit narration for the current step (change-driven guides only). */
-  narration: string | null;
+  /** The LLM explanation for the current step (rendered in the node's detail area). */
+  explanation: string | null;
+  /** Change type of the current step's node. */
+  changeType: GuideChangeType | null;
+  /** All guide nodes → their change type, for coloring the whole change footprint. */
+  changes: Record<string, GuideChangeType>;
   start: (path: ExecutionPath) => void;
-  /** Start a change-driven guide from a diff artifact, latching onto loaded paths. */
+  /** Start a change-driven guide from an artifact, latching onto loaded paths. */
   startGuide: (artifact: GuideArtifact, paths: ExecutionPath[], repoRoot: string) => void;
   advance: () => void;
   back: () => void;
@@ -78,6 +82,11 @@ export function useGuide(): UseGuideResult {
   const active = stepIndex !== null && sequence.length > 0;
   const currentStep = active ? sequence[stepIndex!] : null;
 
+  const changes: Record<string, GuideChangeType> = {};
+  for (const step of sequence) {
+    if (step.changeType) changes[step.node.id] = step.changeType;
+  }
+
   return {
     active,
     currentStep,
@@ -85,7 +94,9 @@ export function useGuide(): UseGuideResult {
     total: sequence.length,
     drillStack: currentStep?.drillStack ?? [],
     guideNodeId: currentStep?.node.id ?? null,
-    narration: currentStep?.narration ?? null,
+    explanation: currentStep?.explanation ?? null,
+    changeType: currentStep?.changeType ?? null,
+    changes,
     start,
     startGuide,
     advance,

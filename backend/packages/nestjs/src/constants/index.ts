@@ -88,15 +88,6 @@ export const FILE_WATCHER_DEBOUNCE_MS = 500;
 /** Milliseconds between SSE keep-alive heartbeat comments (prevents proxy timeouts). */
 export const SSE_HEARTBEAT_INTERVAL_MS = 30_000;
 
-/** How many call-graph hops out from a changed node the guide pulls in as context. */
-export const GUIDE_SUBGRAPH_DEPTH = 1;
-
-/** Head ref for a guide is always the checked-out branch. */
-export const GUIDE_DEFAULT_HEAD = 'HEAD';
-
-/** Local trunk names to try when the remote default branch can't be resolved. */
-export const GUIDE_TRUNK_FALLBACKS = ['main', 'master'];
-
 /** Directory (relative to repo root) where skill-authored guides are saved. */
 export const GUIDE_SAVE_DIR = '.codemap/guides';
 

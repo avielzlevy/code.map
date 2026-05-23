@@ -46,15 +46,15 @@ export type GuideCommit = {
   subject: string;
 };
 
+export type GuideChangeType = "added" | "edited" | "removed";
+
 export type GuideStep = {
   nodeId: string;
   methodName: string;
   file: string;
   type: "controller" | "service" | "utility" | "unknown";
-  lineRange: [number, number];
-  status: "modified";
-  narration: string;
-  diff: string;
+  changeType: GuideChangeType;
+  explanation: string;
 };
 
 export type GuideSubgraphNode = {
