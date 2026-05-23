@@ -2,9 +2,9 @@ import pytest
 import httpx
 import respx  # pip install respx  (httpx mock library)
 
-from flow_map.ast_parser import FlowNode
-from flow_map.nano_agent import NanoAgentService
-from flow_map.exceptions import NanoAgentError
+from code_map.ast_parser import FlowNode
+from code_map.nano_agent import NanoAgentService
+from code_map.exceptions import NanoAgentError
 
 
 def make_node(**overrides) -> FlowNode:

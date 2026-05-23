@@ -9,17 +9,17 @@ from .ast_parser import AstParserService, FlowGraph
 from .cache import CacheService
 from .config import env_config
 from .constants import DEFAULT_SIDECAR_PORT, FLOW_CACHE_DIR, NANO_AGENT_BATCH_SIZE
-from .exceptions import FlowMapConfigError, FlowMapInitializationError
+from .exceptions import CodeMapConfigError, CodeMapInitializationError
 from .file_watcher import FileWatcherService
 from .logger import FlowLogger
 from .nano_agent import NanoAgentService
 from .sidecar import SidecarService
 
-LOGGER_CONTEXT = "FlowMap"
+LOGGER_CONTEXT = "CodeMap"
 
 
-class FlowMap:
-    _instance: Optional[FlowMap] = None
+class CodeMap:
+    _instance: Optional[CodeMap] = None
 
     def __init__(
         self,
@@ -38,9 +38,9 @@ class FlowMap:
         self._config = config
 
     @classmethod
-    async def bind(cls, app: Any, config: Optional[dict[str, Any]] = None) -> FlowMap:
+    async def bind(cls, app: Any, config: Optional[dict[str, Any]] = None) -> CodeMap:
         """
-        Initializes the FlowMap engine. Spawns the sidecar visualization server
+        Initializes the code.map engine. Spawns the sidecar visualization server
         and performs the first AST scan. Idempotent — returns the existing instance
         if called more than once.
 
@@ -55,7 +55,7 @@ class FlowMap:
         if cls._instance is not None:
             FlowLogger.warn(
                 LOGGER_CONTEXT,
-                "FlowMap.bind() called more than once — returning existing instance",
+                "CodeMap.bind() called more than once — returning existing instance",
             )
             return cls._instance
 
@@ -69,7 +69,7 @@ class FlowMap:
 
         FlowLogger.info(
             LOGGER_CONTEXT,
-            "Initializing FlowMap",
+            "Initializing code.map",
             {"port": resolved["port"], "enable_ai": resolved["enable_ai"]},
         )
 
@@ -84,7 +84,7 @@ class FlowMap:
             instance = cls(ast_parser, cache, sidecar, nano_agent, file_watcher, resolved)
             await instance._build_and_serve_graph()
         except Exception as err:
-            raise FlowMapInitializationError(str(err))
+            raise CodeMapInitializationError(str(err))
 
         loop = asyncio.get_event_loop()
         file_watcher.start(loop)
@@ -100,8 +100,8 @@ class FlowMap:
         """Stops the file watcher, sidecar server, and resets the singleton."""
         self._file_watcher.stop()
         self._sidecar.stop()
-        FlowMap._instance = None
-        FlowLogger.info(LOGGER_CONTEXT, "FlowMap shut down")
+        CodeMap._instance = None
+        FlowLogger.info(LOGGER_CONTEXT, "code.map shut down")
 
     async def _build_and_serve_graph(self) -> FlowGraph:
         graph = self._ast_parser.parse(self._config["source_root"])
@@ -279,16 +279,16 @@ class FlowMap:
     def _validate_config(config: dict[str, Any]) -> None:
         port = config["port"]
         if not (1 <= port <= 65535):
-            raise FlowMapConfigError("port", f"must be between 1 and 65535, got {port}")
+            raise CodeMapConfigError("port", f"must be between 1 and 65535, got {port}")
 
         if config["enable_ai"] and not config["api_key"]:
-            raise FlowMapInitializationError(
+            raise CodeMapInitializationError(
                 "enable_ai is True but no api_key was provided. "
                 "Set api_key in config or the SUMMARIES_API_KEY environment variable."
             )
 
         if config["enable_ai"] and not config["provider"]:
-            raise FlowMapInitializationError(
+            raise CodeMapInitializationError(
                 "enable_ai is True but no provider was specified. "
                 "Set provider in config or the SUMMARIES_PROVIDER environment variable."
             )

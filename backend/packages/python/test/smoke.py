@@ -19,9 +19,9 @@ import urllib.request
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from flow_map.ast_parser import AstParserService
-from flow_map.cache import CacheService
-from flow_map.sidecar import SidecarService
+from code_map.ast_parser import AstParserService
+from code_map.cache import CacheService
+from code_map.sidecar import SidecarService
 
 SIDECAR_PORT = 4569  # Use a distinct port to avoid conflicts
 FIXTURE_DIR = os.path.join(os.path.dirname(__file__), "fixtures")
@@ -43,7 +43,7 @@ def wait_for_server(port: int, retries: int = 10, delay: float = 0.3) -> None:
 
 
 def run() -> None:
-    print("--- FlowMap smoke test ---\n")
+    print("--- code.map smoke test ---\n")
 
     # 1. Parse fixtures
     parser = AstParserService()
@@ -52,8 +52,8 @@ def run() -> None:
 
     tagged = next((n for n in graph.nodes if n.custom_tag), None)
     if not tagged:
-        raise AssertionError("Expected at least one node with a @flow_step tag")
-    print(f'[AST]  @flow_step node → label: "{tagged.label}"')
+        raise AssertionError("Expected at least one node with a @dot tag")
+    print(f'[AST]  @dot node → label: "{tagged.label}"')
 
     docstring_node = next((n for n in graph.nodes if n.docstring), None)
     if not docstring_node:

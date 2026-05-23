@@ -1,4 +1,4 @@
-export const FLOW_STEP_METADATA_KEY = '__flow_step_description__';
+export const DOT_METADATA_KEY = '__flow_step_description__';
 
 /**
  * Marks a function as a named dot with a human-readable business intent label.
@@ -15,7 +15,7 @@ export const FLOW_STEP_METADATA_KEY = '__flow_step_description__';
  */
 export function Dot(description: string) {
   return function <T extends (...args: any[]) => any>(fn: T): T {
-    (fn as any)[FLOW_STEP_METADATA_KEY] = description;
+    (fn as any)[DOT_METADATA_KEY] = description;
     return fn;
   };
 }

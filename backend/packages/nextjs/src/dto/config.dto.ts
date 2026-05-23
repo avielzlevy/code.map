@@ -1,6 +1,6 @@
 import { AIProvider } from '../constants';
 
-type FlowMapBaseConfig = {
+type CodeMapBaseConfig = {
   /** Port for the sidecar visualization server. Defaults to 4567. */
   port?: number;
   /** File system path for the AI summary cache directory. Defaults to .flow-cache in cwd. */
@@ -9,13 +9,13 @@ type FlowMapBaseConfig = {
   sourceRoot?: string;
 };
 
-export type FlowMapConfig = FlowMapBaseConfig &
+export type CodeMapConfig = CodeMapBaseConfig &
   (
     | { enableAI: true; apiKey: string; provider: AIProvider; model?: string }
     | { enableAI?: false; apiKey?: string; provider?: AIProvider; model?: string }
   );
 
-export interface ResolvedFlowMapConfig {
+export interface ResolvedCodeMapConfig {
   port: number;
   enableAI: boolean;
   apiKey: string;
@@ -73,7 +73,7 @@ export interface NodeDetail {
 export interface FrontendExecutionPath {
   endpoint: string;
   method: string;
-  /** Root layer: route handler → service → @FlowStep nodes only. */
+  /** Root layer: route handler → service → @Dot nodes only. */
   nodes: FrontendNode[];
   edges: FrontendEdge[];
   /** Full internal call graph for each drillable node, keyed by node id. */

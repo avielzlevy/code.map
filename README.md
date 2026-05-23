@@ -73,7 +73,7 @@ that renders my API's execution graph at http://localhost:4567.
 
 4. Wire it in, GUARDED FOR DEVELOPMENT ONLY (never in production):
    - NestJS  — in app.module.ts add CodeMapModule.forRoot({ port: 4567, ...ai }) to imports.
-   - FastAPI — in the app entry: FlowMap.bind(app, config={"port": 4567, ...ai}).
+   - FastAPI — in the app entry: CodeMap.bind(app, config={"port": 4567, ...ai}).
    Apply my AI choice as ...ai:
        • Off    → no AI fields.
        • Local  → NestJS: enableAI: true, provider: 'ollama'
@@ -140,10 +140,10 @@ pip install code-map
 ```python
 # main.py
 from fastapi import FastAPI
-from code_map import FlowMap
+from code_map import CodeMap
 
 app = FastAPI()
-FlowMap.bind(app, config={"port": 4567})
+CodeMap.bind(app, config={"port": 4567})
 ```
 
 Start your app, then open **http://localhost:4567**.
@@ -178,9 +178,9 @@ export class OrderService {
 **FastAPI:**
 
 ```python
-from code_map import flow_step
+from code_map import dot
 
-@flow_step("Validate cart and apply discounts")
+@dot("Validate cart and apply discounts")
 async def process_checkout(cart_id: str):
     # ...
 ```
@@ -208,7 +208,7 @@ CodeMapModule.forRoot({
 **FastAPI:**
 
 ```python
-FlowMap.bind(app, config={
+CodeMap.bind(app, config={
     "port": 4567,
     "enable_ai": True,
     "api_key": os.environ["ANTHROPIC_API_KEY"],

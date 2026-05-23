@@ -327,7 +327,7 @@ export class SidecarService {
     } else {
       this.app.get('/', (_req: Request, res: Response) => {
         res.status(200).send(
-          '<p>FlowMap UI not found. Run <code>npm run build</code> in the frontend package first.</p>',
+          '<p>code.map UI not found. Run <code>npm run build</code> in the frontend package first.</p>',
         );
       });
       FlowLogger.warn(LOGGER_CONTEXT, 'Frontend build not found; serving placeholder', {

@@ -22,7 +22,7 @@ LOGGER_CONTEXT = "SidecarService"
 
 class SidecarService:
     def __init__(self) -> None:
-        self._app = FastAPI(title="FlowMap Sidecar", docs_url=None, redoc_url=None)
+        self._app = FastAPI(title="code.map Sidecar", docs_url=None, redoc_url=None)
         self._app.add_middleware(
             CORSMiddleware,
             allow_origins=["*"],
@@ -190,7 +190,7 @@ class SidecarService:
         self._mount_frontend()
 
     def _mount_frontend(self) -> None:
-        # __file__ is <repo>/backend/packages/python/flow_map/sidecar.py
+        # __file__ is <repo>/backend/packages/python/code_map/sidecar.py
         # Four levels up reaches the repo root, then into frontend/out
         frontend_out = os.path.abspath(
             os.path.join(os.path.dirname(__file__), "../../../../frontend/out")

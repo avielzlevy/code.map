@@ -17,14 +17,12 @@ class router:
         return decorator
 
 
-def flow_step(description: str):
-    def decorator(fn): return fn
-    return decorator
+from code_map import dot
 
 
 class UserRouter:
     @router.get("/users")
-    @flow_step("Fetch all active users with pagination")
+    @dot("Fetch all active users with pagination")
     async def find_all(self):
         """Returns a paginated list of active users."""
         return await self.user_service.find_all()
@@ -35,7 +33,7 @@ class UserRouter:
 
 
 class UserService:
-    @flow_step("Persist new user record to database")
+    @dot("Persist new user record to database")
     async def create(self):
         return await self._save_to_db()
 

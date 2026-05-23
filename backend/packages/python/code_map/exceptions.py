@@ -1,11 +1,11 @@
-class FlowMapInitializationError(RuntimeError):
+class CodeMapInitializationError(RuntimeError):
     def __init__(self, message: str) -> None:
-        super().__init__(f"[FlowMap] Initialization failed: {message}")
+        super().__init__(f"[code.map] Initialization failed: {message}")
 
 
-class FlowMapConfigError(ValueError):
+class CodeMapConfigError(ValueError):
     def __init__(self, field: str, reason: str) -> None:
-        super().__init__(f'[FlowMap] Invalid configuration for "{field}": {reason}')
+        super().__init__(f'[code.map] Invalid configuration for "{field}": {reason}')
 
 
 class AstParserError(RuntimeError):

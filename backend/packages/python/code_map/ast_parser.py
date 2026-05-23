@@ -72,7 +72,7 @@ class _ParsedMethod:
     method_name: str
     class_decorators: list[str]
     method_decorators: list[str]
-    flow_step_tag: Optional[str]
+    dot_tag: Optional[str]
     http_method: Optional[str]
     route_path: Optional[str]
     docstring: Optional[str]
@@ -192,7 +192,7 @@ class AstParserService:
         method_decorators = [self._get_decorator_name(d) for d in decorator_nodes]
         method_decorators = [n for n in method_decorators if n]
 
-        flow_step_tag = self._extract_flow_step_tag(decorator_nodes)
+        dot_tag = self._extract_dot_tag(decorator_nodes)
         http_method, route_path = self._extract_http_decorator(decorator_nodes)
         docstring = self._extract_docstring(fn_node)
 
@@ -211,7 +211,7 @@ class AstParserService:
             method_name=method_name,
             class_decorators=[],
             method_decorators=method_decorators,
-            flow_step_tag=flow_step_tag,
+            dot_tag=dot_tag,
             http_method=http_method,
             route_path=route_path,
             docstring=docstring,
@@ -262,7 +262,7 @@ class AstParserService:
             method_decorators = [self._get_decorator_name(d) for d in method_decorator_nodes]
             method_decorators = [n for n in method_decorators if n]
 
-            flow_step_tag = self._extract_flow_step_tag(method_decorator_nodes)
+            dot_tag = self._extract_dot_tag(method_decorator_nodes)
             http_method, route_path = self._extract_http_decorator(method_decorator_nodes)
             docstring = self._extract_docstring(method_node)
 
@@ -276,7 +276,7 @@ class AstParserService:
                 method_name=method_name,
                 class_decorators=class_decorators,
                 method_decorators=method_decorators,
-                flow_step_tag=flow_step_tag,
+                dot_tag=dot_tag,
                 http_method=http_method,
                 route_path=route_path,
                 docstring=docstring,
@@ -334,7 +334,7 @@ class AstParserService:
     def _get_decorator_name(self, decorator_node: Node) -> Optional[str]:
         """
         Returns the unqualified decorator name.
-        @flow_step("tag")          → "flow_step"
+        @dot("tag")                → "dot"
         @router.get("/path")       → "get"
         @Injectable                → "Injectable"
         """
@@ -396,8 +396,8 @@ class AstParserService:
     # Specific decorator extractors
     # -----------------------------------------------------------------------
 
-    def _extract_flow_step_tag(self, decorator_nodes: list[Node]) -> Optional[str]:
-        decorator_name = self._descriptor.flow_step_decorator
+    def _extract_dot_tag(self, decorator_nodes: list[Node]) -> Optional[str]:
+        decorator_name = self._descriptor.dot_decorator
         for d in decorator_nodes:
             if self._get_decorator_name(d) == decorator_name:
                 return self._get_decorator_first_string_arg(d)
@@ -651,14 +651,14 @@ class AstParserService:
 
             nodes.append(FlowNode(
                 id=node_id,
-                label=method.flow_step_tag or method.method_name,
+                label=method.dot_tag or method.method_name,
                 method_name=method.method_name,
                 type=method.node_type,
                 file_path=method.file_path,
                 line_number=method.line_number,
                 docstring=method.docstring,
                 raw_body=method.raw_body,
-                custom_tag=method.flow_step_tag,
+                custom_tag=method.dot_tag,
                 http_method=method.http_method,
                 route_path=method.route_path,
             ))

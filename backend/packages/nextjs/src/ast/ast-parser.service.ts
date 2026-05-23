@@ -18,7 +18,7 @@ const LOGGER_CONTEXT = 'AstParserService';
 interface ParsedMethod {
   /** Display name (function name or class#method). */
   methodName: string;
-  flowStepTag?: string;
+  dotTag?: string;
   httpMethod?: string;
   routePath?: string;
   docstring?: string;
@@ -119,7 +119,7 @@ export class AstParserService {
       if (!ts.isMethodDeclaration(member)) continue;
 
       const methodName = member.name ? `${className}#${member.name.getText(sourceFile)}` : `${className}#anonymous`;
-      const flowStepTag = this.extractFlowStepTagFromDecorators(member, sourceFile);
+      const dotTag = this.extractDotTagFromDecorators(member, sourceFile);
       const docstring = this.extractJsDoc(member, sourceFile);
       const rawBody = member.body ? member.body.getText(sourceFile) : '';
       const lineNumber = sourceFile.getLineAndCharacterOfPosition(member.getStart(sourceFile)).line + 1;
@@ -127,7 +127,7 @@ export class AstParserService {
 
       methods.push({
         methodName,
-        flowStepTag,
+        dotTag,
         docstring,
         rawBody,
         filePath,
@@ -201,8 +201,8 @@ export class AstParserService {
     const isPagesHandler = isPagesApiFile && fnName === NEXTJS_PAGES_HANDLER_NAME;
     const isController = (isRouteFile && isHttpHandler) || isPagesHandler;
 
-    const flowStepTag = this.extractFlowStepTagFromJsDoc(node, sourceFile)
-      ?? this.extractFlowStepTagFromDecorators(node, sourceFile);
+    const dotTag = this.extractDotTagFromJsDoc(node, sourceFile)
+      ?? this.extractDotTagFromDecorators(node, sourceFile);
     const docstring = this.extractJsDoc(node, sourceFile);
     const rawBody = body.getText(sourceFile);
     const lineNumber = sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile)).line + 1;
@@ -213,7 +213,7 @@ export class AstParserService {
 
     return {
       methodName: fnName,
-      flowStepTag,
+      dotTag,
       httpMethod,
       routePath,
       docstring,
@@ -245,7 +245,7 @@ export class AstParserService {
     return modifiers.some((m) => m.kind === ts.SyntaxKind.ExportKeyword);
   }
 
-  private extractFlowStepTagFromDecorators(node: ts.Node, sourceFile: ts.SourceFile): string | undefined {
+  private extractDotTagFromDecorators(node: ts.Node, sourceFile: ts.SourceFile): string | undefined {
     if (!ts.canHaveDecorators(node)) return undefined;
     const decorators = ts.getDecorators(node as ts.HasDecorators);
     if (!decorators) return undefined;
@@ -269,7 +269,7 @@ export class AstParserService {
    * // @flow-step Validate request and authenticate user
    * export async function POST(request: NextRequest) { ... }
    */
-  private extractFlowStepTagFromJsDoc(node: ts.Node, sourceFile: ts.SourceFile): string | undefined {
+  private extractDotTagFromJsDoc(node: ts.Node, sourceFile: ts.SourceFile): string | undefined {
     const jsDocNodes = (node as any).jsDoc as ts.JSDoc[] | undefined;
     if (!jsDocNodes) return undefined;
 
@@ -361,14 +361,14 @@ export class AstParserService {
 
       nodes.push({
         id: nodeId,
-        label: method.flowStepTag ?? method.methodName,
+        label: method.dotTag ?? method.methodName,
         methodName: method.methodName,
         type: method.nodeType,
         filePath: method.filePath,
         lineNumber: method.lineNumber,
         docstring: method.docstring,
         rawBody: method.rawBody,
-        customTag: method.flowStepTag,
+        customTag: method.dotTag,
         httpMethod: method.httpMethod,
         routePath: method.routePath,
       });

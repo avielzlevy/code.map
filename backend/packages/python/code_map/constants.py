@@ -1,7 +1,7 @@
 DEFAULT_SIDECAR_PORT: int = 4567
 FLOW_CACHE_DIR: str = ".flow-cache"
 FLOW_CACHE_INDEX_FILE: str = "index.json"
-FLOW_STEP_ATTR: str = "_flow_step_description"
+DOT_ATTR: str = "_flow_step_description"
 SIDECAR_API_PREFIX: str = "/api/flow-map"
 
 NANO_AGENT_MAX_TOKENS: int = 50

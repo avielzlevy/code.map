@@ -6,7 +6,7 @@ import {
   FrontendEdge,
   FrontendExecutionPath,
   NodeDetail,
-  ResolvedFlowMapConfig,
+  ResolvedCodeMapConfig,
 } from '../dto/config.dto';
 import { AstParserService } from '../ast/ast-parser.service';
 import { CacheService } from '../cache/cache.service';
@@ -23,10 +23,10 @@ export class FlowMapService {
   private readonly cache: CacheService;
   private readonly sidecar: SidecarService;
   private readonly nanoAgent: NanoAgentService | null;
-  private readonly config: ResolvedFlowMapConfig;
+  private readonly config: ResolvedCodeMapConfig;
 
   constructor(
-    config: ResolvedFlowMapConfig,
+    config: ResolvedCodeMapConfig,
     astParser: AstParserService,
     cache: CacheService,
     sidecar: SidecarService,

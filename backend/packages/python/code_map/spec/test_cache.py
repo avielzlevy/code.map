@@ -3,7 +3,7 @@ import tempfile
 import json
 import pytest
 
-from flow_map.cache import CacheService
+from code_map.cache import CacheService
 
 
 @pytest.fixture

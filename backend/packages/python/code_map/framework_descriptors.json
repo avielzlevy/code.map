@@ -148,7 +148,7 @@
       "controllerDecorators": ["APIRouter", "FastAPI"],
       "serviceDecorators": [],
       "routeDecorators": ["get", "post", "put", "delete", "patch", "options", "head", "route", "api_route"],
-      "flowStepDecorator": "flow_step",
+      "flowStepDecorator": "dot",
       "httpMethodMap": {
         "get": "GET",
         "post": "POST",
@@ -173,7 +173,7 @@
       "controllerDecorators": ["Blueprint"],
       "serviceDecorators": [],
       "routeDecorators": ["route", "get", "post", "put", "delete", "patch"],
-      "flowStepDecorator": "flow_step",
+      "flowStepDecorator": "dot",
       "httpMethodMap": {
         "route": "GET",
         "get": "GET",
@@ -195,7 +195,7 @@
       "controllerDecorators": ["ViewSet", "ModelViewSet", "ReadOnlyModelViewSet", "GenericViewSet", "APIView"],
       "serviceDecorators": [],
       "routeDecorators": ["api_view", "action"],
-      "flowStepDecorator": "flow_step",
+      "flowStepDecorator": "dot",
       "httpMethodMap": {
         "list": "GET",
         "create": "POST",

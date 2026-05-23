@@ -25,8 +25,8 @@ dev = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["flow_map"]
+packages = ["code_map"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
-testpaths = ["flow_map/spec"]
+testpaths = ["code_map/spec"]

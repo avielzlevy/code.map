@@ -1,7 +1,7 @@
 import os
 import pytest
 
-from flow_map.ast_parser import AstParserService
+from code_map.ast_parser import AstParserService
 
 FIXTURE_DIR = os.path.join(os.path.dirname(__file__), "../../test/fixtures")
 
@@ -21,7 +21,7 @@ class TestAstParserParse:
         assert len(graph.nodes) > 0
         assert graph.generated_at != ""
 
-    def test_uses_flow_step_description_as_label(self, graph):
+    def test_uses_dot_description_as_label(self, graph):
         node = next(
             (n for n in graph.nodes if n.label == "Fetch all active users with pagination"),
             None,

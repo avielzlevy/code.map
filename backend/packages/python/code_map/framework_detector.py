@@ -26,7 +26,7 @@ class FrameworkDescriptor:
     controller_decorators: list[str] = field(default_factory=list)
     service_decorators: list[str] = field(default_factory=list)
     route_decorators: list[str] = field(default_factory=list)
-    flow_step_decorator: str = "flow_step"
+    dot_decorator: str = "dot"
     http_method_map: dict[str, str] = field(default_factory=dict)
     viewset_methods: list[str] = field(default_factory=list)
 
@@ -46,7 +46,7 @@ def _load_descriptors() -> dict[str, FrameworkDescriptor]:
             controller_decorators=data.get("controllerDecorators", []),
             service_decorators=data.get("serviceDecorators", []),
             route_decorators=data.get("routeDecorators", []),
-            flow_step_decorator=data.get("flowStepDecorator", "flow_step"),
+            dot_decorator=data.get("flowStepDecorator", "dot"),
             http_method_map=data.get("httpMethodMap", {}),
             viewset_methods=data.get("viewsetMethods", []),
         )

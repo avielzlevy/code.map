@@ -1,8 +1,8 @@
 export { withCodeMap } from './with-code-map';
-export { FlowMap } from './flow-map/flow-map';
+export { CodeMap } from './flow-map/flow-map';
 export { Dot } from './decorators/dot';
 export type {
-  FlowMapConfig,
+  CodeMapConfig,
   FlowGraph,
   FlowNode,
   FlowEdge,
