@@ -67,6 +67,11 @@ export const apiClient = {
     return request<GuideArtifact>(`/api/flow-map/guide${qs}`, 15000);
   },
 
+  /** Load a skill-authored guide saved under .codemap/guides/<slug>.json. */
+  getSavedGuide(slug: string): Promise<GuideArtifact> {
+    return request<GuideArtifact>(`/api/flow-map/guide/saved/${encodeURIComponent(slug)}`);
+  },
+
   /**
    * Opens a persistent SSE connection to the sidecar.
    *

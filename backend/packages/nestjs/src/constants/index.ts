@@ -96,3 +96,9 @@ export const GUIDE_DEFAULT_HEAD = 'HEAD';
 
 /** Local trunk names to try when the remote default branch can't be resolved. */
 export const GUIDE_TRUNK_FALLBACKS = ['main', 'master'];
+
+/** Directory (relative to repo root) where skill-authored guides are saved. */
+export const GUIDE_SAVE_DIR = '.codemap/guides';
+
+/** Allowed guide slug characters — guards the saved-guide read against path traversal. */
+export const GUIDE_SLUG_PATTERN = /^[a-zA-Z0-9._-]+$/;

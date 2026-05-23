@@ -233,11 +233,51 @@ export class SidecarService {
       }
     });
 
+    this.app.get(`${SIDECAR_API_PREFIX}/guide/saved`, (_req: Request, res: Response) => {
+      const { root } = this.resolveGitInfo();
+      const response: ApiResponse<string[]> = {
+        status: 'success',
+        data: this.guideService.listSaved(root),
+      };
+      res.json(response);
+    });
+
+    this.app.get(`${SIDECAR_API_PREFIX}/guide/saved/:slug`, (req: Request, res: Response) => {
+      const { root } = this.resolveGitInfo();
+      try {
+        const guide = this.guideService.loadSaved(root, req.params.slug);
+        const response: ApiResponse<GuideArtifact> = { status: 'success', data: guide };
+        res.json(response);
+      } catch (err) {
+        if (err instanceof GuideException) {
+          FlowLogger.warn(LOGGER_CONTEXT, 'Saved guide load failed', { error: err.message });
+          const response: ApiResponse<null> = { status: 'error', data: null };
+          res.status(404).json(response);
+          return;
+        }
+        throw err;
+      }
+    });
+
     this.serveStaticFrontend();
   }
 
   private resolveGitInfo(): { githubBaseUrl: string | null; sha: string | null; root: string } {
-    const root = process.cwd();
+    const cwd = process.cwd();
+    // The git repo root — NOT process.cwd(). git reports diff paths relative to the
+    // repo top-level, so node-path relativization must use the same base or nothing
+    // maps when the server is started from a subdirectory.
+    let root = cwd;
+    try {
+      root =
+        execSync('git rev-parse --show-toplevel', {
+          encoding: 'utf8',
+          stdio: ['pipe', 'pipe', 'pipe'],
+          cwd,
+        }).trim() || cwd;
+    } catch {
+      // not a git repo — fall back to cwd
+    }
     try {
       const rawRemote = execSync('git remote get-url origin', {
         encoding: 'utf8',

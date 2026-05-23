@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles } from "lucide-react";
 import { SPRING_DEFAULT, SPRING_SNAPPY } from "@/lib/spring";
@@ -103,6 +103,32 @@ export default function Home() {
       setTimeout(() => setGuideNotice(null), 4000);
     }
   };
+
+  // Deep link: /app?guide=<slug> auto-loads a skill-authored guide and plays it.
+  const guideLoadedRef = useRef(false);
+  useEffect(() => {
+    if (guideLoadedRef.current || paths.length === 0 || !gitInfo) return;
+    const slug = new URLSearchParams(window.location.search).get("guide");
+    if (!slug) return;
+    guideLoadedRef.current = true;
+    setGuideNotice("Loading guide…");
+    apiClient
+      .getSavedGuide(slug)
+      .then((artifact) => {
+        if (artifact.steps.length === 0) {
+          setGuideNotice("Guide has no steps.");
+          setTimeout(() => setGuideNotice(null), 3000);
+          return;
+        }
+        setGuideNotice(null);
+        setDrillStack([]);
+        guide.startGuide(artifact, paths, gitInfo.root);
+      })
+      .catch(() => {
+        setGuideNotice(`Couldn't load guide "${slug}".`);
+        setTimeout(() => setGuideNotice(null), 4000);
+      });
+  }, [paths, gitInfo, guide]);
 
   // A change-driven guide spans endpoints — follow each step to its endpoint.
   useEffect(() => {

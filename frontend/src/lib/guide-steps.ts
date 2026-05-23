@@ -6,6 +6,8 @@ export interface FlowGuideStep {
   drillStack: DrillEntry[];
   /** Commit narration for change-driven guides (the "why"). Absent for path tours. */
   narration?: string;
+  /** The changed diff hunk for this step (the "what"). Absent for path tours. */
+  diff?: string;
   endpoint?: string;
 }
 
@@ -37,10 +39,13 @@ export function buildGuideSequence(path: ExecutionPath): FlowGuideStep[] {
 }
 
 /**
- * Builds a guide sequence from a commit/branch diff artifact, latching onto the
- * already-loaded execution paths — no new graph. Each changed node is located
- * within the live paths so the canvas can drill to it; nodes not reachable from
- * any endpoint are still surfaced (without a drill target) so nothing is dropped.
+ * Builds a guide sequence from a guide artifact, latching onto the already-loaded
+ * execution paths — no new graph. The walkthrough follows the artifact's step
+ * ORDER (an LLM may have curated/reordered it), not graph-traversal order.
+ *
+ * Each step's node is located within the live paths so the canvas can drill to
+ * it; a node not reachable from any endpoint is still surfaced (without a drill
+ * target) so nothing is dropped.
  *
  * Artifact ids are repo-relative; live node ids are absolute, so we strip
  * `repoRoot` to match — the same normalization the GitHub-link builder uses.
@@ -53,23 +58,17 @@ export function buildSequenceFromArtifact(
   const toRel = (id: string): string =>
     repoRoot && id.startsWith(`${repoRoot}/`) ? id.slice(repoRoot.length + 1) : id;
 
-  const changed = new Map(artifact.steps.map((s) => [s.nodeId, s]));
-  const sequence: FlowGuideStep[] = [];
-  const seen = new Set<string>();
-
+  // Locate every node reachable in the live paths once: relId → node + how to reach it.
+  const located = new Map<
+    string,
+    { node: FlowNode; drillStack: DrillEntry[]; endpoint: string }
+  >();
   for (const path of paths) {
     const walk = (nodes: FlowNode[], drillStack: DrillEntry[]): void => {
       for (const node of nodes) {
         const rel = toRel(node.id);
-        const step = changed.get(rel);
-        if (step && !seen.has(rel)) {
-          seen.add(rel);
-          sequence.push({
-            node,
-            drillStack: [...drillStack],
-            narration: step.narration,
-            endpoint: path.endpoint,
-          });
+        if (!located.has(rel)) {
+          located.set(rel, { node, drillStack: [...drillStack], endpoint: path.endpoint });
         }
         if (node.hasDetail && path.nodeDetails[node.id]) {
           walk(path.nodeDetails[node.id].nodes, [
@@ -82,10 +81,19 @@ export function buildSequenceFromArtifact(
     walk(path.nodes, []);
   }
 
-  // Changed nodes that aren't reachable from any endpoint path — surface anyway.
-  for (const step of artifact.steps) {
-    if (seen.has(step.nodeId)) continue;
-    sequence.push({
+  // Emit in the artifact's step order; fall back to a drill-less step for orphans.
+  return artifact.steps.map((step): FlowGuideStep => {
+    const hit = located.get(step.nodeId);
+    if (hit) {
+      return {
+        node: hit.node,
+        drillStack: hit.drillStack,
+        narration: step.narration,
+        diff: step.diff,
+        endpoint: hit.endpoint,
+      };
+    }
+    return {
       node: {
         id: step.nodeId,
         type: "standard",
@@ -96,8 +104,7 @@ export function buildSequenceFromArtifact(
       },
       drillStack: [],
       narration: step.narration,
-    });
-  }
-
-  return sequence;
+      diff: step.diff,
+    };
+  });
 }
