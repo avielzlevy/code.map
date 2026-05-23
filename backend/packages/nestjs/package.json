@@ -47,9 +47,9 @@
     "moduleNameMapper": {
       "@constants": "<rootDir>/src/constants/index",
       "@config": "<rootDir>/src/config/env-config",
-      "@exceptions": "<rootDir>/src/exceptions/flow-mapper.exceptions",
+      "@exceptions": "<rootDir>/src/exceptions/code-map.exceptions",
       "@logger": "<rootDir>/src/logger/flow-logger",
-      "@dto": "<rootDir>/src/dto/flow-mapper-config.dto"
+      "@dto": "<rootDir>/src/dto/code-map-config.dto"
     }
   }
 }
