@@ -43,6 +43,59 @@ It's a zero-configuration sidecar: add one module, get a live visualization at `
 
 ## Quick Start
 
+### Install with an agent (recommended)
+
+Paste this prompt to your coding agent (Claude Code, Cursor, etc.). It detects your framework, asks how you want AI summaries set up, installs and wires in code-map, and installs the `/codemap-guide` skill globally.
+
+```text
+Set up code-map (https://github.com/avielzlevy/code-map) in this project — a dev tool
+that renders my API's execution graph at http://localhost:4567.
+
+1. Detect my framework from the manifest:
+   - NestJS  → "@nestjs/core" in package.json
+   - FastAPI → "fastapi" in requirements.txt / pyproject.toml
+   If it's neither, stop and tell me code-map currently supports NestJS and FastAPI.
+
+2. ASK ME whether I want AI summaries, and WAIT for my answer. Explain the trade-off:
+   - Summaries annotate each function with a one-line plain-English intent label.
+   - They are CACHED in .flow-cache/ and INCREMENTAL: a summary is generated the first
+     time a function is seen and only re-generated when that function's body changes —
+     a one-time cost per function, not per run.
+   - Options:
+       • Off    — no LLM, just the structural graph (fastest).
+       • Local  — Ollama on my machine, no API key, free (requires Ollama installed).
+       • Remote — Anthropic / OpenAI / Google / OpenRouter; needs an API key.
+
+3. Install the package for my framework:
+   - NestJS:  npm install @code-map/nestjs
+   - FastAPI: pip install code-map
+
+4. Wire it in, GUARDED FOR DEVELOPMENT ONLY (never in production):
+   - NestJS  — in app.module.ts add FlowMapperModule.forRoot({ port: 4567, ...ai }) to imports.
+   - FastAPI — in the app entry: FlowMap.bind(app, config={"port": 4567, ...ai}).
+   Apply my AI choice as ...ai:
+       • Off    → no AI fields.
+       • Local  → NestJS: enableAI: true, provider: 'ollama'
+                  FastAPI: "enable_ai": True, "provider": "ollama"
+       • Remote → NestJS: enableAI: true, provider: '<provider>', apiKey: process.env.<KEY>
+                  FastAPI: "enable_ai": True, "provider": "<provider>", "api_key": os.environ["<KEY>"]
+                  and tell me which env var to set.
+
+5. Install the code-map skill globally so I can author guides from any project:
+   mkdir -p ~/.claude/skills/codemap-guide
+   curl -fsSL https://raw.githubusercontent.com/avielzlevy/code-map/main/.claude/skills/codemap-guide/SKILL.md \
+     -o ~/.claude/skills/codemap-guide/SKILL.md
+
+6. Explain the skill to me: after we work through a change together I can run
+   /codemap-guide — it authors a step-by-step walkthrough of what we changed (which
+   functions, and why), saves it to .codemap/guides/, and opens it in code-map so I can
+   replay the change on the visual graph. It's shareable — commit it or send the URL.
+
+Finally, start my app and tell me to open http://localhost:4567.
+```
+
+Prefer to do it by hand? Follow the framework-specific steps below.
+
 ### NestJS
 
 Requires Node.js ≥ 18 and NestJS ≥ 10.
@@ -150,6 +203,14 @@ FlowMap.bind(app, config={
 
 `@FlowStep`-tagged nodes are highlighted with an amber border to distinguish them from standard nodes. You can also set your API key and provider via the `SUMMARIES_API_KEY` and `SUMMARIES_PROVIDER` environment variables instead of passing them in config.
 
+**Local, no API key (Ollama):** run summaries entirely on your machine — no key, no data leaves your laptop. Requires [Ollama](https://ollama.com) running locally.
+
+```typescript
+FlowMapperModule.forRoot({ port: 4567, enableAI: true, provider: 'ollama' })
+```
+
+Either way, summaries are cached in `.flow-cache/` and regenerated incrementally — only when a function's body changes — so it's a one-time cost per function, not per run.
+
 ## Configuration
 
 | Option | Type | Default | Description |
@@ -157,7 +218,7 @@ FlowMap.bind(app, config={
 | `port` | `number` | `4567` | Port for the sidecar server |
 | `enableAI` / `enable_ai` | `boolean` | `false` | Generate AI summaries via Claude Haiku |
 | `apiKey` / `api_key` | `string` | `SUMMARIES_API_KEY` env var | API key for the chosen provider (required when AI is enabled) |
-| `provider` | `string` | `SUMMARIES_PROVIDER` env var | LLM provider: `anthropic`, `openai`, `gemini`, `openrouter` (required when AI is enabled) |
+| `provider` | `string` | `SUMMARIES_PROVIDER` env var | LLM provider: `anthropic`, `openai`, `google`, `openrouter` (API key required), or `ollama` (local, no key) |
 | `cachePath` / `cache_path` | `string` | `.flow-cache` | Directory for cached AI summaries |
 | `sourceRoot` / `source_root` | `string` | `process.cwd()` | Root directory scanned for source files |
 
