@@ -71,7 +71,7 @@ class SidecarService:
             FlowLogger.warn(LOGGER_CONTEXT, "Sidecar already running")
             return
 
-        config = uvicorn.Config(self._app, host="0.0.0.0", port=port, log_level="error")
+        config = uvicorn.Config(self._app, host="127.0.0.1", port=port, log_level="error")
         self._server = uvicorn.Server(config)
         self._server_thread = threading.Thread(target=self._server.run, daemon=True)
         self._server_thread.start()

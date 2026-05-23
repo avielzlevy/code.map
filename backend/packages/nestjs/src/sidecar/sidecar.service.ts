@@ -63,16 +63,11 @@ export class SidecarService {
 
   async start(port: number): Promise<void> {
     return new Promise((resolve, reject) => {
-      this.server = this.app.listen(port, () => {
+      this.server = this.app.listen(port, '127.0.0.1', () => {
         FlowLogger.info(LOGGER_CONTEXT, 'Sidecar server listening', {
           port,
           url: `http://localhost:${port}`,
         });
-        FlowLogger.warn(
-          LOGGER_CONTEXT,
-          'SECURITY: The sidecar binds to all interfaces by default. ' +
-          'Ensure port ' + port + ' is not reachable from outside localhost in shared or staging environments.',
-        );
         this.startHeartbeat();
         resolve();
       });
