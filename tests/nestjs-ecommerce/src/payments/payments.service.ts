@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { FlowStep } from '@code-map/nestjs';
+import { Dot } from '@code-map/nestjs';
 import { StripeService } from './stripe.service';
 
 @Injectable()
@@ -9,28 +9,28 @@ export class PaymentsService {
   /**
    * Creates a Stripe PaymentIntent for the given order total.
    */
-  @FlowStep('Call Stripe API to create PaymentIntent with idempotency key')
+  @Dot('Call Stripe API to create PaymentIntent with idempotency key')
   async createIntent() {
     const intent = await this.stripeService.createPaymentIntent();
     await this.persistPaymentRecord(intent);
     return this.formatIntentResponse(intent);
   }
 
-  @FlowStep('Confirm payment with Stripe and update order status')
+  @Dot('Confirm payment with Stripe and update order status')
   async confirmPayment() {
     const result = await this.stripeService.confirmPaymentIntent();
     await this.updatePaymentStatus(result);
     return result;
   }
 
-  @FlowStep('Initiate Stripe refund and record refund event')
+  @Dot('Initiate Stripe refund and record refund event')
   async processRefund() {
     const refund = await this.stripeService.createRefund();
     await this.persistRefundRecord(refund);
     return refund;
   }
 
-  @FlowStep('Verify Stripe webhook signature and route to handler')
+  @Dot('Verify Stripe webhook signature and route to handler')
   async handleWebhook() {
     const event = await this.stripeService.verifyWebhookSignature();
     return this.dispatchWebhookEvent(event);

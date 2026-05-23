@@ -1,4 +1,4 @@
-import { FlowStep } from '@code-map/nextjs';
+import { Dot } from '@code-map/nextjs';
 import { ProductService } from '../../../../services/product.service';
 
 const productService = new ProductService();
@@ -13,7 +13,7 @@ export async function PUT() {
   return Response.json({ data: product });
 }
 
-@FlowStep('Archive product and zero out inventory')
+@Dot('Archive product and zero out inventory')
 export async function DELETE() {
   const result = await productService.remove();
   return Response.json({ data: result });

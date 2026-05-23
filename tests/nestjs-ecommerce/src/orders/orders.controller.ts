@@ -1,5 +1,5 @@
 import { Controller, Get, Post, Put, Delete, Patch } from '@nestjs/common';
-import { FlowStep } from '@code-map/nestjs';
+import { Dot } from '@code-map/nestjs';
 import { OrdersService } from './orders.service';
 
 @Controller('orders')
@@ -10,7 +10,7 @@ export class OrdersController {
    * Returns a paginated list of orders for the authenticated user.
    */
   @Get()
-  @FlowStep('List all orders with filters and pagination')
+  @Dot('List all orders with filters and pagination')
   async findAll() {
     return this.ordersService.findAll();
   }
@@ -21,7 +21,7 @@ export class OrdersController {
   }
 
   @Post()
-  @FlowStep('Create a new order and reserve inventory')
+  @Dot('Create a new order and reserve inventory')
   async create() {
     return this.ordersService.create();
   }
@@ -32,7 +32,7 @@ export class OrdersController {
   }
 
   @Delete(':id')
-  @FlowStep('Cancel order and release reserved inventory')
+  @Dot('Cancel order and release reserved inventory')
   async cancel() {
     return this.ordersService.cancel();
   }
@@ -41,7 +41,7 @@ export class OrdersController {
    * Initiates the checkout flow — charges the customer and confirms inventory deduction.
    */
   @Post(':id/checkout')
-  @FlowStep('Initiate checkout: charge payment and confirm stock')
+  @Dot('Initiate checkout: charge payment and confirm stock')
   async checkout() {
     return this.ordersService.checkout();
   }
@@ -52,7 +52,7 @@ export class OrdersController {
   }
 
   @Patch(':id/status')
-  @FlowStep('Update order fulfillment status')
+  @Dot('Update order fulfillment status')
   async updateStatus() {
     return this.ordersService.updateStatus();
   }

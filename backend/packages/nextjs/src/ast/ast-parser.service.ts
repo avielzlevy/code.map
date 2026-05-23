@@ -6,7 +6,7 @@ import { FlowLogger } from '../logger/logger';
 import { FlowNode, FlowEdge, FlowGraph } from '../dto/config.dto';
 import { AstParserException } from '../exceptions/exceptions';
 import {
-  FLOW_STEP_DECORATOR_NAME,
+  DOT_DECORATOR_NAME,
   NEXTJS_HTTP_METHODS,
   NEXTJS_PAGES_HANDLER_NAME,
   SUPPORTED_EXTENSIONS,
@@ -253,7 +253,7 @@ export class AstParserService {
     for (const d of decorators) {
       if (!ts.isCallExpression(d.expression)) continue;
       const name = d.expression.expression.getText(sourceFile);
-      if (name !== FLOW_STEP_DECORATOR_NAME) continue;
+      if (name !== DOT_DECORATOR_NAME) continue;
       if (d.expression.arguments.length === 0) continue;
       const arg = d.expression.arguments[0];
       if (ts.isStringLiteral(arg)) return arg.text;

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { FlowStep } from '@code-map/nestjs';
+import { Dot } from '@code-map/nestjs';
 import { InventoryService } from '../shared/inventory.service';
 
 @Injectable()
@@ -9,14 +9,14 @@ export class ProductsService {
   /**
    * Fetches all products and joins with live stock counts from inventory.
    */
-  @FlowStep('Fetch product catalog with live inventory counts')
+  @Dot('Fetch product catalog with live inventory counts')
   async findAll() {
     const products = await this.queryProducts();
     const stock = await this.inventoryService.getStockLevels();
     return this.attachStockToProducts(products, stock);
   }
 
-  @FlowStep('Execute full-text search with relevance ranking')
+  @Dot('Execute full-text search with relevance ranking')
   async search() {
     const results = await this.runSearchQuery();
     return this.rankResults(results);
@@ -28,7 +28,7 @@ export class ProductsService {
     return { ...product, stock };
   }
 
-  @FlowStep('Persist new product and register with inventory system')
+  @Dot('Persist new product and register with inventory system')
   async create() {
     const product = await this.persistProduct();
     await this.inventoryService.initializeStock();
@@ -41,7 +41,7 @@ export class ProductsService {
     return product;
   }
 
-  @FlowStep('Soft-delete product and archive inventory record')
+  @Dot('Soft-delete product and archive inventory record')
   async remove() {
     await this.inventoryService.archiveStock();
     return this.softDeleteProduct();

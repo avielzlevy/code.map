@@ -1,5 +1,5 @@
 import { Controller, Get, Post, Put, Delete } from '@nestjs/common';
-import { FlowStep } from '@code-map/nestjs';
+import { Dot } from '@code-map/nestjs';
 import { ProductsService } from './products.service';
 
 @Controller('products')
@@ -10,13 +10,13 @@ export class ProductsController {
    * Returns all active products with inventory status.
    */
   @Get()
-  @FlowStep('List all products with real-time stock status')
+  @Dot('List all products with real-time stock status')
   async findAll() {
     return this.productsService.findAll();
   }
 
   @Get('search')
-  @FlowStep('Full-text search across product catalog')
+  @Dot('Full-text search across product catalog')
   async search() {
     return this.productsService.search();
   }
@@ -27,7 +27,7 @@ export class ProductsController {
   }
 
   @Post()
-  @FlowStep('Create product and initialize inventory slot')
+  @Dot('Create product and initialize inventory slot')
   async create() {
     return this.productsService.create();
   }
@@ -38,7 +38,7 @@ export class ProductsController {
   }
 
   @Delete(':id')
-  @FlowStep('Archive product and zero out inventory')
+  @Dot('Archive product and zero out inventory')
   async remove() {
     return this.productsService.remove();
   }

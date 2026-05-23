@@ -1,14 +1,14 @@
-export class FlowMapperInitializationException extends Error {
+export class CodeMapInitializationException extends Error {
   constructor(message: string) {
-    super(`[FlowMapper] Initialization failed: ${message}`);
-    this.name = 'FlowMapperInitializationException';
+    super(`[CodeMap] Initialization failed: ${message}`);
+    this.name = 'CodeMapInitializationException';
   }
 }
 
-export class FlowMapperConfigException extends Error {
+export class CodeMapConfigException extends Error {
   constructor(field: string, reason: string) {
-    super(`[FlowMapper] Invalid configuration for "${field}": ${reason}`);
-    this.name = 'FlowMapperConfigException';
+    super(`[CodeMap] Invalid configuration for "${field}": ${reason}`);
+    this.name = 'CodeMapConfigException';
   }
 }
 

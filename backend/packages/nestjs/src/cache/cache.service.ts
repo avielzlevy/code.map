@@ -3,8 +3,8 @@ import * as path from 'path';
 import * as crypto from 'crypto';
 
 import { FlowLogger } from '../logger/flow-logger';
-import { CacheEntry, CacheIndex } from '../dto/flow-mapper-config.dto';
-import { CacheException } from '../exceptions/flow-mapper.exceptions';
+import { CacheEntry, CacheIndex } from '../dto/code-map-config.dto';
+import { CacheException } from '../exceptions/code-map.exceptions';
 import { FLOW_CACHE_INDEX_FILE } from '../constants';
 
 const LOGGER_CONTEXT = 'CacheService';

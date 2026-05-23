@@ -14,7 +14,7 @@
       "controllerDecorators": ["Controller"],
       "serviceDecorators": ["Injectable"],
       "routeDecorators": ["Get", "Post", "Put", "Delete", "Patch", "Options", "Head"],
-      "flowStepDecorator": "FlowStep",
+      "flowStepDecorator": "Dot",
       "httpMethodMap": {
         "Get": "GET",
         "Post": "POST",
@@ -37,7 +37,7 @@
       "controllerDecorators": [],
       "serviceDecorators": [],
       "routeDecorators": [],
-      "flowStepDecorator": "FlowStep",
+      "flowStepDecorator": "Dot",
       "httpMethodMap": {
         "get": "GET",
         "post": "POST",
@@ -65,7 +65,7 @@
       "controllerDecorators": [],
       "serviceDecorators": [],
       "routeDecorators": [],
-      "flowStepDecorator": "FlowStep",
+      "flowStepDecorator": "Dot",
       "httpMethodMap": {
         "get": "GET",
         "post": "POST",
@@ -93,7 +93,7 @@
       "controllerDecorators": [],
       "serviceDecorators": [],
       "routeDecorators": [],
-      "flowStepDecorator": "FlowStep",
+      "flowStepDecorator": "Dot",
       "httpMethodMap": {
         "get": "GET",
         "post": "POST",
@@ -121,7 +121,7 @@
       "controllerDecorators": [],
       "serviceDecorators": [],
       "routeDecorators": [],
-      "flowStepDecorator": "FlowStep",
+      "flowStepDecorator": "Dot",
       "httpMethodMap": {
         "GET": "GET",
         "POST": "POST",

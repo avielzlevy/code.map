@@ -1,8 +1,8 @@
 import axios from 'axios';
 
 import { NanoAgentService } from '../nano-agent.service';
-import { FlowNode } from '../../dto/flow-mapper-config.dto';
-import { NanoAgentException } from '../../exceptions/flow-mapper.exceptions';
+import { FlowNode } from '../../dto/code-map-config.dto';
+import { NanoAgentException } from '../../exceptions/code-map.exceptions';
 
 jest.mock('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;

@@ -1,9 +1,9 @@
-import { FlowStep } from '@code-map/nextjs';
+import { Dot } from '@code-map/nextjs';
 import { UserService } from '../../../services/user.service';
 
 const userService = new UserService();
 
-@FlowStep('Register new user: hash password and send welcome email')
+@Dot('Register new user: hash password and send welcome email')
 export async function POST() {
   /**
    * Registers a new user account and sends a welcome email.

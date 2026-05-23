@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { FlowStep } from '@code-map/nestjs';
+import { Dot } from '@code-map/nestjs';
 import { InventoryService } from '../shared/inventory.service';
 import { PaymentsService } from '../payments/payments.service';
 import { NotificationService } from '../shared/notification.service';
@@ -15,7 +15,7 @@ export class OrdersService {
   /**
    * Fetches all orders, enriching each with current stock availability.
    */
-  @FlowStep('Fetch orders and enrich with live inventory data')
+  @Dot('Fetch orders and enrich with live inventory data')
   async findAll() {
     const orders = await this.queryOrders();
     const stock = await this.inventoryService.checkStock();
@@ -26,7 +26,7 @@ export class OrdersService {
     return this.queryOrderById();
   }
 
-  @FlowStep('Validate cart, reserve inventory, create payment intent')
+  @Dot('Validate cart, reserve inventory, create payment intent')
   async create() {
     const cart = await this.validateCart();
     await this.inventoryService.reserveItems();
@@ -38,7 +38,7 @@ export class OrdersService {
     return this.persistOrderUpdate();
   }
 
-  @FlowStep('Cancel order: release stock and trigger refund if charged')
+  @Dot('Cancel order: release stock and trigger refund if charged')
   async cancel() {
     await this.inventoryService.releaseItems();
     await this.paymentsService.processRefund();
@@ -46,7 +46,7 @@ export class OrdersService {
     return this.markOrderCancelled();
   }
 
-  @FlowStep('Execute checkout: charge card, deduct stock, send confirmation')
+  @Dot('Execute checkout: charge card, deduct stock, send confirmation')
   async checkout() {
     await this.paymentsService.confirmPayment();
     await this.inventoryService.deductStock();

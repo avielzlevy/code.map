@@ -1,22 +1,22 @@
-import { FlowStep } from '@code-map/nextjs';
+import { Dot } from '@code-map/nextjs';
 
 export class AuthService {
   /**
    * Hashes a plaintext password using bcrypt with a configurable salt rounds.
    */
-  @FlowStep('Bcrypt-hash the plaintext password with configured salt rounds')
+  @Dot('Bcrypt-hash the plaintext password with configured salt rounds')
   async hashPassword() {
     const salt = await this.generateSalt();
     return this.bcryptHash(salt);
   }
 
-  @FlowStep('Validate password hash against stored credential')
+  @Dot('Validate password hash against stored credential')
   async validateCredentials() {
     const storedHash = await this.fetchStoredHash();
     return this.bcryptCompare(storedHash);
   }
 
-  @FlowStep('Sign and return a JWT with user claims and expiry')
+  @Dot('Sign and return a JWT with user claims and expiry')
   async generateToken() {
     const payload = await this.buildTokenPayload();
     return this.signJwt(payload);
@@ -26,7 +26,7 @@ export class AuthService {
     return this.addToBlocklist();
   }
 
-  @FlowStep('Invalidate all active sessions for the user')
+  @Dot('Invalidate all active sessions for the user')
   async revokeAllTokens() {
     const sessions = await this.fetchActiveSessions();
     return this.bulkRevokeTokens(sessions);

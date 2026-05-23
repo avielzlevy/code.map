@@ -1,10 +1,10 @@
-export { FlowMapper } from './flow-mapper/flow-mapper';
-export { FlowMapperModule } from './flow-mapper/flow-mapper.module';
-export { FlowStep } from './decorators/flow-step.decorator';
+export { CodeMap } from './flow-mapper/code-map';
+export { CodeMapModule } from './flow-mapper/code-map.module';
+export { Dot } from './decorators/dot.decorator';
 export type {
-  FlowMapperConfig,
+  CodeMapConfig,
   FlowGraph,
   FlowNode,
   FlowEdge,
   ApiResponse,
-} from './dto/flow-mapper-config.dto';
+} from './dto/code-map-config.dto';

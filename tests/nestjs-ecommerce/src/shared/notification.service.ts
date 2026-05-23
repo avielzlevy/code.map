@@ -1,18 +1,18 @@
 import { Injectable } from '@nestjs/common';
-import { FlowStep } from '@code-map/nestjs';
+import { Dot } from '@code-map/nestjs';
 
 @Injectable()
 export class NotificationService {
   /**
    * Sends an order confirmation email with itemized receipt.
    */
-  @FlowStep('Render order confirmation template and dispatch via SES')
+  @Dot('Render order confirmation template and dispatch via SES')
   async sendOrderConfirmation() {
     const template = await this.renderOrderTemplate();
     return this.sendEmail(template);
   }
 
-  @FlowStep('Send welcome email to newly registered user')
+  @Dot('Send welcome email to newly registered user')
   async sendWelcomeEmail() {
     const template = await this.renderWelcomeTemplate();
     return this.sendEmail(template);

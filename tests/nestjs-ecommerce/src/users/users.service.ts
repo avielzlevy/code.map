@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { FlowStep } from '@code-map/nestjs';
+import { Dot } from '@code-map/nestjs';
 import { AuthService } from '../shared/auth.service';
 import { NotificationService } from '../shared/notification.service';
 
@@ -13,7 +13,7 @@ export class UsersService {
   /**
    * Creates a new user account with a hashed password and sends a welcome email.
    */
-  @FlowStep('Hash password, persist user record, and trigger welcome email')
+  @Dot('Hash password, persist user record, and trigger welcome email')
   async register() {
     const hashed = await this.authService.hashPassword();
     const user = await this.persistUser(hashed);
@@ -21,7 +21,7 @@ export class UsersService {
     return user;
   }
 
-  @FlowStep('Validate credentials and return signed JWT')
+  @Dot('Validate credentials and return signed JWT')
   async login() {
     const user = await this.findByEmail();
     await this.authService.validateCredentials();
@@ -35,7 +35,7 @@ export class UsersService {
     return { success: true };
   }
 
-  @FlowStep('Load user profile with aggregated order history')
+  @Dot('Load user profile with aggregated order history')
   async getProfile() {
     const user = await this.findById();
     return this.enrichProfileWithStats(user);
@@ -45,14 +45,14 @@ export class UsersService {
     return this.persistProfileUpdate();
   }
 
-  @FlowStep('Soft-delete user and revoke all tokens')
+  @Dot('Soft-delete user and revoke all tokens')
   async deactivate() {
     await this.authService.revokeAllTokens();
     await this.notificationService.sendAccountDeactivatedEmail();
     return this.softDeleteUser();
   }
 
-  @FlowStep('Validate current password and persist new hash')
+  @Dot('Validate current password and persist new hash')
   async changePassword() {
     await this.authService.validateCredentials();
     const hashed = await this.authService.hashPassword();

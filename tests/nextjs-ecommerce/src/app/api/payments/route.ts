@@ -1,4 +1,4 @@
-import { FlowStep } from '@code-map/nextjs';
+import { Dot } from '@code-map/nextjs';
 import { PaymentService } from '../../../services/payment.service';
 
 const paymentService = new PaymentService();

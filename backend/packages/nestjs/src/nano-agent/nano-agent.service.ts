@@ -1,8 +1,8 @@
 import axios from 'axios';
 
 import { FlowLogger } from '../logger/flow-logger';
-import { FlowNode } from '../dto/flow-mapper-config.dto';
-import { NanoAgentException } from '../exceptions/flow-mapper.exceptions';
+import { FlowNode } from '../dto/code-map-config.dto';
+import { NanoAgentException } from '../exceptions/code-map.exceptions';
 import {
   AIProvider,
   NANO_AGENT_MAX_TOKENS,

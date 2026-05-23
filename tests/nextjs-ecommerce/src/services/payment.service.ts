@@ -1,7 +1,7 @@
-import { FlowStep } from '@code-map/nextjs';
+import { Dot } from '@code-map/nextjs';
 
 export class PaymentService {
-  @FlowStep('Call Stripe API to create PaymentIntent with idempotency key')
+  @Dot('Call Stripe API to create PaymentIntent with idempotency key')
   async createIntent() {
     /**
      * Creates a Stripe PaymentIntent for the given order total.
@@ -11,21 +11,21 @@ export class PaymentService {
     return this.formatIntentResponse(intent);
   }
 
-  @FlowStep('Confirm payment with Stripe and update order status')
+  @Dot('Confirm payment with Stripe and update order status')
   async confirmPayment() {
     const result = await this.stripeConfirmIntent();
     await this.updatePaymentStatus(result);
     return result;
   }
 
-  @FlowStep('Initiate Stripe refund and record refund event')
+  @Dot('Initiate Stripe refund and record refund event')
   async processRefund() {
     const refund = await this.stripeCreateRefund();
     await this.persistRefundRecord(refund);
     return refund;
   }
 
-  @FlowStep('Verify Stripe webhook signature and route to handler')
+  @Dot('Verify Stripe webhook signature and route to handler')
   async handleWebhook() {
     const event = await this.stripeVerifyWebhook();
     return this.dispatchWebhookEvent(event);

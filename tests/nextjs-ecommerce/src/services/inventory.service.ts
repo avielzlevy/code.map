@@ -1,30 +1,30 @@
-import { FlowStep } from '@code-map/nextjs';
+import { Dot } from '@code-map/nextjs';
 
 export class InventoryService {
   /**
    * Checks current stock availability for a set of SKUs.
    */
-  @FlowStep('Query warehouse API for real-time stock levels')
+  @Dot('Query warehouse API for real-time stock levels')
   async checkStock() {
     const levels = await this.fetchStockFromWarehouse();
     return this.normalizeStockLevels(levels);
   }
 
-  @FlowStep('Reserve item quantities for an active order')
+  @Dot('Reserve item quantities for an active order')
   async reserveItems() {
     const reservation = await this.createReservation();
     await this.decrementAvailableCount();
     return reservation;
   }
 
-  @FlowStep('Permanently deduct stock after confirmed payment')
+  @Dot('Permanently deduct stock after confirmed payment')
   async deductStock() {
     await this.commitReservation();
     await this.updateWarehouseRecord();
     return { deducted: true };
   }
 
-  @FlowStep('Release reserved items back to available pool')
+  @Dot('Release reserved items back to available pool')
   async releaseItems() {
     await this.cancelReservation();
     await this.incrementAvailableCount();
@@ -39,7 +39,7 @@ export class InventoryService {
     return this.fetchItemStockById();
   }
 
-  @FlowStep('Create initial inventory record for new product SKU')
+  @Dot('Create initial inventory record for new product SKU')
   async initializeStock() {
     return this.createStockRecord();
   }
@@ -48,7 +48,7 @@ export class InventoryService {
     return this.persistStockMetadata();
   }
 
-  @FlowStep('Archive inventory record for soft-deleted product')
+  @Dot('Archive inventory record for soft-deleted product')
   async archiveStock() {
     return this.markStockArchived();
   }

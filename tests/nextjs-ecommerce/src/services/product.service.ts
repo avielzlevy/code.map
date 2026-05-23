@@ -1,4 +1,4 @@
-import { FlowStep } from '@code-map/nextjs';
+import { Dot } from '@code-map/nextjs';
 import { InventoryService } from './inventory.service';
 
 export class ProductService {
@@ -7,7 +7,7 @@ export class ProductService {
   /**
    * Fetches all products and joins with live stock counts from inventory.
    */
-  @FlowStep('Fetch product catalog with live inventory counts')
+  @Dot('Fetch product catalog with live inventory counts')
   async findAll() {
     const products = await this.queryProducts();
     const stock = await this.inventory.getStockLevels();
@@ -20,7 +20,7 @@ export class ProductService {
     return { ...product, stock };
   }
 
-  @FlowStep('Persist new product and register with inventory system')
+  @Dot('Persist new product and register with inventory system')
   async create() {
     const product = await this.persistProduct();
     await this.inventory.initializeStock();
@@ -33,7 +33,7 @@ export class ProductService {
     return product;
   }
 
-  @FlowStep('Soft-delete product and archive inventory record')
+  @Dot('Soft-delete product and archive inventory record')
   async remove() {
     await this.inventory.archiveStock();
     return this.softDeleteProduct();

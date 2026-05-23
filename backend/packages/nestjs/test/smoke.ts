@@ -30,7 +30,7 @@ function get(url: string): Promise<{ status: number; body: string }> {
 }
 
 async function run(): Promise<void> {
-  console.log('--- FlowMapper smoke test ---\n');
+  console.log('--- code.map smoke test ---\n');
 
   // 1. Parse fixtures
   const parser = new AstParserService();

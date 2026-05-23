@@ -6,8 +6,8 @@ import {
   FrontendEdge,
   FrontendExecutionPath,
   NodeDetail,
-  ResolvedFlowMapperConfig,
-} from '../dto/flow-mapper-config.dto';
+  ResolvedCodeMapConfig,
+} from '../dto/code-map-config.dto';
 import { AstParserService } from '../ast/ast-parser.service';
 import { CacheService } from '../cache/cache.service';
 import { NanoAgentService } from '../nano-agent/nano-agent.service';
@@ -16,17 +16,17 @@ import { MAX_EXECUTION_DEPTH, DETAIL_EXPANSION_DEPTH, NANO_AGENT_BATCH_SIZE } fr
 
 type OrderedAdj = Map<string, string[]>;
 
-const LOGGER_CONTEXT = 'FlowMapperService';
+const LOGGER_CONTEXT = 'CodeMapService';
 
-export class FlowMapperService {
+export class CodeMapService {
   private readonly astParser: AstParserService;
   private readonly cache: CacheService;
   private readonly sidecar: SidecarService;
   private readonly nanoAgent: NanoAgentService | null;
-  private readonly config: ResolvedFlowMapperConfig;
+  private readonly config: ResolvedCodeMapConfig;
 
   constructor(
-    config: ResolvedFlowMapperConfig,
+    config: ResolvedCodeMapConfig,
     astParser: AstParserService,
     cache: CacheService,
     sidecar: SidecarService,

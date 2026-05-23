@@ -1,7 +1,7 @@
 export const DEFAULT_SIDECAR_PORT = 4567;
 export const FLOW_CACHE_DIR = ".flow-cache";
 export const FLOW_CACHE_INDEX_FILE = "index.json";
-export const FLOW_STEP_DECORATOR_NAME = "FlowStep";
+export const DOT_DECORATOR_NAME = "Dot";
 export const SIDECAR_API_PREFIX = "/api/flow-map";
 
 export const NANO_AGENT_MAX_TOKENS = 50;

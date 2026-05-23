@@ -13,8 +13,8 @@ import {
   GuideArtifact,
   GuideAuthorInput,
   GuideAuthorResult,
-} from '../dto/flow-mapper-config.dto';
-import { SidecarException, GuideException } from '../exceptions/flow-mapper.exceptions';
+} from '../dto/code-map-config.dto';
+import { SidecarException, GuideException } from '../exceptions/code-map.exceptions';
 import { SIDECAR_API_PREFIX, SSE_HEARTBEAT_INTERVAL_MS } from '../constants';
 import { GuideService } from '../guide/guide.service';
 

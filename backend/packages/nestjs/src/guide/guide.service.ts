@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 import { FlowLogger } from '../logger/flow-logger';
-import { GuideException } from '../exceptions/flow-mapper.exceptions';
+import { GuideException } from '../exceptions/code-map.exceptions';
 import { GUIDE_SAVE_DIR, GUIDE_SLUG_PATTERN, GUIDE_CHANGE_TYPES } from '../constants';
 import {
   FlowGraph,
@@ -10,7 +10,7 @@ import {
   GuideAuthorInput,
   GuideStep,
   GuideUnresolvedStep,
-} from '../dto/flow-mapper-config.dto';
+} from '../dto/code-map-config.dto';
 
 const LOGGER_CONTEXT = 'GuideService';
 

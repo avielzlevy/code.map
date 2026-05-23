@@ -11,8 +11,8 @@ const { typescript: TSGrammar } = require('tree-sitter-typescript') as {
 };
 
 import { FlowLogger } from '../logger/flow-logger';
-import { FlowNode, FlowEdge, FlowGraph } from '../dto/flow-mapper-config.dto';
-import { AstParserException } from '../exceptions/flow-mapper.exceptions';
+import { FlowNode, FlowEdge, FlowGraph } from '../dto/code-map-config.dto';
+import { AstParserException } from '../exceptions/code-map.exceptions';
 import { SUPPORTED_EXTENSIONS, EXCLUDED_DIRS } from '../constants';
 import { detectFramework, FrameworkDescriptor } from './framework-detector';
 

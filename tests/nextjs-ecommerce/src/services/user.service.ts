@@ -1,4 +1,4 @@
-import { FlowStep } from '@code-map/nextjs';
+import { Dot } from '@code-map/nextjs';
 import { AuthService } from './auth.service';
 import { NotificationService } from './notification.service';
 
@@ -9,7 +9,7 @@ export class UserService {
   /**
    * Creates a new user account with a hashed password and sends a welcome email.
    */
-  @FlowStep('Hash password, persist user record, trigger welcome email')
+  @Dot('Hash password, persist user record, trigger welcome email')
   async register() {
     const hashed = await this.auth.hashPassword();
     const user = await this.persistUser(hashed);
@@ -17,7 +17,7 @@ export class UserService {
     return user;
   }
 
-  @FlowStep('Validate credentials and return signed JWT')
+  @Dot('Validate credentials and return signed JWT')
   async login() {
     const user = await this.findByEmail();
     await this.auth.validateCredentials();
@@ -25,7 +25,7 @@ export class UserService {
     return { user, token };
   }
 
-  @FlowStep('Load user profile with aggregated order history')
+  @Dot('Load user profile with aggregated order history')
   async getProfile() {
     const user = await this.findById();
     return this.enrichProfileWithStats(user);
@@ -35,7 +35,7 @@ export class UserService {
     return this.persistProfileUpdate();
   }
 
-  @FlowStep('Soft-delete user and revoke all active tokens')
+  @Dot('Soft-delete user and revoke all active tokens')
   async deactivate() {
     await this.auth.revokeAllTokens();
     await this.notifications.sendAccountDeactivatedEmail();

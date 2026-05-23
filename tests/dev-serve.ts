@@ -10,7 +10,7 @@ import * as path from 'path';
 import { AstParserService } from '../backend/packages/nestjs/src/ast/ast-parser.service';
 import { CacheService } from '../backend/packages/nestjs/src/cache/cache.service';
 import { SidecarService } from '../backend/packages/nestjs/src/sidecar/sidecar.service';
-import { FlowMapperService } from '../backend/packages/nestjs/src/flow-mapper/flow-mapper.service';
+import { CodeMapService } from '../backend/packages/nestjs/src/flow-mapper/code-map.service';
 
 const PORT = 4580;
 
@@ -33,7 +33,7 @@ async function run(): Promise<void> {
   const astParser = new AstParserService();
   const cache = new CacheService('/tmp/flow-map-dev');
   const sidecar = new SidecarService();
-  const flowMapper = new FlowMapperService(
+  const flowMapper = new CodeMapService(
     { port: PORT, enableAI: false, apiKey: '', provider: '', model: undefined, cachePath: '/tmp/flow-map-dev', sourceRoot: fixtureDir, ollamaHost: undefined },
     astParser,
     cache,

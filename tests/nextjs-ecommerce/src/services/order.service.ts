@@ -1,4 +1,4 @@
-import { FlowStep } from '@code-map/nextjs';
+import { Dot } from '@code-map/nextjs';
 import { InventoryService } from './inventory.service';
 import { PaymentService } from './payment.service';
 import { NotificationService } from './notification.service';
@@ -11,7 +11,7 @@ export class OrderService {
   /**
    * Fetches all orders, enriching each with current stock availability.
    */
-  @FlowStep('Fetch orders and enrich with live inventory data')
+  @Dot('Fetch orders and enrich with live inventory data')
   async findAll() {
     const orders = await this.queryOrders();
     const stock = await this.inventory.checkStock();
@@ -22,7 +22,7 @@ export class OrderService {
     return this.queryOrderById();
   }
 
-  @FlowStep('Validate cart, reserve inventory, create payment intent')
+  @Dot('Validate cart, reserve inventory, create payment intent')
   async create() {
     const cart = await this.validateCart();
     await this.inventory.reserveItems();
@@ -34,7 +34,7 @@ export class OrderService {
     return this.persistOrderUpdate();
   }
 
-  @FlowStep('Cancel order: release stock and trigger refund')
+  @Dot('Cancel order: release stock and trigger refund')
   async cancel() {
     await this.inventory.releaseItems();
     await this.payments.processRefund();
@@ -42,7 +42,7 @@ export class OrderService {
     return this.markOrderCancelled();
   }
 
-  @FlowStep('Execute checkout: charge card, deduct stock, send confirmation')
+  @Dot('Execute checkout: charge card, deduct stock, send confirmation')
   async checkout() {
     await this.payments.confirmPayment();
     await this.inventory.deductStock();

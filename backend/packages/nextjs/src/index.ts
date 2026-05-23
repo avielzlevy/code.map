@@ -1,6 +1,6 @@
 export { withCodeMap } from './with-code-map';
 export { FlowMap } from './flow-map/flow-map';
-export { FlowStep } from './decorators/flow-step';
+export { Dot } from './decorators/dot';
 export type {
   FlowMapConfig,
   FlowGraph,

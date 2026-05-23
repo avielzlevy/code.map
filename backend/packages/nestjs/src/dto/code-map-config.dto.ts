@@ -1,6 +1,6 @@
 import { RemoteAIProvider, AIProvider } from '../constants';
 
-type FlowMapperBaseConfig = {
+type CodeMapBaseConfig = {
   /** Port for the sidecar visualization server. Defaults to 4567. */
   port?: number;
   /** File system path for the AI summary cache directory. Defaults to .flow-cache in cwd. */
@@ -9,14 +9,14 @@ type FlowMapperBaseConfig = {
   sourceRoot?: string;
 };
 
-export type FlowMapperConfig = FlowMapperBaseConfig &
+export type CodeMapConfig = CodeMapBaseConfig &
   (
     | { enableAI: true; provider: 'ollama'; ollamaHost?: string; model?: string }
     | { enableAI: true; provider: RemoteAIProvider; apiKey: string; model?: string }
     | { enableAI?: false }
   );
 
-export interface ResolvedFlowMapperConfig {
+export interface ResolvedCodeMapConfig {
   port: number;
   enableAI: boolean;
   apiKey: string | undefined;
