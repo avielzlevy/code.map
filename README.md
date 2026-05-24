@@ -46,7 +46,7 @@ It's a zero-configuration sidecar: add one module, get a live visualization at `
 
 ### Install with an agent (recommended)
 
-Paste this prompt to your coding agent (Claude Code, Cursor, etc.). It detects your framework, asks how you want AI summaries set up, installs and wires in code.map, and installs the `/codemap-guide` skill globally.
+Paste this prompt to your coding agent (Claude Code, Cursor, etc.). It detects your framework, asks how you want AI summaries set up, installs and wires in code.map, and installs the `/codemap-*` skills globally.
 
 ```text
 Set up code-map (https://github.com/avielzlevy/code-map) in this project — a dev tool
