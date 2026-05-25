@@ -95,13 +95,19 @@ that renders my API's execution graph at http://localhost:4567.
                   and tell me which env var to set.
 
 5. Install the code-map skills globally so I can use them from any project:
-   mkdir -p ~/.claude/skills/codemap-guide ~/.claude/skills/codemap-x
+   mkdir -p ~/.claude/skills/codemap-guide ~/.claude/skills/codemap-sharpen ~/.claude/skills/codemap-x
    curl -fsSL https://raw.githubusercontent.com/avielzlevy/code-map/main/.claude/skills/codemap-guide/SKILL.md \
      -o ~/.claude/skills/codemap-guide/SKILL.md
+   curl -fsSL https://raw.githubusercontent.com/avielzlevy/code-map/main/.claude/skills/codemap-sharpen/SKILL.md \
+     -o ~/.claude/skills/codemap-sharpen/SKILL.md
    curl -fsSL https://raw.githubusercontent.com/avielzlevy/code-map/main/.claude/skills/codemap-x/SKILL.md \
      -o ~/.claude/skills/codemap-x/SKILL.md
 
 6. Explain the skills to me:
+   - /codemap-sharpen — takes a rough task description and turns it into a precise,
+     graph-grounded prompt using the live code-map graph. It identifies the relevant nodes,
+     flags high-risk shared paths, and emits a structured prompt the developer can paste into
+     any chat window or LLM session — no file exploration, no wasted tokens.
    - /codemap-guide — after we work through a change together, it authors a step-by-step
      walkthrough of what we changed (which functions, and why), saves it to .codemap/guides/,
      and opens it in code-map so I can replay the change on the visual graph. It's shareable —
