@@ -9,10 +9,6 @@
 </p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/@code-map/nestjs"><img src="https://img.shields.io/npm/v/@code-map/nestjs?style=flat-square&label=%40code-map%2Fnestjs&color=white" alt="npm version"></a>
-  <a href="https://www.npmjs.com/package/@code-map/node"><img src="https://img.shields.io/npm/v/@code-map/node?style=flat-square&label=%40code-map%2Fnode&color=white" alt="npm version"></a>
-  <a href="https://www.npmjs.com/package/@code-map/nextjs"><img src="https://img.shields.io/npm/v/@code-map/nextjs?style=flat-square&label=%40code-map%2Fnextjs&color=white" alt="npm version"></a>
-  <a href="https://pypi.org/project/code-map/"><img src="https://img.shields.io/pypi/v/code-map?style=flat-square&label=code-map&color=white" alt="PyPI version"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-white?style=flat-square" alt="License"></a>
 </p>
 
@@ -30,7 +26,7 @@
 
 code.map instruments your TypeScript or Python app and renders the full execution path — from route handler down to every service call — as an interactive call graph. Drop it into any supported framework, open your browser, and your codebase becomes a map.
 
-It's a zero-configuration sidecar: add one module, get a live visualization at `localhost:4567`. No rebuild, no separate process. Optional AI summaries annotate each node with a plain-English intent label — run locally with Ollama or against any major provider (Anthropic, OpenAI, Google, OpenRouter) — cached after first run.
+It works through **static AST analysis**: at startup, a local [Tree-sitter](https://tree-sitter.github.io/tree-sitter/) parser walks your source files and builds the full call graph from class declarations, method signatures, and framework decorators — before your app handles a single request, with zero LLM calls required. Optional AI summaries can then annotate each node with a plain-English intent label, running locally with Ollama or against any major provider (Anthropic, OpenAI, Google, OpenRouter), cached after first run.
 
 ## Features
 
