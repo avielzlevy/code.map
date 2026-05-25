@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles } from "lucide-react";
 import { SPRING_DEFAULT, SPRING_SNAPPY } from "@/lib/spring";
 
 import { useExecutionPaths } from "@/hooks/useExecutionPaths";
 import { useGuide } from "@/hooks/useGuide";
-import { ExecutionPath, FlowNode, FlowEdge, GitInfo, RawGraph, RawGraphNode } from "@/lib/flow-types";
+import { ExecutionPath, FlowNode, FlowEdge, GitInfo, GuideChangeType, RawGraph, RawGraphNode } from "@/lib/flow-types";
 import { apiClient } from "@/lib/api-client";
 import { Switchboard } from "@/components/Switchboard";
 import { FlowCanvas } from "@/components/FlowCanvas";
@@ -201,14 +201,51 @@ export default function Home() {
       });
   }, [paths, gitInfo, guide]);
 
-  // A change-driven guide spans endpoints — follow each step to its endpoint.
+  // Guide step navigation — orphan-aware.
+  // Path-connected steps follow the existing execution-path behaviour.
+  // Orphan steps (no endpoint) build a local-neighborhood view exactly as the
+  // command palette does when an orphan node is selected.
   useEffect(() => {
-    if (!guide.active) return;
-    const endpoint = guide.currentStep?.endpoint;
-    if (!endpoint) return;
-    const match = paths.find((p) => p.endpoint === endpoint);
-    if (match && match !== activePath) setSelectedPath(match);
-  }, [guide.active, guide.currentStep, paths, activePath]);
+    if (!guide.active || !guide.currentStep) return;
+    const { node, endpoint } = guide.currentStep;
+
+    if (endpoint) {
+      const match = paths.find((p) => p.endpoint === endpoint);
+      if (match && match !== selectedPath) setSelectedPath(match);
+      setOrphanPath(null);
+      return;
+    }
+
+    // Orphan step: node.id is the repo-relative id from the artifact.
+    // graphData nodes carry absolute ids — absolutise before lookup.
+    if (!graphData) return;
+    const absId = gitInfo?.root ? `${gitInfo.root}/${node.id}` : node.id;
+    const rawNode = graphData.nodes.find((n) => n.id === absId || n.id === node.id);
+    if (rawNode) setOrphanPath(buildNeighborhoodPath(rawNode, graphData));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [guide.active, guide.currentStep, paths, graphData, gitInfo]);
+
+  // For orphan guide steps the step's node.id is repo-relative; orphanPath nodes
+  // carry absolute ids. Normalise so the canvas can match for highlight + fitView.
+  const activeGuideNodeId = useMemo((): string | null => {
+    if (!guide.active || !guide.currentStep) return null;
+    if (guide.currentStep.endpoint) return guide.guideNodeId; // path-connected — id already absolute
+    if (!graphData || !gitInfo?.root) return guide.guideNodeId;
+    const absId = `${gitInfo.root}/${guide.currentStep.node.id}`;
+    return graphData.nodes.find((n) => n.id === absId)?.id ?? guide.guideNodeId;
+  }, [guide.active, guide.currentStep, guide.guideNodeId, graphData, gitInfo]);
+
+  // guide.changes keys may be relative for orphan steps — add absolute counterparts
+  // so the canvas border-colouring fires for nodes in orphanPath.
+  const activeGuideChanges = useMemo((): Record<string, GuideChangeType> => {
+    if (!gitInfo?.root) return guide.changes;
+    const out: Record<string, GuideChangeType> = {};
+    for (const [id, ct] of Object.entries(guide.changes)) {
+      out[id] = ct;
+      if (!id.startsWith("/")) out[`${gitInfo.root}/${id}`] = ct;
+    }
+    return out;
+  }, [guide.changes, gitInfo]);
 
   const handleSelectEndpoint = handleSelectPath;
 
@@ -367,9 +404,9 @@ export default function Home() {
                 drillStack={activeDrillStack}
                 onNodeDrillDown={guide.active ? () => {} : handleNodeDrillDown}
                 onBackTo={guide.active ? () => {} : handleBackTo}
-                guideNodeId={guide.guideNodeId}
+                guideNodeId={activeGuideNodeId}
                 guideExplanation={guide.explanation}
-                guideChanges={guide.changes}
+                guideChanges={activeGuideChanges}
                 gitInfo={gitInfo}
               />
               <Guide guide={guide} />
