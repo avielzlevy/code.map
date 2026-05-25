@@ -302,21 +302,43 @@ export class FlowMapService {
   }
 
   private fallbackSinglePath(graph: FlowGraph): FrontendExecutionPath[] {
-    return [
-      {
-        endpoint: '/*',
-        method: 'ALL',
-        nodes: graph.nodes.map((n) => this.toFrontendNode(n, { hasDetail: false })),
-        edges: graph.edges.map((e) => ({
-          id: `${e.from}→${e.to}`,
-          source: e.from,
-          target: e.to,
-          callOrder: e.callOrder,
-          edgeType: 'call' as const,
-        })),
-        nodeDetails: {},
-      },
-    ];
+    // Use nodes with no incoming edges as process entry points (workers, CLI bins, queue consumers).
+    const calledIds = new Set(graph.edges.map((e) => e.to));
+    const roots = graph.nodes.filter((n) => !calledIds.has(n.id));
+
+    if (roots.length === 0) {
+      // Pure circular graph — fall back to flat dump.
+      return [
+        {
+          endpoint: '/*',
+          method: 'ALL',
+          nodes: graph.nodes.map((n) => this.toFrontendNode(n, { hasDetail: false })),
+          edges: graph.edges.map((e) => ({
+            id: `${e.from}→${e.to}`,
+            source: e.from,
+            target: e.to,
+            callOrder: e.callOrder,
+            edgeType: 'call' as const,
+          })),
+          nodeDetails: {},
+        },
+      ];
+    }
+
+    const nodeMap = new Map(graph.nodes.map((n) => [n.id, n]));
+    const orderedAdj = this.buildOrderedAdj(graph);
+
+    return roots.map((root) => {
+      const nodeDetails: Record<string, NodeDetail> = {};
+      const { nodes, edges } = this.buildRootLayer(root, orderedAdj, nodeMap, nodeDetails);
+      return {
+        endpoint: this.resolveEndpoint(root),
+        method: root.httpMethod ?? 'GET',
+        nodes,
+        edges,
+        nodeDetails,
+      };
+    });
   }
 
   private async enrichWithAiSummaries(graph: FlowGraph): Promise<void> {
