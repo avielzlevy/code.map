@@ -100,11 +100,6 @@ function CascadeMenu({
   const groupKeys = Object.keys(groups).sort();
   const subPaths = hoveredKey ? (groups[hoveredKey] ?? []) : [];
 
-  // Reset hover when menu type changes (e.g., switching from resources to methods)
-  useEffect(() => {
-    setHoveredKey(null);
-  }, [menuType]);
-
   return (
     <motion.div
       initial={{ opacity: 0, y: -8, scale: 0.97 }}
@@ -116,7 +111,7 @@ function CascadeMenu({
       onMouseLeave={onMouseLeave}
     >
       {/* Card 1 — group list (resources or methods) */}
-      <div className="bg-zinc-950/98 border border-white/12 rounded-xl shadow-[0_12px_40px_rgba(0,0,0,0.8)] overflow-hidden min-w-[152px]">
+      <div className="bg-zinc-950/98 border border-white/12 rounded-xl shadow-[0_12px_40px_rgba(0,0,0,0.8)] overflow-hidden min-w-38">
         <div className="px-3 py-2 border-b border-white/6">
           <span className="text-[9px] font-mono text-white/25 uppercase tracking-[0.18em]">
             {menuType}
@@ -157,22 +152,23 @@ function CascadeMenu({
         </div>
       </div>
 
-      {/* Card 2 — animates in/out as a whole; content swaps in-place (no key) */}
+      {/* Card 2 — keyed by hoveredKey so it remounts (and resets scroll) on group change */}
       <AnimatePresence>
         {hoveredKey && subPaths.length > 0 && (
           <motion.div
+            key={hoveredKey}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.1 }}
-            className="bg-zinc-950/98 border border-white/12 rounded-xl shadow-[0_12px_40px_rgba(0,0,0,0.8)] overflow-hidden min-w-[260px]"
+            className="bg-zinc-950/98 border border-white/12 rounded-xl shadow-[0_12px_40px_rgba(0,0,0,0.8)] overflow-hidden min-w-65"
           >
             <div className="px-3 py-2 border-b border-white/6">
               <span className="text-[9px] font-mono text-white/25 uppercase tracking-[0.18em]">
                 {hoveredKey}
               </span>
             </div>
-            <div className="py-1">
+            <div className="py-1 max-h-[60vh] overflow-y-auto">
               {subPaths.map((path) => {
                 const isSelected =
                   selectedPath?.endpoint === path.endpoint &&
@@ -210,7 +206,7 @@ function CascadeMenu({
                         onClick={() => onStartGuide(path)}
                         title="Walk through this flow"
                         aria-label="Start flow guide"
-                        className="shrink-0 w-8 h-9 flex items-center justify-center text-transparent group-hover:text-white/30 hover:!text-white/70 transition-colors"
+                        className="shrink-0 w-8 h-9 flex items-center justify-center text-transparent group-hover:text-white/30 hover:text-white/70! transition-colors"
                       >
                         <GraduationCap className="w-3.5 h-3.5" />
                       </button>
