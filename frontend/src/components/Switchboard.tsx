@@ -97,13 +97,8 @@ function CascadeMenu({
   onMouseLeave: () => void;
 }) {
   const [hoveredKey, setHoveredKey] = useState<string | null>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
   const groupKeys = Object.keys(groups).sort();
   const subPaths = hoveredKey ? (groups[hoveredKey] ?? []) : [];
-
-  useEffect(() => {
-    if (scrollRef.current) scrollRef.current.scrollTop = 0;
-  }, [hoveredKey]);
 
   return (
     <motion.div
@@ -157,14 +152,15 @@ function CascadeMenu({
         </div>
       </div>
 
-      {/* Card 2 — stays mounted while any group is hovered; content swaps in-place */}
-      <AnimatePresence>
+      {/* Card 2 — mode="wait" ensures old panel exits before new one enters */}
+      <AnimatePresence mode="wait">
         {hoveredKey && subPaths.length > 0 && (
           <motion.div
+            key={hoveredKey}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.1 }}
+            transition={{ duration: 0.06 }}
             className="bg-zinc-950/98 border border-white/12 rounded-xl shadow-[0_12px_40px_rgba(0,0,0,0.8)] overflow-hidden min-w-65"
           >
             <div className="px-3 py-2 border-b border-white/6">
@@ -172,7 +168,7 @@ function CascadeMenu({
                 {hoveredKey}
               </span>
             </div>
-            <div ref={scrollRef} className="py-1 max-h-[60vh] overflow-y-auto">
+            <div className="py-1 max-h-[60vh] overflow-y-auto">
               {subPaths.map((path) => {
                 const isSelected =
                   selectedPath?.endpoint === path.endpoint &&
