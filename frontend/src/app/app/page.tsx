@@ -7,7 +7,7 @@ import { SPRING_DEFAULT, SPRING_SNAPPY } from "@/lib/spring";
 
 import { useExecutionPaths } from "@/hooks/useExecutionPaths";
 import { useGuide } from "@/hooks/useGuide";
-import { ExecutionPath, FlowNode, GitInfo } from "@/lib/flow-types";
+import { ExecutionPath, FlowNode, FlowEdge, GitInfo, RawGraph, RawGraphNode } from "@/lib/flow-types";
 import { apiClient } from "@/lib/api-client";
 import { Switchboard } from "@/components/Switchboard";
 import { FlowCanvas } from "@/components/FlowCanvas";
@@ -15,6 +15,53 @@ import { CommandPalette } from "@/components/CommandPalette";
 import { Guide } from "@/components/Guide";
 
 export type DrillEntry = { id: string; label: string; fileName: string };
+
+/** Build a depth-1 neighborhood ExecutionPath centered on a raw graph node. */
+function buildNeighborhoodPath(center: RawGraphNode, graph: RawGraph): ExecutionPath {
+  const nodeMap = new Map(graph.nodes.map((n) => [n.id, n]));
+
+  const relevantEdges = graph.edges.filter(
+    (e) => e.from === center.id || e.to === center.id,
+  );
+
+  const neighborIds = new Set<string>([center.id]);
+  relevantEdges.forEach((e) => { neighborIds.add(e.from); neighborIds.add(e.to); });
+
+  const frontendNodes: FlowNode[] = [...neighborIds]
+    .map((id) => nodeMap.get(id))
+    .filter((n): n is RawGraphNode => !!n)
+    .map((n) => ({
+      id: n.id,
+      type: (n.customTag || n.aiSummary ? "enhanced" : "standard") as "standard" | "enhanced",
+      funcName: n.methodName.includes("#") ? n.methodName.split("#").pop()! : n.methodName,
+      fileName: n.filePath,
+      line: n.lineNumber,
+      intentTag: n.customTag,
+      docstring: n.docstring,
+      aiSummary: n.aiSummary,
+      hasDetail: false,
+    }));
+
+  const frontendEdges: FlowEdge[] = relevantEdges.map((e) => ({
+    id: `${e.from}→${e.to}`,
+    source: e.from,
+    target: e.to,
+    callOrder: e.callOrder,
+    edgeType: "call" as const,
+  }));
+
+  const baseName = center.methodName.includes("#")
+    ? center.methodName.split("#").pop()!
+    : center.methodName;
+
+  return {
+    endpoint: `~${baseName}`,
+    method: "GRAPH",
+    nodes: frontendNodes,
+    edges: frontendEdges,
+    nodeDetails: {},
+  };
+}
 
 const LOADING_MESSAGES = [
   "Connecting to your backend…",
@@ -27,6 +74,8 @@ export default function Home() {
   const { paths, status, aiEnriching } = useExecutionPaths();
   const guide = useGuide();
   const [selectedPath, setSelectedPath] = useState<ExecutionPath | null>(null);
+  const [orphanPath, setOrphanPath] = useState<ExecutionPath | null>(null);
+  const [graphData, setGraphData] = useState<RawGraph | null>(null);
   const [drillStack, setDrillStack] = useState<DrillEntry[]>([]);
   const [loadingMsgIdx, setLoadingMsgIdx] = useState(0);
   const [gitInfo, setGitInfo] = useState<GitInfo | null>(null);
@@ -37,6 +86,13 @@ export default function Home() {
   useEffect(() => {
     apiClient.getGitInfo().then(setGitInfo).catch(() => {});
   }, []);
+
+  // Fetch the full parsed graph for global search. Re-fetches whenever paths rebuild
+  // (paths reference changes on every SSE push), keeping graph in sync with the canvas.
+  useEffect(() => {
+    if (status !== "success") return;
+    apiClient.getGraph().then(setGraphData).catch(() => {});
+  }, [paths, status]);
 
   // Fetch the list of skill-authored guides for the ⌘K picker
   useEffect(() => {
@@ -74,7 +130,7 @@ export default function Home() {
     );
   }, []);
 
-  const activePath = selectedPath ?? paths[0] ?? null;
+  const activePath = orphanPath ?? selectedPath ?? paths[0] ?? null;
 
   // When guide is running it controls the drill level; otherwise use normal drillStack
   const activeDrillStack = guide.active ? guide.drillStack : drillStack;
@@ -82,11 +138,20 @@ export default function Home() {
   const handleSelectPath = (path: ExecutionPath) => {
     guide.exit();
     setSelectedPath(path);
+    setOrphanPath(null);
+    setDrillStack([]);
+  };
+
+  const handleSelectOrphanNode = (rawNode: RawGraphNode) => {
+    if (!graphData) return;
+    guide.exit();
+    setOrphanPath(buildNeighborhoodPath(rawNode, graphData));
     setDrillStack([]);
   };
 
   const handleStartGuide = (path: ExecutionPath) => {
     setSelectedPath(path);
+    setOrphanPath(null);
     setDrillStack([]);
     guide.start(path);
   };
@@ -249,6 +314,26 @@ export default function Home() {
       <div className="flex flex-1 overflow-hidden">
         <main className="flex-1 relative">
           <AnimatePresence>
+            {orphanPath && (
+              <motion.div
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={SPRING_DEFAULT}
+                className="absolute top-3 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-white/10 bg-black/80 backdrop-blur-sm shadow-[0_4px_24px_rgba(0,0,0,0.6)]"
+              >
+                <span className="text-[11px] font-mono text-white/40 whitespace-nowrap">graph neighborhood · not in execution paths</span>
+                <button
+                  onClick={() => setOrphanPath(null)}
+                  className="text-white/20 hover:text-white/60 transition-colors text-[11px] font-mono leading-none"
+                  aria-label="Back to execution paths"
+                >
+                  ✕
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+          <AnimatePresence>
             {aiEnriching && (
               <motion.div
                 initial={{ opacity: 0, y: 12 }}
@@ -347,9 +432,11 @@ export default function Home() {
         paths={paths}
         onSelectEndpoint={handleSelectEndpoint}
         onSelectNode={handleSelectNodeFromSearch}
+        onSelectOrphanNode={handleSelectOrphanNode}
         onStartGuide={handleStartGuide}
         guides={savedGuides}
         onOpenGuide={handleOpenGuide}
+        graphData={graphData}
       />
     </div>
   );

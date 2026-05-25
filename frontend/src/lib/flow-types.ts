@@ -32,6 +32,37 @@ export type ExecutionPath = {
   nodeDetails: Record<string, NodeDetail>;
 };
 
+// ── Raw graph types — returned by /api/flow-map/graph (rawBody stripped) ──────
+// These are the parser-level types, distinct from the canvas-ready FlowNode above.
+
+export type RawGraphNode = {
+  id: string;
+  label: string;
+  methodName: string;
+  /** Parser-level classification — superset of the canvas "standard/enhanced" split. */
+  type: string;
+  filePath: string;
+  lineNumber: number;
+  docstring?: string;
+  aiSummary?: string;
+  customTag?: string;
+  httpMethod?: string;
+  routePath?: string;
+  controllerPrefix?: string;
+};
+
+export type RawGraphEdge = {
+  from: string;
+  to: string;
+  callOrder: number;
+};
+
+export type RawGraph = {
+  nodes: RawGraphNode[];
+  edges: RawGraphEdge[];
+  generatedAt: string;
+};
+
 export type GitInfo = {
   githubBaseUrl: string | null;
   sha: string | null;

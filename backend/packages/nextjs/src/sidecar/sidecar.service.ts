@@ -79,7 +79,12 @@ export class SidecarService {
         return;
       }
 
-      const response: ApiResponse<FlowGraph> = { status: 'success', data: this.currentGraph };
+      // Strip rawBody — function source code must not be exposed over HTTP
+      const sanitizedGraph = {
+        ...this.currentGraph,
+        nodes: this.currentGraph.nodes.map(({ rawBody: _rawBody, ...safeNode }) => safeNode),
+      };
+      const response: ApiResponse<typeof sanitizedGraph> = { status: 'success', data: sanitizedGraph };
       res.json(response);
     });
 

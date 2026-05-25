@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useRef, Fragment } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Command, Network, FunctionSquare, GraduationCap, Sparkles } from "lucide-react";
-import { ExecutionPath, FlowNode } from "@/lib/flow-types";
+import { ExecutionPath, FlowNode, RawGraph, RawGraphNode } from "@/lib/flow-types";
 import clsx from "clsx";
 import { SPRING_STANDARD, SPRING_SNAPPY, SPRING_DEFAULT } from "@/lib/spring";
 
@@ -15,11 +15,15 @@ interface CommandPaletteProps {
     node: FlowNode,
     parentId: string | null,
   ) => void;
+  /** Called when the user selects a graph node that isn't in any rendered path. */
+  onSelectOrphanNode?: (node: RawGraphNode) => void;
   onStartGuide?: (path: ExecutionPath) => void;
   /** Saved guide slugs available to open. */
   guides?: string[];
   /** Open and play a saved guide by slug. */
   onOpenGuide?: (slug: string) => void;
+  /** Full parsed graph — enables searching nodes not reachable from any entry point. */
+  graphData?: RawGraph | null;
 }
 
 type SearchResultItem =
@@ -32,15 +36,23 @@ type SearchResultItem =
       parentId: string | null;
       label: string;
       sublabel: string;
+    }
+  | {
+      type: "orphan-node";
+      node: RawGraphNode;
+      label: string;
+      sublabel: string;
     };
 
 export function CommandPalette({
   paths,
   onSelectEndpoint,
   onSelectNode,
+  onSelectOrphanNode,
   onStartGuide,
   guides,
   onOpenGuide,
+  graphData,
 }: CommandPaletteProps) {
   "use no memo"; // React Compiler over-memoizes this component — query state changes must trigger re-renders
   const [isOpen, setIsOpen] = useState(false);
@@ -71,6 +83,18 @@ export function CommandPalette({
       requestAnimationFrame(() => inputRef.current?.focus());
     }
   }, [isOpen]);
+
+  // Set of node IDs reachable from any rendered path — used to exclude from orphan search.
+  const pathNodeIds = useMemo(() => {
+    const ids = new Set<string>();
+    paths.forEach((path) => {
+      path.nodes.forEach((n) => ids.add(n.id));
+      Object.values(path.nodeDetails || {}).forEach((detail) =>
+        detail.nodes.forEach((n) => ids.add(n.id)),
+      );
+    });
+    return ids;
+  }, [paths]);
 
   const allItems = useMemo(() => {
     const items: SearchResultItem[] = [];
@@ -157,25 +181,57 @@ export function CommandPalette({
     const rankItem = (item: SearchResultItem): number => {
       const label = item.label.toLowerCase();
       const sublabel = item.sublabel.toLowerCase();
-      const aiSummary = (item.type === "node" ? (item.node.aiSummary ?? "") : "").toLowerCase();
-      const intentTag = (item.type === "node" ? (item.node.intentTag ?? "") : "").toLowerCase();
-      if (label === q) return 0;                // exact function/endpoint name
-      if (label.startsWith(q)) return 1;        // prefix
-      if (label.includes(q)) return 2;          // substring
-      if (fuzzyMatch(label, q)) return 3;       // fuzzy label
-      if (intentTag.includes(q)) return 4;      // @FlowStep intent tag — business language
-      if (aiSummary.includes(q)) return 5;      // AI summary — semantic search
-      if (sublabel.includes(q)) return 6;       // file/endpoint path
-      if (fuzzyMatch(aiSummary, q)) return 7;   // fuzzy AI summary
-      if (fuzzyMatch(sublabel, q)) return 8;    // fuzzy sublabel
+      const aiSummary = (
+        item.type === "node" ? (item.node.aiSummary ?? "") :
+        item.type === "orphan-node" ? (item.node.aiSummary ?? "") : ""
+      ).toLowerCase();
+      const intentTag = (
+        item.type === "node" ? (item.node.intentTag ?? "") :
+        item.type === "orphan-node" ? (item.node.customTag ?? "") : ""
+      ).toLowerCase();
+      if (label === q) return 0;
+      if (label.startsWith(q)) return 1;
+      if (label.includes(q)) return 2;
+      if (fuzzyMatch(label, q)) return 3;
+      if (intentTag.includes(q)) return 4;
+      if (aiSummary.includes(q)) return 5;
+      if (sublabel.includes(q)) return 6;
+      if (fuzzyMatch(aiSummary, q)) return 7;
+      if (fuzzyMatch(sublabel, q)) return 8;
       return 99;
     };
 
-    return allItems
+    const pathResults = allItems
       .filter((item) => rankItem(item) < 99)
       .sort((a, b) => rankItem(a) - rankItem(b))
-      .slice(0, 20);
-  }, [query, allItems]);
+      .slice(0, 15);
+
+    // Orphan nodes — graph nodes not reachable from any rendered entry point
+    const orphanResults: SearchResultItem[] = [];
+    if (graphData && onSelectOrphanNode) {
+      for (const n of graphData.nodes) {
+        if (pathNodeIds.has(n.id)) continue;
+        const baseName = n.methodName.includes("#")
+          ? n.methodName.split("#").pop()!
+          : n.methodName;
+        const className = n.methodName.includes("#")
+          ? n.methodName.split("#")[0]
+          : null;
+        const fileName = n.filePath.split("/").pop() ?? n.filePath;
+        const item: SearchResultItem = {
+          type: "orphan-node",
+          node: n,
+          label: baseName,
+          sublabel: [className, fileName, n.type].filter(Boolean).join(" · "),
+        };
+        if (rankItem(item) < 99) orphanResults.push(item);
+      }
+      orphanResults.sort((a, b) => rankItem(a) - rankItem(b));
+      orphanResults.splice(10);
+    }
+
+    return [...pathResults, ...orphanResults].slice(0, 20);
+  }, [query, allItems, graphData, pathNodeIds, onSelectOrphanNode]);
 
   const handleSelect = (index: number) => {
     const item = filteredItems[index];
@@ -185,6 +241,8 @@ export function CommandPalette({
       item.run();
     } else if (item.type === "endpoint") {
       onSelectEndpoint(item.path);
+    } else if (item.type === "orphan-node") {
+      onSelectOrphanNode?.(item.node);
     } else {
       onSelectNode(item.path, item.node, item.parentId);
     }
@@ -263,7 +321,9 @@ export function CommandPalette({
                       ? `action-${item.id}`
                       : item.type === "endpoint"
                         ? `endpoint-${item.path.method}-${item.path.endpoint}`
-                        : `node-${item.path.endpoint}-${item.parentId ?? "root"}-${item.node.id}`;
+                        : item.type === "orphan-node"
+                          ? `orphan-${item.node.id}`
+                          : `node-${item.path.endpoint}-${item.parentId ?? "root"}-${item.node.id}`;
                   const prevItem = index > 0 ? filteredItems[index - 1] : null;
                   const showGroupLabel =
                     !prevItem || prevItem.type !== item.type;
@@ -272,7 +332,9 @@ export function CommandPalette({
                       ? "Guides"
                       : item.type === "endpoint"
                         ? "Endpoints"
-                        : "Functions";
+                        : item.type === "orphan-node"
+                          ? "Unreachable functions"
+                          : "Functions";
                   return (
                     <Fragment key={itemKey}>
                       {showGroupLabel && (
@@ -328,6 +390,18 @@ export function CommandPalette({
                               <span className="flex items-center gap-1 text-[11px] text-amber-400/60 font-mono truncate mt-0.5">
                                 <Sparkles className="w-2.5 h-2.5 shrink-0" />
                                 {item.node.aiSummary}
+                              </span>
+                            )}
+                            {item.type === "orphan-node" && item.node.aiSummary && query.trim() &&
+                              item.node.aiSummary.toLowerCase().includes(query.toLowerCase().trim()) && (
+                              <span className="flex items-center gap-1 text-[11px] text-amber-400/60 font-mono truncate mt-0.5">
+                                <Sparkles className="w-2.5 h-2.5 shrink-0" />
+                                {item.node.aiSummary}
+                              </span>
+                            )}
+                            {item.type === "orphan-node" && (
+                              <span className="text-[10px] text-gray-600 font-mono mt-0.5">
+                                not in execution paths
                               </span>
                             )}
                           </div>

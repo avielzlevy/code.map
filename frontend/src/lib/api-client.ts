@@ -1,4 +1,4 @@
-import { ExecutionPath, GitInfo, GuideArtifact } from "@/lib/flow-types";
+import { ExecutionPath, GitInfo, GuideArtifact, RawGraph } from "@/lib/flow-types";
 
 /**
  * Base URL of the FlowMap sidecar server.
@@ -43,6 +43,11 @@ async function request<T>(path: string, timeoutMs = 6000): Promise<T> {
 export const apiClient = {
   getPaths(): Promise<ExecutionPath[]> {
     return request<ExecutionPath[]>("/api/flow-map/paths");
+  },
+
+  /** Full parsed graph (rawBody stripped). Used for global search over unreachable nodes. */
+  getGraph(): Promise<RawGraph> {
+    return request<RawGraph>("/api/flow-map/graph");
   },
 
   healthCheck(): Promise<{ alive: boolean }> {
