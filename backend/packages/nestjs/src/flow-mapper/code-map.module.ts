@@ -1,8 +1,6 @@
 import { DynamicModule, Global, Module, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 
-import { CodeMapConfig } from '../dto/code-map-config.dto';
-import { FlowLogger } from '../logger/flow-logger';
-import { CodeMap } from './code-map';
+import { CodeMapConfig, CodeMap, FlowLogger } from '@code-map/node';
 
 const LOGGER_CONTEXT = 'CodeMapModule';
 
