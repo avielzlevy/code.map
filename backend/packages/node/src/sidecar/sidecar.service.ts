@@ -61,9 +61,28 @@ export class SidecarService {
     this.broadcast('rebuild-start', { reason: 'file-change' });
   }
 
-  async start(port: number): Promise<void> {
+  async start(preferredPort: number): Promise<void> {
+    const MAX_SCAN = 10;
+    for (let attempt = 0; attempt < MAX_SCAN; attempt++) {
+      const port = preferredPort + attempt;
+      try {
+        await this.tryListen(port);
+        if (attempt > 0) {
+          FlowLogger.warn(LOGGER_CONTEXT, `Port ${preferredPort} in use — bound to ${port} instead`);
+        }
+        this.writePortFile(port);
+        return;
+      } catch (err) {
+        if ((err as NodeJS.ErrnoException).code === 'EADDRINUSE' && attempt < MAX_SCAN - 1) continue;
+        throw new SidecarException(port, (err as Error).message);
+      }
+    }
+  }
+
+  private tryListen(port: number): Promise<void> {
     return new Promise((resolve, reject) => {
-      this.server = this.app.listen(port, '127.0.0.1', () => {
+      const server = this.app.listen(port, '127.0.0.1', () => {
+        this.server = server;
         FlowLogger.info(LOGGER_CONTEXT, 'Sidecar server listening', {
           port,
           url: `http://localhost:${port}`,
@@ -71,11 +90,18 @@ export class SidecarService {
         this.startHeartbeat();
         resolve();
       });
-
-      this.server.on('error', (err: NodeJS.ErrnoException) => {
-        reject(new SidecarException(port, err.message));
-      });
+      server.on('error', reject);
     });
+  }
+
+  private writePortFile(port: number): void {
+    try {
+      const dir = path.join(process.cwd(), '.codemap');
+      fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(path.join(dir, 'port'), String(port), 'utf8');
+    } catch {
+      // Non-fatal — frontend can fall back to the default port
+    }
   }
 
   async stop(): Promise<void> {
