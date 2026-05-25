@@ -10,8 +10,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "build:watch": "tsc -p tsconfig.json --watch",
-    "test": "jest",
-    "smoke": "ts-node test/smoke.ts"
+    "test": "jest"
   },
   "peerDependencies": {
     "@nestjs/common": "^10.0.0",

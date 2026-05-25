@@ -9,7 +9,7 @@ declare function Controller(prefix?: string): ClassDecorator;
 declare function Injectable(): ClassDecorator;
 declare function Get(path?: string): MethodDecorator;
 declare function Post(path?: string): MethodDecorator;
-declare function FlowStep(description: string): MethodDecorator;
+declare function Dot(description: string): MethodDecorator;
 
 @Controller('users')
 class UserController {
@@ -19,7 +19,7 @@ class UserController {
    * Returns a paginated list of active users.
    */
   @Get()
-  @FlowStep('Fetch all active users with pagination')
+  @Dot('Fetch all active users with pagination')
   async findAll() {
     return this.userService.findAll();
   }
@@ -32,7 +32,7 @@ class UserController {
 
 @Injectable()
 class UserService {
-  @FlowStep('Persist new user record to database')
+  @Dot('Persist new user record to database')
   async create() {
     return this.saveToDb();
   }

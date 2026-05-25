@@ -9,7 +9,8 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json && cp src/ast/framework-descriptors.json dist/ast/framework-descriptors.json",
-    "build:watch": "tsc -p tsconfig.json --watch"
+    "build:watch": "tsc -p tsconfig.json --watch",
+    "smoke": "ts-node test/smoke.ts"
   },
   "dependencies": {
     "axios": "^1.6.0",
@@ -22,6 +23,7 @@
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
     "@types/node": "^20.0.0",
+    "ts-node": "^10.9.0",
     "typescript": "^5.0.0"
   }
 }
