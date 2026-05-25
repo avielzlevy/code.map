@@ -5,7 +5,7 @@
 <h1 align="center">code.map</h1>
 
 <p align="center">
-  <em>Interactive API execution graph for TypeScript and Python — see your full call chain in seconds</em>
+  <em>Interactive API execution graph for TypeScript and Python to see your full call chain in seconds</em>
 </p>
 
 <p align="center">
