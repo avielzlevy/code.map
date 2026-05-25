@@ -24,9 +24,9 @@
   <video src="https://github.com/user-attachments/assets/127de087-012c-4e6b-a568-7e234b3af33a" width="100%" controls muted></video>
 </div>
 
-code.map instruments your TypeScript or Python app and renders the full execution path — from route handler down to every service call — as an interactive call graph. Drop it into any supported framework, open your browser, and your codebase becomes a map.
+code.map instruments your TypeScript or Python app and renders the full execution path  from route handler down to every service call as an interactive call graph. Drop it into any supported framework, open your browser, and your codebase becomes a map.
 
-It works through **static AST analysis**: at startup, a local [Tree-sitter](https://tree-sitter.github.io/tree-sitter/) parser walks your source files and builds the full call graph from class declarations, method signatures, and framework decorators — before your app handles a single request, with zero LLM calls required. Optional AI summaries can then annotate each node with a plain-English intent label, running locally with Ollama or against any major provider (Anthropic, OpenAI, Google, OpenRouter), cached after first run.
+It works through **static AST analysis**: at startup, a local [Tree-sitter](https://tree-sitter.github.io/tree-sitter/) parser walks your source files and builds the full call graph from class declarations, method signatures, and framework decorators before your app handles a single request, with zero LLM calls required. Optional AI summaries can then annotate each node with a plain-English intent label, running locally with Ollama or against any major provider (Anthropic, OpenAI, Google, OpenRouter), cached after first run.
 
 ## Features
 
