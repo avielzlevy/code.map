@@ -117,7 +117,7 @@ function CascadeMenu({
             {menuType}
           </span>
         </div>
-        <div className="py-1">
+        <div className="py-1 max-h-[60vh] overflow-y-auto">
           {groupKeys.map((key) => {
             const count = groups[key].length;
             const isHovered = hoveredKey === key;
