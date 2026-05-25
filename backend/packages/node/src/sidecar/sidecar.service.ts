@@ -70,7 +70,6 @@ export class SidecarService {
         if (attempt > 0) {
           FlowLogger.warn(LOGGER_CONTEXT, `Port ${preferredPort} in use — bound to ${port} instead`);
         }
-        this.writePortFile(port);
         return;
       } catch (err) {
         if ((err as NodeJS.ErrnoException).code === 'EADDRINUSE' && attempt < MAX_SCAN - 1) continue;
@@ -92,16 +91,6 @@ export class SidecarService {
       });
       server.on('error', reject);
     });
-  }
-
-  private writePortFile(port: number): void {
-    try {
-      const dir = path.join(process.cwd(), '.codemap');
-      fs.mkdirSync(dir, { recursive: true });
-      fs.writeFileSync(path.join(dir, 'port'), String(port), 'utf8');
-    } catch {
-      // Non-fatal — frontend can fall back to the default port
-    }
   }
 
   async stop(): Promise<void> {
