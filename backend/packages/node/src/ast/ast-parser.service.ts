@@ -51,7 +51,7 @@ interface ParsedMethod {
   calls: CallSite[];
   /** Constructor-injected deps: paramName → TypeName */
   constructorInjections: Map<string, string>;
-  nodeType: 'controller' | 'service' | 'utility' | 'unknown';
+  nodeType: 'controller' | 'worker-entry' | 'scheduler' | 'queue-handler' | 'service' | 'utility' | 'unknown';
 }
 
 // ---------------------------------------------------------------------------
@@ -159,6 +159,9 @@ export class AstParserService {
     if (this.descriptor.routeStyle === 'chained' && this.descriptor.chainedRoute) {
       methods.push(...this.parseChainedRoutes(tree.rootNode, filePath));
     }
+
+    // Scan top-level functions for worker entry points (main.ts / bootstrap / CodeMap.init callers)
+    methods.push(...this.parseTopLevelFunctions(tree.rootNode, filePath));
 
     return methods;
   }
@@ -296,6 +299,7 @@ export class AstParserService {
         const methodName = methodNameNode?.text ?? 'anonymous';
         if (methodName === 'constructor') continue;
 
+        const methodDecoratorNames = methodDecorators.map((d) => this.getDecoratorName(d)).filter(Boolean) as string[];
         const flowStepTag = this.extractFlowStepTagFromDecorators(methodDecorators);
         const { httpMethod, routePath } = this.extractHttpDecoratorFromDecorators(methodDecorators);
         const docstring = this.extractJsDoc(child);
@@ -305,11 +309,14 @@ export class AstParserService {
         const lineNumber = child.startPosition.row + 1;
         const calls = bodyBlock ? this.extractCallSites(bodyBlock) : [];
 
+        // Method-level entry-point decorators (scheduler/queue) override the class-level type
+        const methodEntryType = this.classifyMethodEntryType(methodDecoratorNames);
+
         methods.push({
           className,
           methodName,
           classDecorators,
-          methodDecorators: methodDecorators.map((d) => this.getDecoratorName(d)).filter(Boolean) as string[],
+          methodDecorators: methodDecoratorNames,
           flowStepTag,
           httpMethod,
           routePath,
@@ -320,7 +327,7 @@ export class AstParserService {
           lineNumber,
           calls,
           constructorInjections,
-          nodeType,
+          nodeType: methodEntryType ?? nodeType,
         });
         continue;
       }
@@ -583,11 +590,116 @@ export class AstParserService {
   // Node classification
   // ---------------------------------------------------------------------------
 
+  // Method decorators that mark a method as a scheduler entry point
+  private static readonly SCHEDULER_DECORATORS = new Set(['Cron', 'Interval', 'Timeout']);
+  // Method decorators that mark a method as a queue/event entry point
+  private static readonly QUEUE_HANDLER_DECORATORS = new Set(['Process', 'EventPattern', 'MessagePattern', 'GrpcMethod']);
+  // File name patterns that identify worker / bootstrap entry points
+  private static readonly WORKER_ENTRY_FILE_RE = /(^|[/\\])(main|bootstrap)\.[jt]sx?$|\.bootstrap\.[jt]sx?$/;
+  // Function names that are conventional worker entry points
+  private static readonly WORKER_ENTRY_NAMES = new Set(['bootstrap', 'main', 'start', 'run']);
+
   private classifyNodeType(decorators: string[]): 'controller' | 'service' | 'utility' | 'unknown' {
     const { controllerDecorators, serviceDecorators } = this.descriptor;
     if (decorators.some((d) => controllerDecorators.includes(d))) return 'controller';
     if (decorators.some((d) => serviceDecorators.includes(d))) return 'service';
     return 'utility';
+  }
+
+  private classifyMethodEntryType(methodDecoratorNames: string[]): 'scheduler' | 'queue-handler' | undefined {
+    if (methodDecoratorNames.some((d) => AstParserService.SCHEDULER_DECORATORS.has(d))) return 'scheduler';
+    if (methodDecoratorNames.some((d) => AstParserService.QUEUE_HANDLER_DECORATORS.has(d))) return 'queue-handler';
+    return undefined;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Top-level function parsing — worker / bootstrap entry points
+  // ---------------------------------------------------------------------------
+
+  private parseTopLevelFunctions(root: SyntaxNode, filePath: string): ParsedMethod[] {
+    const isWorkerFile = AstParserService.WORKER_ENTRY_FILE_RE.test(filePath.replace(/\\/g, '/'));
+    const className = path.basename(filePath, path.extname(filePath))
+      .split(/[.\-_]/)
+      .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
+      .join('');
+
+    const methods: ParsedMethod[] = [];
+
+    for (const child of root.children) {
+      // function bootstrap() { ... } or async function main() { ... }
+      if (child.type === 'function_declaration') {
+        const funcName = child.childForFieldName('name')?.text;
+        if (!funcName) continue;
+        const bodyNode = child.childForFieldName('body');
+        const isEntryName = AstParserService.WORKER_ENTRY_NAMES.has(funcName);
+        const hasInitCall = this.containsCodeMapInit(bodyNode);
+        if (!isWorkerFile && !isEntryName && !hasInitCall) continue;
+
+        methods.push(this.makeTopLevelMethod(className, funcName, bodyNode, child, filePath));
+      }
+
+      // const bootstrap = async () => { ... } or const bootstrap = async function() { ... }
+      if (child.type === 'lexical_declaration' || child.type === 'variable_declaration') {
+        for (const decl of child.namedChildren) {
+          if (decl.type !== 'variable_declarator') continue;
+          const funcName = decl.childForFieldName('name')?.text;
+          if (!funcName) continue;
+          const init = decl.childForFieldName('value');
+          if (!init || !['arrow_function', 'function_expression'].includes(init.type)) continue;
+
+          const bodyNode = init.childForFieldName('body');
+          const isEntryName = AstParserService.WORKER_ENTRY_NAMES.has(funcName);
+          const hasInitCall = this.containsCodeMapInit(bodyNode ?? init);
+          if (!isWorkerFile && !isEntryName && !hasInitCall) continue;
+
+          methods.push(this.makeTopLevelMethod(className, funcName, bodyNode, init, filePath));
+        }
+      }
+    }
+
+    return methods;
+  }
+
+  private makeTopLevelMethod(
+    className: string,
+    funcName: string,
+    bodyNode: SyntaxNode | null | undefined,
+    funcNode: SyntaxNode,
+    filePath: string,
+  ): ParsedMethod {
+    const rawBody = bodyNode?.text ?? funcNode.text;
+    const calls = bodyNode ? this.extractCallSites(bodyNode) : [];
+    return {
+      className,
+      methodName: funcName,
+      classDecorators: [],
+      methodDecorators: [],
+      flowStepTag: undefined,
+      httpMethod: undefined,
+      routePath: undefined,
+      controllerPrefix: undefined,
+      docstring: undefined,
+      rawBody,
+      filePath,
+      lineNumber: funcNode.startPosition.row + 1,
+      calls,
+      constructorInjections: new Map(),
+      nodeType: 'worker-entry',
+    };
+  }
+
+  private containsCodeMapInit(node: SyntaxNode | null | undefined): boolean {
+    if (!node) return false;
+    let found = false;
+    this.walkNode(node, (n) => {
+      if (found || n.type !== 'call_expression') return;
+      const fn = n.childForFieldName('function');
+      if (fn?.type !== 'member_expression') return;
+      const obj = fn.childForFieldName('object');
+      const prop = fn.childForFieldName('property');
+      if (obj?.text === 'CodeMap' && prop?.text === 'init') found = true;
+    });
+    return found;
   }
 
   // ---------------------------------------------------------------------------

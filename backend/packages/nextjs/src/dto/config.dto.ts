@@ -29,7 +29,7 @@ export interface FlowNode {
   id: string;
   label: string;
   methodName: string;
-  type: 'controller' | 'service' | 'utility' | 'unknown';
+  type: 'controller' | 'worker-entry' | 'scheduler' | 'queue-handler' | 'service' | 'utility' | 'unknown';
   filePath: string;
   lineNumber: number;
   docstring?: string;

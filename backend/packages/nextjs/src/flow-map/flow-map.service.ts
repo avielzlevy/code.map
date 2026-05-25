@@ -72,11 +72,15 @@ export class FlowMapService {
     return graph;
   }
 
+  private static readonly ENTRY_POINT_TYPES = new Set<FlowGraph['nodes'][number]['type']>([
+    'controller', 'worker-entry', 'scheduler', 'queue-handler',
+  ]);
+
   buildExecutionPaths(graph: FlowGraph): FrontendExecutionPath[] {
     const nodeMap = new Map(graph.nodes.map((n) => [n.id, n]));
     const orderedAdj = this.buildOrderedAdj(graph);
 
-    const entryPoints = graph.nodes.filter((n) => n.type === 'controller');
+    const entryPoints = graph.nodes.filter((n) => FlowMapService.ENTRY_POINT_TYPES.has(n.type));
     if (entryPoints.length === 0) return this.fallbackSinglePath(graph);
 
     return entryPoints.map((controller) => {
