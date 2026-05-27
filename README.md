@@ -69,11 +69,15 @@ that renders my API's execution graph at http://localhost:4567.
        • Local  — Ollama on my machine, no API key, free (requires Ollama installed).
        • Remote — Anthropic / OpenAI / Google / OpenRouter; needs an API key.
 
-3. Install the package for my framework:
-   - NestJS:      npm install @code-map/nestjs
-   - Next.js:     npm install @code-map/nextjs
-   - Other Node:  npm install @code-map/node
-   - FastAPI:     pip install code-map
+3. Clone the repo and link the package for my framework:
+   git clone https://github.com/avielzlevy/code-map.git /tmp/code-map
+   cd /tmp/code-map && npm install
+
+   Then link the right package:
+   - NestJS:      cd backend/packages/nestjs  && npm run build && npm link && cd - && npm link @code-map/nestjs
+   - Next.js:     cd backend/packages/nextjs  && npm run build && npm link && cd - && npm link @code-map/nextjs
+   - Other Node:  cd backend/packages/node    && npm run build && npm link && cd - && npm link @code-map/node
+   - FastAPI:     cd backend/packages/python  && pip install -e .
 
 4. Wire it in, GUARDED FOR DEVELOPMENT ONLY (never in production):
    - NestJS  — in app.module.ts add CodeMapModule.forRoot({ port: 4567, ...ai }) to imports.
@@ -123,7 +127,10 @@ Prefer to do it by hand? Follow the framework-specific steps below.
 Requires Node.js ≥ 18 and NestJS ≥ 10.
 
 ```bash
-npm install @code-map/nestjs
+git clone https://github.com/avielzlevy/code-map.git /tmp/code-map
+cd /tmp/code-map && npm install
+cd backend/packages/nestjs && npm run build && npm link
+cd /your/project && npm link @code-map/nestjs
 ```
 
 ```typescript
@@ -150,7 +157,10 @@ Use `@code-map/node` for any Node.js project that isn't NestJS — Express/Fasti
 Requires Node.js ≥ 18.
 
 ```bash
-npm install @code-map/node
+git clone https://github.com/avielzlevy/code-map.git /tmp/code-map
+cd /tmp/code-map && npm install
+cd backend/packages/node && npm run build && npm link
+cd /your/project && npm link @code-map/node
 ```
 
 **With an HTTP server (Express / Fastify):**
@@ -186,7 +196,10 @@ Start your script, then open **http://localhost:4567** (or whichever port you ch
 Requires Node.js ≥ 18 and Next.js ≥ 13 (App Router).
 
 ```bash
-npm install @code-map/nextjs
+git clone https://github.com/avielzlevy/code-map.git /tmp/code-map
+cd /tmp/code-map && npm install
+cd backend/packages/nextjs && npm run build && npm link
+cd /your/project && npm link @code-map/nextjs
 ```
 
 **Step 1 — wrap your Next.js config:**
@@ -222,7 +235,8 @@ Start your app, then open **http://localhost:4567**.
 Requires Python ≥ 3.9 and FastAPI ≥ 0.100.
 
 ```bash
-pip install code-map
+git clone https://github.com/avielzlevy/code-map.git /tmp/code-map
+pip install -e /tmp/code-map/backend/packages/python
 ```
 
 ```python
