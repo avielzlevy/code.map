@@ -13,6 +13,8 @@ import { Switchboard } from "@/components/Switchboard";
 import { FlowCanvas } from "@/components/FlowCanvas";
 import { CommandPalette } from "@/components/CommandPalette";
 import { Guide } from "@/components/Guide";
+import { GuidePlayer } from "@/components/GuidePlayer";
+import { MOCK_GUIDE } from "@/lib/guide-mock";
 
 export type DrillEntry = { id: string; label: string; fileName: string };
 
@@ -81,6 +83,11 @@ export default function Home() {
   const [gitInfo, setGitInfo] = useState<GitInfo | null>(null);
   const [guideNotice, setGuideNotice] = useState<string | null>(null);
   const [savedGuides, setSavedGuides] = useState<string[]>([]);
+  // Mock narrated-playback player — open with /app?guidemock=1
+  const [showMockPlayer, setShowMockPlayer] = useState(false);
+  useEffect(() => {
+    setShowMockPlayer(new URLSearchParams(window.location.search).get("guidemock") === "1");
+  }, []);
 
   // Fetch git remote info once for "Open in GitHub" links
   useEffect(() => {
@@ -272,6 +279,15 @@ export default function Home() {
       setDrillStack([]);
     }
   };
+
+  // Mock narrated-playback guide — full takeover, independent of backend state.
+  if (showMockPlayer) {
+    return (
+      <AnimatePresence>
+        <GuidePlayer guide={MOCK_GUIDE} onExit={() => setShowMockPlayer(false)} />
+      </AnimatePresence>
+    );
+  }
 
   if (status === "loading") {
     return (
