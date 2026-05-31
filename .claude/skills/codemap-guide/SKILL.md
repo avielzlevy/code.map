@@ -5,7 +5,9 @@ description: Author a code-map walkthrough guide from THIS conversation's work, 
 
 # code-map guide author
 
-code-map *plays* guides; you author them from **this conversation**. You describe — in plain language — which functions were added or edited and why. The code-map sidecar does the mechanical work: it resolves each function to a real node in the live graph, validates it, and writes the guide file. You never construct node ids or write JSON by hand.
+code-map *plays* guides; you author them from **this conversation**. A guide is a narrated, animated walkthrough: code-map opens a takeover player that, step by step, fades in the changed function, then **speaks your narration** while the focus glides over the exact lines each sentence is about.
+
+You write only **semantic** content — which functions changed, and a spoken script. The sidecar does the mechanical work: it resolves each function to a real node in the live graph, **snapshots the before/after from git**, maps each sentence's focus onto real diff lines, validates, and writes the guide. You never construct node ids, line numbers, or diffs by hand.
 
 ## Prerequisites
 
@@ -15,12 +17,21 @@ code-map *plays* guides; you author them from **this conversation**. You describ
 
 ### 1. Decide the steps from the conversation
 List the functions involved in the change, in the order you'd teach them (usually entry point → downstream). For each, you need:
-- `methodName` — the function name (e.g. `create`).
-- `file` — enough of the path to identify it (e.g. `orders.controller.ts`). Use a longer path if the basename isn't unique.
-- `changeType` — `"added"` or `"edited"`. (`removed` isn't supported yet — mention deletions inside a neighboring step's explanation instead.)
-- `explanation` — 1–3 sentences: what this function does now, why it changed, how it fits the whole change. This is the value you add; keep it concrete.
+- `methodName` — the function name (e.g. `refund`).
+- `file` — enough of the path to identify it (e.g. `orders.controller.ts`). Use a longer path if the basename isn't unique; add `"className"` to disambiguate same-named methods.
+- `changeType` — `"added"` or `"edited"`. (`"removed"` isn't supported — a deleted function has no live node; mention deletions inside a neighboring step's narration instead.)
 
-### 2. POST it to the sidecar
+### 2. Write the narration — this is the value you add
+For each step, write `narration`: an **ordered array of short spoken sentences**. Each sentence is one idea, and carries an optional `focus`:
+- `text` — what to say. Write it to be *heard* — conversational, one beat per sentence. The player shows it as a chat bubble above the code and (soon) speaks it aloud.
+- `focus` — a **snippet of the changed code** to spotlight while that sentence plays (e.g. `"assertRefundable"` or `"order.refundedAmount = amount"`). The server finds the diff line(s) containing it and highlights them. Omit `focus` to highlight the whole function for that sentence.
+
+Guidance:
+- Keep `focus` distinctive enough to match one place (a method call, an assignment, a decorator). It's matched against the **after** side first, then the before side.
+- Walk the reader through the change: first sentence sets the scene, later sentences land on each meaningful added/edited line.
+- 2–5 sentences per step is the sweet spot.
+
+### 3. POST it to the sidecar
 ```bash
 curl -s -X POST "$BASE/api/flow-map/guide" \
   -H "Content-Type: application/json" \
@@ -28,29 +39,36 @@ curl -s -X POST "$BASE/api/flow-map/guide" \
     "slug": "refund-flow",
     "title": "Refund flow",
     "steps": [
-      { "methodName": "create", "file": "orders.controller.ts", "changeType": "added",
-        "explanation": "New endpoint that starts the refund and hands off to OrdersService." },
-      { "methodName": "create", "file": "orders.service.ts", "changeType": "edited",
-        "explanation": "Now validates inventory before persisting, so refunds fail fast." }
+      { "methodName": "refund", "file": "orders.controller.ts", "changeType": "added",
+        "narration": [
+          { "text": "We start at the new refund endpoint on the orders controller.", "focus": "@Post(':id/refund')" },
+          { "text": "It loads the order, then hands the real work to the service.", "focus": "this.orders.refund" }
+        ] },
+      { "methodName": "refund", "file": "orders.service.ts", "changeType": "edited",
+        "narration": [
+          { "text": "Before persisting, it now asserts the order can be refunded.", "focus": "assertRefundable" },
+          { "text": "And it records the amount, so partial refunds are tracked.", "focus": "order.refundedAmount = amount" }
+        ] }
     ]
   }'
 ```
 Pick a short kebab-case `slug` (the feature name).
 
-### 3. Check the response — this is the validation chain
+### 4. Check the response — this is the validation chain
 The response is `{ status, data: { url, resolved, total, unresolved } }`:
-- **`resolved === total`, `unresolved: []`** → success. The guide is written.
+- **`resolved === total`, `unresolved: []`** → success. The guide is written, with the diff and focus already snapshotted.
 - **`unresolved` has entries** → each tells you why a step didn't match:
+  - `"missing methodName, file, or narration"` → the step is incomplete; `narration` must be a non-empty array.
   - `"ambiguous …"` with `candidates: [...]` → re-send that step with a more specific `file` (or add `"className"`).
-  - `"no matching function in the live graph"` → the function isn't parsed into the graph (e.g. it's frontend, or a file type code-map doesn't scan). Drop it or fold it into another step's explanation.
-  - `"removed functions are not in the graph yet"` → describe the deletion in a neighboring step instead.
+  - `"no matching function in the live graph"` → the function isn't parsed into the graph (e.g. it's frontend, or a file type code-map doesn't scan). Drop it or fold it into another step's narration.
   - Fix and POST again (same slug overwrites).
 - **HTTP 422 / `resolved: 0`** → nothing matched; read the reasons and retry.
 
-### 4. Hand over the URL
-On success, give the user `$BASE` + the returned `url` (e.g. `http://localhost:4567/app?guide=refund-flow`) and offer to open it (macOS: `open "<url>"`). It loads the guide and starts the walkthrough on the canvas — each step pans to the node, colors it by change type, and shows your explanation in the node.
+> Focus snippets that don't match a diff line aren't an error — that sentence simply highlights the whole function. If a focus isn't landing where you expect, pick a more exact snippet from the changed line.
+
+### 5. Hand over the URL
+On success, give the user `$BASE` + the returned `url` (e.g. `http://localhost:4567/app?guide=refund-flow`) and offer to open it (macOS: `open "<url>"`). It loads the guide and starts the narrated playback — each step fades in the function, then the focus walks the change as the narration plays.
 
 ## Notes
-- You only ever send **semantic** content (`methodName` + `file` + `changeType` + `explanation`). The server owns id resolution, relativization, validation, and file-writing. Don't build node ids or write `.codemap/guides/*.json` yourself.
-- To disambiguate same-named methods, pass a longer `file` path or add `"className": "OrdersService"`.
-- The written guide is portable: commit it or open the same URL on a teammate's checkout.
+- You only ever send **semantic** content (`methodName` + `file` + `changeType` + `narration`). The server owns id resolution, the git before/after snapshot, focus-to-line mapping, validation, and file-writing. Don't build node ids, line numbers, or `.codemap/guides/*.json` yourself.
+- The diff is captured from `git diff HEAD` at author time, so author the guide **after** making the change and **before** committing-and-moving-on if you want the working-tree diff. The written guide is portable: commit it or open the same URL on a teammate's checkout.

@@ -8,9 +8,13 @@ import {
   FlowGraph,
   GuideArtifact,
   GuideAuthorInput,
+  GuideDiff,
+  GuideFocus,
+  GuideNarrationSegment,
   GuideStep,
   GuideUnresolvedStep,
 } from '../dto/code-map-config.dto';
+import { GuideDiffService } from './guide-diff.service';
 
 const LOGGER_CONTEXT = 'GuideService';
 
@@ -21,6 +25,8 @@ const LOGGER_CONTEXT = 'GuideService';
  * validates — so the LLM never hand-constructs node ids or JSON.
  */
 export class GuideService {
+  constructor(private readonly diffService: GuideDiffService = new GuideDiffService()) {}
+
   /**
    * Resolve semantic steps against the live graph into a portable artifact.
    * Returns the artifact (resolved steps only) plus any steps that couldn't be
@@ -36,8 +42,8 @@ export class GuideService {
     const unresolved: GuideUnresolvedStep[] = [];
 
     for (const s of input.steps) {
-      if (!s.methodName || !s.file || !s.explanation) {
-        unresolved.push({ ...s, reason: 'missing methodName, file, or explanation' });
+      if (!s.methodName || !s.file || !Array.isArray(s.narration) || s.narration.length === 0) {
+        unresolved.push({ ...s, reason: 'missing methodName, file, or narration' });
         continue;
       }
       if (!GUIDE_CHANGE_TYPES.includes(s.changeType)) {
@@ -70,13 +76,27 @@ export class GuideService {
       }
 
       const node = matches[0];
+      const relFile = rel(node.filePath);
+      const diff = this.diffService.snapshot(
+        repoRoot,
+        relFile,
+        node.methodName,
+        node.lineNumber,
+        s.changeType,
+      );
+      const narration: GuideNarrationSegment[] = s.narration.map((n) => {
+        const focus = n.focus ? this.mapFocus(diff, n.focus) : undefined;
+        return focus ? { text: n.text, focus } : { text: n.text };
+      });
       steps.push({
-        nodeId: rel(node.filePath) + node.id.slice(node.filePath.length),
+        nodeId: relFile + node.id.slice(node.filePath.length),
         methodName: node.methodName,
-        file: rel(node.filePath),
+        file: relFile,
         type: node.type,
         changeType: s.changeType,
-        explanation: s.explanation,
+        narration,
+        diff,
+        explanation: narration[0]?.text ?? '',
       });
     }
 
@@ -90,6 +110,31 @@ export class GuideService {
       artifact: { meta: { title: input.title, generatedAt: new Date().toISOString() }, steps },
       unresolved,
     };
+  }
+
+  /**
+   * Resolve a focus SNIPPET to an inclusive line range within the diff. Prefers
+   * the after pane (where new code lives); falls back to before. Returns the span
+   * from the first to the last line containing the snippet, or undefined if absent.
+   */
+  private mapFocus(diff: GuideDiff, snippet: string): GuideFocus | undefined {
+    const needle = snippet.trim();
+    if (!needle) return undefined;
+
+    const search = (
+      lines: GuideDiff['after'],
+      side: GuideFocus['side'],
+    ): GuideFocus | undefined => {
+      if (!lines) return undefined;
+      const hits: number[] = [];
+      lines.forEach((l, i) => {
+        if (l.text.includes(needle)) hits.push(i);
+      });
+      if (hits.length === 0) return undefined;
+      return { side, lines: [hits[0], hits[hits.length - 1]] };
+    };
+
+    return search(diff.after, 'after') ?? search(diff.before, 'before');
   }
 
   /** Persist an artifact to `.codemap/guides/<slug>.json`. */

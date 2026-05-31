@@ -72,42 +72,37 @@ export type GitInfo = {
 // ── Guide artifact (mirrors the backend GuideArtifact) ──────────────────────
 // Ids and file paths are repo-relative so the file is portable across machines.
 
-export type GuideCommit = {
-  hash: string;
-  subject: string;
+export type GuideChangeType = "added" | "edited" | "removed";
+
+export type GuideDiffKind = "added" | "removed" | "context";
+export type GuideDiffLine = { text: string; kind: GuideDiffKind };
+export type GuideDiff = {
+  language: string;
+  before: GuideDiffLine[] | null;
+  after: GuideDiffLine[] | null;
 };
 
-export type GuideChangeType = "added" | "edited" | "removed";
+export type GuideFocus = { side: "before" | "after" | "both"; lines: [number, number] };
+export type GuideNarrationSegment = { text: string; focus?: GuideFocus };
 
 export type GuideStep = {
   nodeId: string;
   methodName: string;
   file: string;
-  type: "controller" | "service" | "utility" | "unknown";
+  type: string;
   changeType: GuideChangeType;
-  explanation: string;
-};
-
-export type GuideSubgraphNode = {
-  id: string;
-  label: string;
-  methodName: string;
-  type: GuideStep["type"];
-  file: string;
-  line: number;
-  role: "changed" | "context";
+  /** Narrated walkthrough for this step (v2). */
+  narration?: GuideNarrationSegment[];
+  /** Before/after code snapshotted from git (v2). */
+  diff?: GuideDiff;
+  /** Legacy single-note; still emitted as narration[0].text for old consumers. */
+  explanation?: string;
 };
 
 export type GuideArtifact = {
   meta: {
-    base: string;
-    head: string;
+    title?: string;
     generatedAt: string;
-    commits: GuideCommit[];
   };
   steps: GuideStep[];
-  subgraph: {
-    nodes: GuideSubgraphNode[];
-    edges: { from: string; to: string; callOrder: number }[];
-  };
 };

@@ -96,3 +96,19 @@ export const GUIDE_CHANGE_TYPES = ['added', 'edited', 'removed'] as const;
 
 /** Allowed guide slug characters — guards the saved-guide read against path traversal. */
 export const GUIDE_SLUG_PATTERN = /^[a-zA-Z0-9._-]+$/;
+
+/** Unified-diff context lines requested when snapshotting a function's before/after. */
+export const GUIDE_DIFF_CONTEXT = 3;
+
+/** Safety cap when extracting a function body from an untracked (brand-new) file. */
+export const GUIDE_MAX_FUNCTION_LINES = 80;
+
+/** Maps a file extension to the syntax language the viewer renders. */
+export const GUIDE_LANGUAGE_BY_EXT: Record<string, string> = {
+  '.ts': 'typescript',
+  '.tsx': 'typescript',
+  '.js': 'javascript',
+  '.jsx': 'javascript',
+  '.mjs': 'javascript',
+  '.py': 'python',
+};

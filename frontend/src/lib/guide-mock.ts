@@ -1,49 +1,9 @@
 /**
- * Mock "narrated playback" guide — the v2 shape the codemap-guide skill will
- * author and the backend will snapshot from git. No voice yet: narration is
- * text + per-sentence focus directives that the GuidePlayer animates.
- *
- * Line indices in `focus.lines` are 0-based and inclusive, addressing the
- * `before`/`after` line arrays on the same step's diff.
+ * Mock "narrated playback" guide — a hand-written sample in the same shape the
+ * backend now produces, used by the `?guidemock=1` preview. Types + the
+ * artifact adapter live in `guide-playable.ts`.
  */
-
-export type DiffSide = "before" | "after" | "both";
-
-/** One spoken sentence and the change area it should focus while "speaking". */
-export type NarrationSegment = {
-  text: string;
-  /** What to highlight while this sentence plays. Omit to highlight nothing. */
-  focus?: { side: DiffSide; lines: [number, number] };
-};
-
-/** A unified line in a diff pane — drives added/removed coloring. */
-export type DiffLine = {
-  text: string;
-  kind: "added" | "removed" | "context";
-};
-
-export type StepDiff = {
-  language: string;
-  /** Null when the function is brand new (changeType "added"). */
-  before: DiffLine[] | null;
-  /** Null when the function was deleted (changeType "removed"). */
-  after: DiffLine[] | null;
-};
-
-export type PlayableGuideStep = {
-  nodeId: string;
-  funcName: string;
-  file: string;
-  changeType: "added" | "edited" | "removed";
-  diff: StepDiff;
-  narration: NarrationSegment[];
-};
-
-export type PlayableGuide = {
-  title: string;
-  slug: string;
-  steps: PlayableGuideStep[];
-};
+import type { DiffLine, PlayableGuide } from "./guide-playable";
 
 const ctx = (text: string): DiffLine => ({ text, kind: "context" });
 const add = (text: string): DiffLine => ({ text, kind: "added" });
@@ -72,6 +32,9 @@ export const MOCK_GUIDE: PlayableGuide = {
         ],
       },
       narration: [
+        {
+          text: "This refund endpoint is brand new — here's the whole thing.",
+        },
         {
           text: "We start at the new refund endpoint on the orders controller.",
           focus: { side: "after", lines: [0, 1] },

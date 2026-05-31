@@ -15,6 +15,7 @@ import { CommandPalette } from "@/components/CommandPalette";
 import { Guide } from "@/components/Guide";
 import { GuidePlayer } from "@/components/GuidePlayer";
 import { MOCK_GUIDE } from "@/lib/guide-mock";
+import { artifactToPlayable, isPlayableArtifact, PlayableGuide } from "@/lib/guide-playable";
 
 export type DrillEntry = { id: string; label: string; fileName: string };
 
@@ -83,10 +84,12 @@ export default function Home() {
   const [gitInfo, setGitInfo] = useState<GitInfo | null>(null);
   const [guideNotice, setGuideNotice] = useState<string | null>(null);
   const [savedGuides, setSavedGuides] = useState<string[]>([]);
-  // Mock narrated-playback player — open with /app?guidemock=1
-  const [showMockPlayer, setShowMockPlayer] = useState(false);
+  // Narrated-playback takeover — the mock (?guidemock=1) or a saved v2 guide.
+  const [activePlayer, setActivePlayer] = useState<PlayableGuide | null>(null);
   useEffect(() => {
-    setShowMockPlayer(new URLSearchParams(window.location.search).get("guidemock") === "1");
+    if (new URLSearchParams(window.location.search).get("guidemock") === "1") {
+      setActivePlayer(MOCK_GUIDE);
+    }
   }, []);
 
   // Fetch git remote info once for "Open in GitHub" links
@@ -174,6 +177,10 @@ export default function Home() {
         return;
       }
       setGuideNotice(null);
+      if (isPlayableArtifact(artifact)) {
+        setActivePlayer(artifactToPlayable(artifact, slug));
+        return;
+      }
       setDrillStack([]);
       guide.startGuide(artifact, paths, gitInfo?.root ?? "");
     } catch {
@@ -199,6 +206,10 @@ export default function Home() {
           return;
         }
         setGuideNotice(null);
+        if (isPlayableArtifact(artifact)) {
+          setActivePlayer(artifactToPlayable(artifact, slug));
+          return;
+        }
         setDrillStack([]);
         guide.startGuide(artifact, paths, gitInfo.root);
       })
@@ -280,11 +291,11 @@ export default function Home() {
     }
   };
 
-  // Mock narrated-playback guide — full takeover, independent of backend state.
-  if (showMockPlayer) {
+  // Narrated-playback guide — full takeover (mock via ?guidemock=1, or a saved v2 guide).
+  if (activePlayer) {
     return (
       <AnimatePresence>
-        <GuidePlayer guide={MOCK_GUIDE} onExit={() => setShowMockPlayer(false)} />
+        <GuidePlayer guide={activePlayer} onExit={() => setActivePlayer(null)} />
       </AnimatePresence>
     );
   }

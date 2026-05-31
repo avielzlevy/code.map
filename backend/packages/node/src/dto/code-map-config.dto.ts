@@ -103,6 +103,34 @@ export interface FlowGraph {
 
 export type GuideChangeType = 'added' | 'edited' | 'removed';
 
+/** A single line in a before/after diff pane. */
+export type GuideDiffKind = 'added' | 'removed' | 'context';
+export interface GuideDiffLine {
+  text: string;
+  kind: GuideDiffKind;
+}
+
+/** Snapshotted before/after for a step's function, captured from git at author time. */
+export interface GuideDiff {
+  language: string;
+  /** Null when the function is brand new (changeType "added"). */
+  before: GuideDiffLine[] | null;
+  /** Null when the function was deleted (changeType "removed"). */
+  after: GuideDiffLine[] | null;
+}
+
+/** Which pane a narration sentence focuses, and the inclusive line range within it. */
+export interface GuideFocus {
+  side: 'before' | 'after' | 'both';
+  lines: [number, number];
+}
+
+/** One spoken sentence and the change area it should focus while playing. */
+export interface GuideNarrationSegment {
+  text: string;
+  focus?: GuideFocus;
+}
+
 export interface GuideStep {
   /** Repo-relative node id, matches a node in the live graph after normalization. */
   nodeId: string;
@@ -112,7 +140,11 @@ export interface GuideStep {
   type: FlowNode['type'];
   /** What happened to this node in the change being explained. */
   changeType: GuideChangeType;
-  /** The LLM's explanation of this step (what/why/how), authored from the conversation. */
+  /** The narrated walkthrough for this step — sentences with optional focus. */
+  narration: GuideNarrationSegment[];
+  /** Before/after code, snapshotted from git. */
+  diff: GuideDiff;
+  /** @deprecated Legacy single-note for old consumers; mirrors narration[0].text. */
   explanation: string;
 }
 
@@ -145,6 +177,14 @@ export interface GuideArtifact {
 // relativizes ids, validates, and writes the artifact. This keeps the brittle
 // id-construction off the LLM.
 
+/** One narration sentence as authored by the skill — focus is a CODE SNIPPET,
+ *  not a line number; the server maps it to the diff lines it appears on. */
+export interface GuideAuthorNarration {
+  text: string;
+  /** A snippet of the changed code to highlight while this sentence plays. */
+  focus?: string;
+}
+
 export interface GuideAuthorStep {
   /** Function name to locate in the live graph. */
   methodName: string;
@@ -153,7 +193,8 @@ export interface GuideAuthorStep {
   /** Optional class name to further disambiguate same-named methods. */
   className?: string;
   changeType: GuideChangeType;
-  explanation: string;
+  /** Ordered narration; the server snapshots the diff and resolves each focus. */
+  narration: GuideAuthorNarration[];
 }
 
 export interface GuideAuthorInput {

@@ -14,7 +14,7 @@ import {
   FileCode2,
 } from "lucide-react";
 import { SPRING_DEFAULT, SPRING_SNAPPY } from "@/lib/spring";
-import type { DiffLine, PlayableGuide, PlayableGuideStep } from "@/lib/guide-mock";
+import type { DiffLine, PlayableGuide, PlayableGuideStep } from "@/lib/guide-playable";
 
 const CHANGE_LABEL: Record<string, { label: string; className: string }> = {
   added: { label: "added", className: "text-green-300 border-green-400/40 bg-green-500/10" },
@@ -188,16 +188,18 @@ function CodePane({
             );
           })}
 
-          {/* Narration bubble — floats above the focused change, tail pointing down. */}
+          {/* Narration bubble — floats above the focused change, tail pointing
+              down. With no focus (nothing specific to highlight) it anchors to
+              the top of the code so the sentence still shows. */}
           <AnimatePresence>
-            {bubbleText && focus && (
+            {bubbleText && (
               <motion.div
                 key={bubbleKey}
                 initial={{ opacity: 0, scale: 0.97, y: "-100%" }}
                 animate={{ opacity: 1, scale: 1, y: "-100%" }}
                 exit={{ opacity: 0, scale: 0.97, y: "-100%" }}
                 transition={SPRING_DEFAULT}
-                style={{ top: PAD_TOP + focus[0] * LINE_H - 10, left: 28 }}
+                style={{ top: PAD_TOP + (focus ? focus[0] : 0) * LINE_H - 10, left: 28 }}
                 className="absolute z-10 w-[min(300px,calc(100%-44px))] origin-bottom-left pointer-events-none"
               >
                 <div className="relative rounded-xl border border-white/15 bg-zinc-900/95 backdrop-blur px-3 py-2 shadow-[0_8px_32px_rgba(0,0,0,0.85)]">
@@ -378,7 +380,11 @@ export function GuidePlayer({
 
   const activeFocus = phase === "narrating" ? step.narration[segmentIndex]?.focus ?? null : null;
   const bubbleText = phase === "narrating" ? step.narration[segmentIndex]?.text ?? null : null;
-  const focusedSide: "before" | "after" = activeFocus?.side === "before" ? "before" : "after";
+  // Which pane shows the narration bubble — the focused side if it exists, else
+  // whichever pane is present (so a no-focus sentence still gets a bubble).
+  const preferredSide: "before" | "after" = activeFocus?.side === "before" ? "before" : "after";
+  const bubbleSide: "before" | "after" =
+    preferredSide === "after" ? (after ? "after" : "before") : before ? "before" : "after";
   const focusFor = (side: "before" | "after"): [number, number] | null => {
     if (!activeFocus) return null;
     if (activeFocus.side === "both" || activeFocus.side === side) return activeFocus.lines;
@@ -444,7 +450,7 @@ export function GuidePlayer({
                 lines={side === "before" ? before! : after!}
                 phase={phase}
                 focus={focusFor(side)}
-                bubbleText={side === focusedSide ? bubbleText : null}
+                bubbleText={side === bubbleSide ? bubbleText : null}
                 bubbleKey={segmentIndex}
                 reduced={reduced}
               />
