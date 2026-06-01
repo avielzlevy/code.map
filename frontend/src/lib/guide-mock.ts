@@ -11,6 +11,8 @@ const add = (text: string): DiffLine => ({ text, kind: "added" });
 export const MOCK_GUIDE: PlayableGuide = {
   title: "Refund flow",
   slug: "refund-flow",
+  summary: "Adds a refund endpoint that validates the order and records the amount before refunding.",
+  closing: "So a refund now flows controller → service → guard, validated and logged end to end — no more silent status flips.",
   overview: {
     before: [
       "Refunds were a one-liner: the service just flipped an order's status to 'refunded'.",

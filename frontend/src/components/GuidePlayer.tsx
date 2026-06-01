@@ -95,6 +95,8 @@ function useEnglishVoices(): SpeechSynthesisVoice[] {
 }
 
 const VOICE_STORAGE_KEY = "codemap-guide-voice";
+const RATE_STORAGE_KEY = "codemap-guide-rate";
+const RATE_STEPS = [1, 1.5, 2] as const;
 
 // GitHub-style diff: a background tint + gutter sign marks the change, while
 // the code text keeps its syntax colors (not painted whole-line green/red).
@@ -277,15 +279,19 @@ function FileSidebar({
   groups,
   activeIndex,
   hasOverview,
+  hasClosing,
   onSelect,
   onSelectOverview,
+  onSelectClosing,
 }: {
   groups: FileGroup[];
-  /** Active step's array index, or -1 when the overview screen is showing. */
+  /** Active step's array index; -1 = overview screen, -2 = recap screen. */
   activeIndex: number;
   hasOverview: boolean;
+  hasClosing: boolean;
   onSelect: (i: number) => void;
   onSelectOverview: () => void;
+  onSelectClosing: () => void;
 }) {
   return (
     <aside className="w-60 shrink-0 border-r border-white/8 overflow-auto py-3">
@@ -342,6 +348,21 @@ function FileSidebar({
           </div>
         );
       })}
+      {hasClosing && (
+        <button
+          onClick={onSelectClosing}
+          className={`w-full flex items-center gap-2 px-4 py-1.5 mt-2 text-left transition-colors ${
+            activeIndex === -2
+              ? "bg-white/[0.06] shadow-[inset_2px_0_0_0_rgba(255,255,255,0.55)]"
+              : "hover:bg-white/[0.03]"
+          }`}
+        >
+          <GraduationCap className={`w-3.5 h-3.5 shrink-0 ${activeIndex === -2 ? "text-white/70" : "text-white/35"}`} />
+          <span className={`text-[12px] font-medium ${activeIndex === -2 ? "text-white" : "text-gray-300"}`}>
+            Recap
+          </span>
+        </button>
+      )}
     </aside>
   );
 }
@@ -402,8 +423,11 @@ function OverviewScreen({
   return (
     <div className="absolute inset-0 overflow-auto rounded-xl border border-white/10 bg-zinc-950 px-10 py-10">
       <div className="max-w-2xl mx-auto flex flex-col gap-9">
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1.5">
           <h1 className="text-2xl font-semibold text-white">{guide.title}</h1>
+          {guide.summary && (
+            <p className="text-[14px] leading-relaxed text-white/60 max-w-xl">{guide.summary}</p>
+          )}
           <p className="text-[12px] font-mono text-white/40">
             {fileCount} file{fileCount !== 1 ? "s" : ""} · {fnCount} function{fnCount !== 1 ? "s" : ""}
             {statBits.length > 0 ? ` · ${statBits.join(" · ")}` : ""}
@@ -411,6 +435,18 @@ function OverviewScreen({
         </div>
         <OverviewBlock label="Before" lines={before} offset={0} activeSegment={activeSegment} />
         <OverviewBlock label="What changed" lines={change} offset={before.length} activeSegment={activeSegment} />
+      </div>
+    </div>
+  );
+}
+
+/** The guide's final screen — a short narrated recap that wraps the walkthrough up. */
+function ClosingScreen({ text }: { text: string }) {
+  return (
+    <div className="absolute inset-0 overflow-auto rounded-xl border border-white/10 bg-zinc-950 px-10 py-10 flex items-center justify-center">
+      <div className="max-w-xl flex flex-col items-center gap-4 text-center">
+        <span className="text-[9px] font-mono uppercase tracking-[0.18em] text-white/30">Recap</span>
+        <p className="text-[18px] leading-relaxed text-gray-100">{text}</p>
       </div>
     </div>
   );
@@ -429,8 +465,10 @@ export function GuidePlayer({
   // its briefing immediately (no code to reveal); steps reveal then narrate.
   const hasOverview =
     !!guide.overview && (guide.overview.before.length > 0 || guide.overview.change.length > 0);
+  const hasClosing = !!guide.closing && guide.closing.trim().length > 0;
   const overviewOffset = hasOverview ? 1 : 0;
-  const totalScreens = guide.steps.length + overviewOffset;
+  const closingOffset = hasClosing ? 1 : 0;
+  const totalScreens = guide.steps.length + overviewOffset + closingOffset;
 
   const [screenIndex, setScreenIndex] = useState(0);
   const [phase, setPhase] = useState<Phase>(hasOverview ? "narrating" : "reveal");
@@ -438,6 +476,26 @@ export function GuidePlayer({
   const [playing, setPlaying] = useState(true);
   const [muted, setMuted] = useState(false);
   const speechSupported = typeof window !== "undefined" && "speechSynthesis" in window;
+
+  // Playback speed (applies to audio, speech, and the dwell timer).
+  const [rate, setRate] = useState<number>(() => {
+    try {
+      return typeof window !== "undefined" ? Number(localStorage.getItem(RATE_STORAGE_KEY)) || 1 : 1;
+    } catch {
+      return 1;
+    }
+  });
+  const cycleRate = useCallback(() => {
+    setRate((r) => {
+      const next = RATE_STEPS[(RATE_STEPS.indexOf(r as (typeof RATE_STEPS)[number]) + 1) % RATE_STEPS.length];
+      try {
+        localStorage.setItem(RATE_STORAGE_KEY, String(next));
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
+  }, []);
 
   const voices = useEnglishVoices();
   const [voiceURI, setVoiceURI] = useState<string | null>(() => {
@@ -477,8 +535,9 @@ export function GuidePlayer({
   );
 
   const onOverview = hasOverview && screenIndex === 0;
+  const onClosing = hasClosing && screenIndex === totalScreens - 1;
   const stepArrayIndex = screenIndex - overviewOffset;
-  const step: PlayableGuideStep | null = onOverview ? null : guide.steps[stepArrayIndex];
+  const step: PlayableGuideStep | null = onOverview || onClosing ? null : guide.steps[stepArrayIndex];
   const before = step?.diff.before ?? null;
   const after = step?.diff.after ?? null;
 
@@ -486,9 +545,13 @@ export function GuidePlayer({
     if (!guide.overview) return [];
     return [...guide.overview.before, ...guide.overview.change].map((text) => ({ text }));
   }, [guide.overview]);
+  const closingSegments = useMemo<{ text: string }[]>(
+    () => (guide.closing ? [{ text: guide.closing }] : []),
+    [guide.closing],
+  );
 
-  // The narration driving the active screen (overview briefing or step sentences).
-  const narration = onOverview ? overviewSegments : step?.narration ?? [];
+  // The narration driving the active screen (overview briefing, step, or recap).
+  const narration = onOverview ? overviewSegments : onClosing ? closingSegments : step?.narration ?? [];
   const lastSegment = narration.length - 1;
   const activeText = narration[segmentIndex]?.text ?? "";
 
@@ -514,19 +577,21 @@ export function GuidePlayer({
       const clamped = Math.max(0, Math.min(totalScreens - 1, i));
       setScreenIndex(clamped);
       setSegmentIndex(0);
-      // Overview (screen 0 when present) narrates straight away; steps reveal first.
-      setPhase(hasOverview && clamped === 0 ? "narrating" : "reveal");
+      // Overview and recap screens narrate straight away; code steps reveal first.
+      const isBrief = (hasOverview && clamped === 0) || (hasClosing && clamped === totalScreens - 1);
+      setPhase(isBrief ? "narrating" : "reveal");
     },
-    [totalScreens, hasOverview],
+    [totalScreens, hasOverview, hasClosing],
   );
 
   // Number of narration sentences on a given screen — for landing on the last one.
   const segmentsOnScreen = useCallback(
     (i: number): number => {
       if (hasOverview && i === 0) return overviewSegments.length;
+      if (hasClosing && i === totalScreens - 1) return closingSegments.length;
       return guide.steps[i - overviewOffset]?.narration.length ?? 0;
     },
-    [hasOverview, overviewSegments.length, guide.steps, overviewOffset],
+    [hasOverview, hasClosing, totalScreens, overviewSegments.length, closingSegments.length, guide.steps, overviewOffset],
   );
 
   // Reveal → narrate: hold for the staggered fade-in, then start the narration.
@@ -557,6 +622,24 @@ export function GuidePlayer({
       advance();
     };
 
+    // 1) Pre-rendered HD clip (preferred) — instant, no generation latency.
+    const clipUrl = !muted && activeText.length > 0 ? guide.audio?.clips[activeText] : undefined;
+    if (clipUrl) {
+      const audio = new Audio(clipUrl);
+      audio.playbackRate = rate;
+      audio.onended = finish;
+      audio.onerror = finish; // missing clip shouldn't stall the walkthrough
+      void audio.play().catch(() => {}); // autoplay-blocked → guard advances
+      const guard = setTimeout(finish, (activeText.length * 95) / rate + 8000);
+      return () => {
+        clearTimeout(guard);
+        audio.onended = null;
+        audio.onerror = null;
+        audio.pause();
+      };
+    }
+
+    // 2) Web Speech (local fallback voice).
     const canSpeak = speechSupported && !muted && activeText.length > 0;
     if (canSpeak) {
       const synth = window.speechSynthesis;
@@ -564,11 +647,12 @@ export function GuidePlayer({
       const utter = new SpeechSynthesisUtterance(activeText);
       if (selectedVoice) utter.voice = selectedVoice;
       utter.lang = selectedVoice?.lang ?? "en-US";
+      utter.rate = rate;
       utter.onend = finish;
       utter.onerror = finish;
       synth.speak(utter);
       // Guard: if onend never fires (autoplay policy, lost utterance), move on.
-      const guard = setTimeout(finish, activeText.length * 95 + 6000);
+      const guard = setTimeout(finish, (activeText.length * 95) / rate + 6000);
       return () => {
         clearTimeout(guard);
         utter.onend = null;
@@ -577,9 +661,9 @@ export function GuidePlayer({
       };
     }
 
-    const id = setTimeout(finish, dwellFor(activeText));
+    const id = setTimeout(finish, dwellFor(activeText) / rate);
     return () => clearTimeout(id);
-  }, [phase, playing, muted, activeText, screenIndex, segmentIndex, speechSupported, selectedVoice, advance]);
+  }, [phase, playing, muted, rate, activeText, screenIndex, segmentIndex, speechSupported, selectedVoice, advance, guide.audio]);
 
   const ensureNarrating = useCallback(() => {
     if (phase === "reveal") setPhase("narrating");
@@ -616,7 +700,7 @@ export function GuidePlayer({
     return () => window.removeEventListener("keydown", onKey);
   }, [onExit, nextSentence, prevSentence, voiceMenuOpen]);
 
-  const narrating = !onOverview && phase === "narrating" && !!step;
+  const narrating = !onOverview && !onClosing && phase === "narrating" && !!step;
   const activeFocus = narrating ? step!.narration[segmentIndex]?.focus ?? null : null;
   const bubbleText = narrating ? step!.narration[segmentIndex]?.text ?? null : null;
   // Which pane shows the narration bubble — the focused side if it exists, else
@@ -658,7 +742,11 @@ export function GuidePlayer({
           {screenIndex + 1} / {totalScreens}
         </span>
         <div className="w-px h-5 bg-white/10" />
-        {onOverview || !step ? (
+        {onOverview ? (
+          <span className="text-[13px] font-mono font-semibold text-white/70 truncate">Overview</span>
+        ) : onClosing ? (
+          <span className="text-[13px] font-mono font-semibold text-white/70 truncate">Recap</span>
+        ) : !step ? (
           <span className="text-[13px] font-mono font-semibold text-white/70 truncate">Overview</span>
         ) : (
           <>
@@ -685,10 +773,12 @@ export function GuidePlayer({
       <div className="flex flex-1 min-h-0">
         <FileSidebar
           groups={fileGroups}
-          activeIndex={onOverview ? -1 : stepArrayIndex}
+          activeIndex={onOverview ? -1 : onClosing ? -2 : stepArrayIndex}
           hasOverview={hasOverview}
+          hasClosing={hasClosing}
           onSelect={(i) => goToScreen(i + overviewOffset)}
           onSelectOverview={() => goToScreen(0)}
+          onSelectClosing={() => goToScreen(totalScreens - 1)}
         />
 
         {/* Stage — a column: optional top context strip + the screen area.
@@ -733,6 +823,17 @@ export function GuidePlayer({
                 >
                   <OverviewScreen guide={guide} activeSegment={segmentIndex} />
                 </motion.div>
+              ) : onClosing ? (
+                <motion.div
+                  key="closing"
+                  initial={{ opacity: 0, y: 14, scale: 0.99 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -14, scale: 0.99 }}
+                  transition={SPRING_DEFAULT}
+                  className="absolute inset-0"
+                >
+                  <ClosingScreen text={guide.closing ?? ""} />
+                </motion.div>
               ) : (
                 <motion.div
                   key={screenIndex}
@@ -768,7 +869,7 @@ export function GuidePlayer({
             key={`${screenIndex}-${segmentIndex}`}
             initial={{ width: "0%" }}
             animate={{ width: "100%" }}
-            transition={{ duration: dwellFor(activeText) / 1000, ease: "linear" }}
+            transition={{ duration: dwellFor(activeText) / rate / 1000, ease: "linear" }}
             className="h-full bg-white/40"
           />
         )}
@@ -837,7 +938,17 @@ export function GuidePlayer({
           {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
         </button>
 
-        {/* Voice picker — opening it pauses so a preview doesn't fight playback */}
+        <button
+          onClick={cycleRate}
+          aria-label={`Playback speed ${rate}x`}
+          title="Playback speed"
+          className="h-9 min-w-[2.75rem] px-2 flex items-center justify-center rounded-lg border border-white/10 text-[11px] font-mono text-gray-400 hover:text-white hover:border-white/25 hover:bg-white/5 transition-colors"
+        >
+          {rate}x
+        </button>
+
+        {/* Voice picker (Web Speech fallback only) — hidden when HD audio is pre-rendered */}
+        {!guide.audio && (
         <div className="relative">
           <button
             onClick={() => {
@@ -889,6 +1000,7 @@ export function GuidePlayer({
             )}
           </AnimatePresence>
         </div>
+        )}
 
         <div className="w-px h-6 bg-white/10 mx-2" />
 

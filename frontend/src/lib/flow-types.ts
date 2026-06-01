@@ -101,11 +101,21 @@ export type GuideStep = {
 
 export type GuideOverview = { before: string[]; change: string[] };
 
+export type GuideAudioManifest = {
+  voice: string;
+  model: string;
+  /** Sentence text → relative URL of its pre-rendered audio clip. */
+  clips: Record<string, string>;
+};
+
 export type GuideArtifact = {
   meta: {
     title?: string;
     generatedAt: string;
   };
+  summary?: string;
+  closing?: string;
   overview?: GuideOverview;
+  audio?: GuideAudioManifest;
   steps: GuideStep[];
 };

@@ -103,6 +103,17 @@ export const GUIDE_DIFF_CONTEXT = 3;
 /** Safety cap when extracting a function body from an untracked (brand-new) file. */
 export const GUIDE_MAX_FUNCTION_LINES = 80;
 
+/** Directory (relative to repo root) where pre-rendered narration audio is cached. */
+export const GUIDE_AUDIO_DIR = '.codemap/guides/audio';
+
+/** OpenAI text-to-speech endpoint + defaults for pre-rendering narration. */
+export const GUIDE_TTS_ENDPOINT = 'https://api.openai.com/v1/audio/speech';
+export const GUIDE_TTS_MODEL = 'tts-1';
+export const GUIDE_TTS_VOICE = 'alloy';
+
+/** Cached-audio filename guard (sha256 hex + .mp3) — blocks path traversal on the serve route. */
+export const GUIDE_AUDIO_FILE_PATTERN = /^[a-f0-9]{64}\.mp3$/;
+
 /** Maps a file extension to the syntax language the viewer renders. */
 export const GUIDE_LANGUAGE_BY_EXT: Record<string, string> = {
   '.ts': 'typescript',

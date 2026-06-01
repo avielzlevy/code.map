@@ -38,11 +38,20 @@ export type PlayableGuideStep = {
 
 export type GuideOverview = { before: string[]; change: string[] };
 
+/** Pre-rendered narration audio: sentence text → clip URL. */
+export type GuideAudio = { voice: string; model: string; clips: Record<string, string> };
+
 export type PlayableGuide = {
   title: string;
   slug: string;
+  /** One-line TL;DR shown on the overview screen. */
+  summary?: string;
+  /** Closing recap sentence(s) shown as the final screen. */
+  closing?: string;
   /** Optional big-picture briefing shown as the first screen. */
   overview?: GuideOverview;
+  /** Pre-rendered narration audio (HD voice); absent → Web Speech fallback. */
+  audio?: GuideAudio;
   steps: PlayableGuideStep[];
 };
 
@@ -56,7 +65,10 @@ export function artifactToPlayable(artifact: GuideArtifact, slug: string): Playa
   return {
     title: artifact.meta?.title ?? slug,
     slug,
+    summary: artifact.summary,
+    closing: artifact.closing,
     overview: artifact.overview,
+    audio: artifact.audio,
     steps: artifact.steps.map(
       (s): PlayableGuideStep => ({
         nodeId: s.nodeId,

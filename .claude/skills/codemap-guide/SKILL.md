@@ -15,12 +15,18 @@ You write only **semantic** content — which functions changed, and a spoken sc
 
 ## Steps
 
-### 1. Brief the big picture (the `overview`)
-Most readers arrive without context — they (often with an LLM) just changed code they didn't write, and can't yet *explain* it because they never understood the before-state. Author an `overview` that orients them; it becomes the guide's **first screen**, before any function.
-- `before` — an array of 1–3 short sentences on how the affected area worked *before* this change. This is the missing context.
-- `change` — an array of 1–3 short sentences on what the change does and why.
+### 1. Brief the big picture (`summary` + `overview`)
+Most readers arrive without context — they (often with an LLM) just changed code they didn't write, and can't yet *explain* it because they never understood the before-state. Two guide-level fields orient them on the **first screen**, before any function:
 
-Each sentence is narrated one at a time, so keep them tight. The overview is optional but strongly recommended — it's the orientation that makes the rest land.
+- `summary` — **one short sentence**, the TL;DR of the whole change (e.g. "Adds an abort endpoint that signals a running deployment to stop"). Shown as a glanceable subtitle. Keep it to a single sentence — it's a summary, not a report.
+- `overview` — the narrated briefing:
+  - `before` — 1–3 short sentences on how the affected area worked *before* this change. This is the missing context.
+  - `change` — 1–3 short sentences on what the change does and why.
+- `closing` — a TED-style **closing recap**: 1–2 sentences that wrap the whole walkthrough up ("So now X flows A → B → C, validated end to end"). Shown and narrated as the final screen. Keep it short and conclusive.
+
+Overview and closing sentences are narrated, so keep them tight. All are optional but strongly recommended — they're the orientation that makes the rest land and stick.
+
+**Diffing committed changes (`base`):** the before/after is captured with `git diff` against `HEAD` by default — i.e. your *uncommitted* working-tree changes. If the change you're documenting is **already committed**, edited functions will show no "before". Pass `base` (a git ref) to diff against the commit *before* your change — e.g. `"base": "abc123^"` or `"base": "main"` — so edited functions get a real before/after. Omit it when authoring against uncommitted work.
 
 ### 2. Decide the steps from the conversation
 List the functions involved in the change, in the order you'd teach them (usually entry point → downstream). For each, you need:
@@ -49,6 +55,8 @@ curl -s -X POST "$BASE/api/flow-map/guide" \
   -d '{
     "slug": "refund-flow",
     "title": "Refund flow",
+    "summary": "Adds a refund endpoint that validates the order and records the amount before refunding.",
+    "closing": "So a refund now flows controller to service to guard — validated and logged end to end, no more silent status flips.",
     "overview": {
       "before": [
         "Refunds were a one-liner — the service just flipped an order'\''s status to refunded.",
@@ -91,6 +99,7 @@ The response is `{ status, data: { url, resolved, total, unresolved } }`:
 On success, give the user `$BASE` + the returned `url` (e.g. `http://localhost:4567/app?guide=refund-flow`) and offer to open it (macOS: `open "<url>"`). It loads the guide and starts the narrated playback — each step fades in the function, then the focus walks the change as the narration plays.
 
 ## Notes
-- You only ever send **semantic** content (the guide-level `overview`, plus per step `methodName` + `file` + `changeType` + `narration`). The server owns id resolution, the git before/after snapshot, focus-to-line mapping, validation, and file-writing. Don't build node ids, line numbers, or `.codemap/guides/*.json` yourself.
+- You only ever send **semantic** content (guide-level `summary` + `closing` + `overview` + optional `base`, plus per step `methodName` + `file` + `changeType` + `narration`). The server owns id resolution, the git before/after snapshot, focus-to-line mapping, validation, and file-writing. Don't build node ids, line numbers, or `.codemap/guides/*.json` yourself.
 - The `overview` is guide-level (one per guide) and needs no graph resolution. Omit it and the guide opens straight on the first function.
+- Narration is **spoken** during playback. If the sidecar has `OPENAI_API_KEY` set, the server pre-renders each sentence to audio at author time (cached, portable); otherwise the player uses the browser's local voice. Either way, write narration to be *heard*.
 - The diff is captured from `git diff HEAD` at author time, so author the guide **after** making the change and **before** committing-and-moving-on if you want the working-tree diff. The written guide is portable: commit it or open the same URL on a teammate's checkout.

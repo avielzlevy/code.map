@@ -29,10 +29,11 @@ export class GuideDiffService {
     methodName: string,
     startLine: number,
     changeType: GuideChangeType,
+    base = 'HEAD',
   ): GuideDiff {
     const language = this.languageFor(relFile);
     try {
-      const raw = this.gitDiff(root, relFile);
+      const raw = this.gitDiff(root, relFile, base);
       if (raw) {
         const hunk = this.pickHunk(raw, startLine);
         if (hunk) return this.shape(this.splitHunk(hunk), changeType, language);
@@ -49,12 +50,12 @@ export class GuideDiffService {
     }
   }
 
-  /** `git diff HEAD` for a single file, or '' when git fails / nothing changed. */
-  private gitDiff(root: string, relFile: string): string {
+  /** `git diff <base>` (base → working tree) for a file, or '' when git fails / nothing changed. */
+  private gitDiff(root: string, relFile: string, base: string): string {
     try {
       return execFileSync(
         'git',
-        ['diff', 'HEAD', '--no-color', `-U${GUIDE_DIFF_CONTEXT}`, '--', relFile],
+        ['diff', base, '--no-color', `-U${GUIDE_DIFF_CONTEXT}`, '--', relFile],
         { cwd: root, encoding: 'utf8', maxBuffer: 10 * 1024 * 1024 },
       );
     } catch {

@@ -15,8 +15,14 @@ import {
   GuideAuthorResult,
 } from '../dto/code-map-config.dto';
 import { SidecarException, GuideException } from '../exceptions/code-map.exceptions';
-import { SIDECAR_API_PREFIX, SSE_HEARTBEAT_INTERVAL_MS } from '../constants';
+import {
+  SIDECAR_API_PREFIX,
+  SSE_HEARTBEAT_INTERVAL_MS,
+  GUIDE_AUDIO_DIR,
+  GUIDE_AUDIO_FILE_PATTERN,
+} from '../constants';
 import { GuideService } from '../guide/guide.service';
+import { GuideTtsService } from '../guide/guide-tts.service';
 
 const LOGGER_CONTEXT = 'SidecarService';
 
@@ -34,6 +40,8 @@ export class SidecarService {
   private heartbeatTimer: ReturnType<typeof setInterval> | null = null;
 
   private readonly guideService = new GuideService();
+
+  private readonly guideTtsService = new GuideTtsService();
 
   constructor() {
     this.app = express();
@@ -241,9 +249,25 @@ export class SidecarService {
       }
     });
 
+    // Serve a pre-rendered narration clip from `.codemap/guides/audio`.
+    this.app.get(`${SIDECAR_API_PREFIX}/guide/audio/:file`, (req: Request, res: Response) => {
+      const file = req.params.file;
+      if (!GUIDE_AUDIO_FILE_PATTERN.test(file)) {
+        res.status(400).end();
+        return;
+      }
+      const { root } = this.resolveGitInfo();
+      const abs = path.join(root, GUIDE_AUDIO_DIR, file);
+      if (!fs.existsSync(abs)) {
+        res.status(404).end();
+        return;
+      }
+      res.type('audio/mpeg').sendFile(abs);
+    });
+
     // Author a guide from SEMANTIC steps. The server resolves each step to a real
     // graph node, validates, and writes the file — so the skill never builds ids.
-    this.app.post(`${SIDECAR_API_PREFIX}/guide`, (req: Request, res: Response) => {
+    this.app.post(`${SIDECAR_API_PREFIX}/guide`, async (req: Request, res: Response) => {
       if (!this.currentGraph) {
         res.status(503).json({ status: 'error', data: null } as ApiResponse<null>);
         return;
@@ -272,6 +296,8 @@ export class SidecarService {
           res.status(422).json({ status: 'error', data: result } as ApiResponse<GuideAuthorResult>);
           return;
         }
+        // Pre-render narration audio (no-op without a TTS key) before persisting.
+        await this.guideTtsService.attachAudio(root, artifact);
         this.guideService.save(root, body.slug, artifact);
         res.json({ status: 'success', data: result } as ApiResponse<GuideAuthorResult>);
       } catch (err) {

@@ -39,6 +39,7 @@ export class GuideService {
     input: GuideAuthorInput,
   ): { artifact: GuideArtifact; unresolved: GuideUnresolvedStep[] } {
     const rel = (abs: string): string => path.relative(repoRoot, abs);
+    const base = input.base?.trim() || 'HEAD';
     const steps: GuideStep[] = [];
     const unresolved: GuideUnresolvedStep[] = [];
 
@@ -84,6 +85,7 @@ export class GuideService {
         node.methodName,
         node.lineNumber,
         s.changeType,
+        base,
       );
       const narration: GuideNarrationSegment[] = s.narration.map((n) => {
         const focus = n.focus ? this.mapFocus(diff, n.focus) : undefined;
@@ -102,17 +104,23 @@ export class GuideService {
     }
 
     const overview = this.cleanOverview(input.overview);
+    const summary = input.summary?.trim() || undefined;
+    const closing = input.closing?.trim() || undefined;
 
     FlowLogger.info(LOGGER_CONTEXT, 'Authored guide', {
       slug: input.slug,
       resolved: steps.length,
       unresolved: unresolved.length,
       hasOverview: !!overview,
+      hasSummary: !!summary,
+      hasClosing: !!closing,
     });
 
     return {
       artifact: {
         meta: { title: input.title, generatedAt: new Date().toISOString() },
+        ...(summary ? { summary } : {}),
+        ...(closing ? { closing } : {}),
         ...(overview ? { overview } : {}),
         steps,
       },

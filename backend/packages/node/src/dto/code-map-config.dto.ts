@@ -166,13 +166,27 @@ export interface GuideOverview {
   change: string[];
 }
 
+/** Pre-rendered narration audio, keyed by the exact sentence text → clip URL. */
+export interface GuideAudioManifest {
+  voice: string;
+  model: string;
+  /** Sentence text → relative URL of its cached audio clip. */
+  clips: Record<string, string>;
+}
+
 export interface GuideArtifact {
   meta: {
     title?: string;
     generatedAt: string;
   };
+  /** One-line TL;DR shown on the overview screen — a glanceable summary, not a report. */
+  summary?: string;
+  /** One or two sentences that close the walkthrough — a recap shown as the final screen. */
+  closing?: string;
   /** Optional big-picture briefing the player shows before the per-function steps. */
   overview?: GuideOverview;
+  /** Pre-rendered narration audio (present when a TTS key was configured at author time). */
+  audio?: GuideAudioManifest;
   /** Ordered walkthrough — one step per changed node, in the order the LLM curated. */
   steps: GuideStep[];
   /** Optional embedded subgraph for standalone/LLM use; the player latches onto the live graph. */
@@ -210,6 +224,16 @@ export interface GuideAuthorStep {
 export interface GuideAuthorInput {
   slug: string;
   title?: string;
+  /** One-line TL;DR for the overview screen. */
+  summary?: string;
+  /** Closing recap sentence(s) for the final screen. */
+  closing?: string;
+  /**
+   * Git ref to diff against for before/after. Defaults to "HEAD" (uncommitted
+   * working-tree changes). Set it to the commit before your change when the
+   * change is already committed, so edited functions still show a real before.
+   */
+  base?: string;
   /** Optional big-picture briefing (before-state + what changed). */
   overview?: GuideOverview;
   steps: GuideAuthorStep[];
