@@ -207,6 +207,12 @@ export interface GuideAuthorNarration {
   text: string;
   /** A snippet of the changed code to highlight while this sentence plays. */
   focus?: string;
+  /**
+   * Force which diff pane the focus highlights. Use "before" to point at the
+   * prior code when narrating what the function did before the change. Default
+   * searches the after pane first, then before.
+   */
+  focusSide?: 'before' | 'after';
 }
 
 export interface GuideAuthorStep {

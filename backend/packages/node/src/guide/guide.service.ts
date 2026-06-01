@@ -88,7 +88,7 @@ export class GuideService {
         base,
       );
       const narration: GuideNarrationSegment[] = s.narration.map((n) => {
-        const focus = n.focus ? this.mapFocus(diff, n.focus) : undefined;
+        const focus = n.focus ? this.mapFocus(diff, n.focus, n.focusSide) : undefined;
         return focus ? { text: n.text, focus } : { text: n.text };
       });
       steps.push({
@@ -133,13 +133,17 @@ export class GuideService {
    * the after pane (where new code lives); falls back to before. Returns the span
    * from the first to the last line containing the snippet, or undefined if absent.
    */
-  private mapFocus(diff: GuideDiff, snippet: string): GuideFocus | undefined {
+  private mapFocus(
+    diff: GuideDiff,
+    snippet: string,
+    side?: 'before' | 'after',
+  ): GuideFocus | undefined {
     const needle = snippet.trim();
     if (!needle) return undefined;
 
     const search = (
       lines: GuideDiff['after'],
-      side: GuideFocus['side'],
+      paneSide: GuideFocus['side'],
     ): GuideFocus | undefined => {
       if (!lines) return undefined;
       const hits: number[] = [];
@@ -147,9 +151,12 @@ export class GuideService {
         if (l.text.includes(needle)) hits.push(i);
       });
       if (hits.length === 0) return undefined;
-      return { side, lines: [hits[0], hits[hits.length - 1]] };
+      return { side: paneSide, lines: [hits[0], hits[hits.length - 1]] };
     };
 
+    // Respect an explicit side (e.g. narrating the prior code); else after, then before.
+    if (side === 'before') return search(diff.before, 'before');
+    if (side === 'after') return search(diff.after, 'after');
     return search(diff.after, 'after') ?? search(diff.before, 'before');
   }
 

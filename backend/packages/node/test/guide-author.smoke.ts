@@ -65,6 +65,7 @@ const { artifact, unresolved } = svc.author(graph, root, {
       narration: [
         { text: 'It now asserts the order can be refunded.', focus: 'assertRefundable' },
         { text: 'And records the refunded amount.', focus: 'order.refundedAmount = amount' },
+        { text: 'Before, it just set the status.', focus: "order.status = 'refunded'", focusSide: 'before' },
       ],
     },
   ],
@@ -76,7 +77,12 @@ const step = artifact.steps[0];
 assert(step.file === rel, `file is repo-relative (${step.file})`);
 assert(step.nodeId === `${rel}:OrdersService#refund`, `nodeId relativized (${step.nodeId})`);
 assert(step.diff.after !== null && step.diff.before !== null, 'diff has both panes');
-assert(step.narration.length === 2, 'two narration sentences');
+assert(step.narration.length === 3, 'three narration sentences');
+
+const fb = step.narration[2].focus;
+const beforeLine = fb && step.diff.before ? step.diff.before[fb.lines[0]].text : '';
+assert(!!fb && fb.side === 'before', 'focusSide before resolves to the before pane');
+assert(beforeLine.includes("order.status = 'refunded'"), `before focus lands on prior code (${beforeLine.trim()})`);
 
 const f0 = step.narration[0].focus;
 const afterLine = f0 && step.diff.after ? step.diff.after[f0.lines[0]].text : '';

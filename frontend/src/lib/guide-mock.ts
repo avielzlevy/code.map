@@ -89,11 +89,11 @@ export const MOCK_GUIDE: PlayableGuide = {
       },
       narration: [
         {
-          text: "The service's refund method is where the new safety check lives.",
-          focus: { side: "after", lines: [0, 0] },
+          text: "Before, refunding was a one-liner: it just flipped the status and saved the order.",
+          focus: { side: "before", lines: [1, 2] },
         },
         {
-          text: "Before touching anything, it now asserts the order can actually be refunded for this amount.",
+          text: "Now, before touching anything, it asserts the order can actually be refunded for this amount.",
           focus: { side: "after", lines: [1, 1] },
         },
         {

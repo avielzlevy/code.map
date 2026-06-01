@@ -39,13 +39,17 @@ For each step, write `narration`: an **ordered array of short spoken sentences**
 - `text` — what to say. Write it to be *heard* — conversational, one beat per sentence. The player shows it as a chat bubble above the code and (soon) speaks it aloud.
 - `focus` — an **exact substring copied from a changed line** to spotlight while that sentence plays (e.g. `"assertRefundable"` or `"order.refundedAmount = amount"`). The server finds the diff line(s) containing it and highlights them, then anchors the bubble there.
 
+- `focusSide` — optional, `"before"` or `"after"`. Forces which diff pane the focus highlights. Default searches the after pane first, then before.
+
 **The rule for `focus`:**
-- If the sentence is about code shown in this step → it **must** have a `focus`, and that `focus` must be an exact substring of a changed line (copy it from the diff, don't paraphrase) so the server can match it. A sentence about the on-screen code with no matching focus floats with nothing to point at — avoid it.
-- Omit `focus` **only** when the sentence is deliberately *not* about the code on screen — context about unchanged code, or a caller/callee in a file this guide doesn't show. These render as a tail-less "context" note, not pinned to a line. Use this sparingly.
+- If the sentence is about code shown in this step → it **must** have a `focus`, and that `focus` must be an exact substring of a line in the diff (copy it, don't paraphrase) so the server can match it. A sentence about the on-screen code with no matching focus floats with nothing to point at — avoid it.
+- Omit `focus` **only** when the sentence is deliberately *not* about the code on screen — context about unchanged code, or a caller/callee in a file this guide doesn't show. These render as a tail-less "context" note. Use this sparingly.
+
+**For `"edited"` steps, narrate the before AND the after.** The reader sees both panes — explain both. Open with what the function did *before* this change, pointing at the prior code with `"focusSide": "before"` (the focus snippet must be a line present in the before pane), then walk the new/changed lines on the after side. Understanding a change means understanding what it replaced, not just what was added.
 
 Guidance:
-- Keep `focus` distinctive enough to match one place (a method call, an assignment, a decorator). It's matched against the **after** side first, then the before side.
-- Walk the reader through the change: first sentence sets the scene, later sentences land on each meaningful added/edited line.
+- Keep `focus` distinctive enough to match one place (a method call, an assignment, a decorator).
+- A typical edited step reads: *"Before, it just did X"* (before pane) → *"now it also does Y"* (after pane) → *"and Z"* (after pane).
 - 2–5 sentences per step is the sweet spot.
 
 ### 4. POST it to the sidecar
@@ -75,7 +79,8 @@ curl -s -X POST "$BASE/api/flow-map/guide" \
         ] },
       { "methodName": "refund", "file": "orders.service.ts", "changeType": "edited",
         "narration": [
-          { "text": "Before persisting, it now asserts the order can be refunded.", "focus": "assertRefundable" },
+          { "text": "Before, refunding was a one-liner: it just flipped the status and saved.", "focus": "order.status = 'refunded'", "focusSide": "before" },
+          { "text": "Now it first asserts the order can actually be refunded.", "focus": "assertRefundable" },
           { "text": "And it records the amount, so partial refunds are tracked.", "focus": "order.refundedAmount = amount" }
         ] }
     ]
