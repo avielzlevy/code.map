@@ -16,6 +16,9 @@ import {
   Info,
   Volume2,
   VolumeX,
+  AudioLines,
+  ChevronDown,
+  Check,
 } from "lucide-react";
 import { SPRING_DEFAULT, SPRING_SNAPPY } from "@/lib/spring";
 import type { DiffLine, PlayableGuide, PlayableGuideStep } from "@/lib/guide-playable";
@@ -53,6 +56,45 @@ function usePrefersReducedMotion(): boolean {
   }, []);
   return reduced;
 }
+
+// Names that signal a higher-quality voice, in rough order of niceness.
+const PREFERRED_VOICES = ["Google US English", "Samantha", "Ava", "Allison", "Zoe", "Evan", "Aria", "Jenny"];
+
+/** Heuristic ranking — higher is more natural. The default browser voice is robotic. */
+function voiceScore(v: SpeechSynthesisVoice): number {
+  const n = v.name;
+  if (/premium|enhanced/i.test(n)) return 100; // Apple high-quality variants
+  if (/neural|natural/i.test(n)) return 95;
+  const idx = PREFERRED_VOICES.findIndex((p) => n.includes(p));
+  if (idx >= 0) return 90 - idx;
+  if (/google/i.test(n)) return 70; // Chrome's network voices — much better than default
+  if (v.localService === false) return 60;
+  return 10;
+}
+
+/** English voices, best-first. Reacts to async voice loading (`voiceschanged`). */
+function useEnglishVoices(): SpeechSynthesisVoice[] {
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
+  useEffect(() => {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+    const load = () => {
+      const en = window.speechSynthesis
+        .getVoices()
+        .filter((v) => v.lang.toLowerCase().startsWith("en"));
+      en.sort((a, b) => voiceScore(b) - voiceScore(a) || a.name.localeCompare(b.name));
+      setVoices(en);
+    };
+    const id = setTimeout(load, 0); // initial (voices are often empty on first sync call)
+    window.speechSynthesis.addEventListener("voiceschanged", load);
+    return () => {
+      clearTimeout(id);
+      window.speechSynthesis.removeEventListener("voiceschanged", load);
+    };
+  }, []);
+  return voices;
+}
+
+const VOICE_STORAGE_KEY = "codemap-guide-voice";
 
 // GitHub-style diff: a background tint + gutter sign marks the change, while
 // the code text keeps its syntax colors (not painted whole-line green/red).
@@ -397,6 +439,43 @@ export function GuidePlayer({
   const [muted, setMuted] = useState(false);
   const speechSupported = typeof window !== "undefined" && "speechSynthesis" in window;
 
+  const voices = useEnglishVoices();
+  const [voiceURI, setVoiceURI] = useState<string | null>(() => {
+    try {
+      return typeof window !== "undefined" ? localStorage.getItem(VOICE_STORAGE_KEY) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [voiceMenuOpen, setVoiceMenuOpen] = useState(false);
+  // Chosen voice, or the top-ranked one as the default.
+  const selectedVoice = useMemo(() => {
+    if (voices.length === 0) return null;
+    return (voiceURI && voices.find((v) => v.voiceURI === voiceURI)) || voices[0];
+  }, [voices, voiceURI]);
+
+  const previewVoice = useCallback((v: SpeechSynthesisVoice) => {
+    const synth = window.speechSynthesis;
+    synth.cancel();
+    const u = new SpeechSynthesisUtterance("This is how the narration will sound.");
+    u.voice = v;
+    u.lang = v.lang;
+    synth.speak(u);
+  }, []);
+
+  const selectVoice = useCallback(
+    (v: SpeechSynthesisVoice) => {
+      setVoiceURI(v.voiceURI);
+      try {
+        localStorage.setItem(VOICE_STORAGE_KEY, v.voiceURI);
+      } catch {
+        /* ignore */
+      }
+      previewVoice(v);
+    },
+    [previewVoice],
+  );
+
   const onOverview = hasOverview && screenIndex === 0;
   const stepArrayIndex = screenIndex - overviewOffset;
   const step: PlayableGuideStep | null = onOverview ? null : guide.steps[stepArrayIndex];
@@ -483,7 +562,8 @@ export function GuidePlayer({
       const synth = window.speechSynthesis;
       synth.cancel();
       const utter = new SpeechSynthesisUtterance(activeText);
-      utter.lang = "en-US";
+      if (selectedVoice) utter.voice = selectedVoice;
+      utter.lang = selectedVoice?.lang ?? "en-US";
       utter.onend = finish;
       utter.onerror = finish;
       synth.speak(utter);
@@ -499,7 +579,7 @@ export function GuidePlayer({
 
     const id = setTimeout(finish, dwellFor(activeText));
     return () => clearTimeout(id);
-  }, [phase, playing, muted, activeText, screenIndex, segmentIndex, speechSupported, advance]);
+  }, [phase, playing, muted, activeText, screenIndex, segmentIndex, speechSupported, selectedVoice, advance]);
 
   const ensureNarrating = useCallback(() => {
     if (phase === "reveal") setPhase("narrating");
@@ -524,15 +604,17 @@ export function GuidePlayer({
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onExit();
-      else if (e.key === " ") { e.preventDefault(); setPlaying((p) => !p); }
+      if (e.key === "Escape") {
+        if (voiceMenuOpen) setVoiceMenuOpen(false);
+        else onExit();
+      } else if (e.key === " ") { e.preventDefault(); setPlaying((p) => !p); }
       else if (e.key === "ArrowRight") nextSentence();
       else if (e.key === "ArrowLeft") prevSentence();
       else if (e.key === "m" || e.key === "M") setMuted((x) => !x);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onExit, nextSentence, prevSentence]);
+  }, [onExit, nextSentence, prevSentence, voiceMenuOpen]);
 
   const narrating = !onOverview && phase === "narrating" && !!step;
   const activeFocus = narrating ? step!.narration[segmentIndex]?.focus ?? null : null;
@@ -754,6 +836,59 @@ export function GuidePlayer({
         >
           {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
         </button>
+
+        {/* Voice picker — opening it pauses so a preview doesn't fight playback */}
+        <div className="relative">
+          <button
+            onClick={() => {
+              setVoiceMenuOpen((o) => {
+                if (!o) setPlaying(false);
+                return !o;
+              });
+            }}
+            disabled={!speechSupported || voices.length === 0}
+            aria-label="Choose narration voice"
+            title={selectedVoice ? `Voice: ${selectedVoice.name}` : "Choose narration voice"}
+            className="h-9 px-2.5 flex items-center gap-1 rounded-lg border border-white/10 text-gray-400 hover:text-white hover:border-white/25 hover:bg-white/5 disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
+          >
+            <AudioLines className="w-4 h-4" />
+            <ChevronDown className="w-3 h-3" />
+          </button>
+
+          <AnimatePresence>
+            {voiceMenuOpen && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setVoiceMenuOpen(false)} />
+                <motion.div
+                  initial={{ opacity: 0, y: 6, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 6, scale: 0.98 }}
+                  transition={SPRING_SNAPPY}
+                  className="absolute bottom-full right-0 mb-2 z-50 w-64 max-h-72 overflow-auto rounded-xl border border-white/12 bg-zinc-900/95 backdrop-blur p-1 shadow-[0_8px_32px_rgba(0,0,0,0.8)]"
+                >
+                  <div className="px-2.5 py-1.5 text-[9px] font-mono uppercase tracking-[0.16em] text-white/30">
+                    Narration voice
+                  </div>
+                  {voices.map((v) => {
+                    const active = v.voiceURI === selectedVoice?.voiceURI;
+                    return (
+                      <button
+                        key={v.voiceURI}
+                        onClick={() => selectVoice(v)}
+                        className={`w-full flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg text-left transition-colors ${
+                          active ? "bg-white/[0.08] text-white" : "text-gray-400 hover:bg-white/[0.04] hover:text-white"
+                        }`}
+                      >
+                        <span className="truncate text-[12px]">{v.name}</span>
+                        {active && <Check className="w-3.5 h-3.5 shrink-0 text-white/70" />}
+                      </button>
+                    );
+                  })}
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
+        </div>
 
         <div className="w-px h-6 bg-white/10 mx-2" />
 
