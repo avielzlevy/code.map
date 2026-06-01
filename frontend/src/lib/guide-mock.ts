@@ -11,6 +11,16 @@ const add = (text: string): DiffLine => ({ text, kind: "added" });
 export const MOCK_GUIDE: PlayableGuide = {
   title: "Refund flow",
   slug: "refund-flow",
+  overview: {
+    before: [
+      "Refunds were a one-liner: the service just flipped an order's status to 'refunded'.",
+      "Nothing validated whether the order could actually be refunded, and no money trail was recorded.",
+    ],
+    change: [
+      "This change adds a real refund endpoint that loads the order and delegates to the service.",
+      "The service now guards the operation and writes a ledger entry, so refunds are validated and traceable.",
+    ],
+  },
   steps: [
     {
       nodeId: "src/orders/orders.controller.ts:OrdersController#refund",
@@ -33,7 +43,7 @@ export const MOCK_GUIDE: PlayableGuide = {
       },
       narration: [
         {
-          text: "This refund endpoint is brand new — here's the whole thing.",
+          text: "Heads up: order lookup and the payment gateway live in code we didn't touch here.",
         },
         {
           text: "We start at the new refund endpoint on the orders controller.",

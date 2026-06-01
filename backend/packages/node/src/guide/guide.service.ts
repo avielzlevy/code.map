@@ -11,6 +11,7 @@ import {
   GuideDiff,
   GuideFocus,
   GuideNarrationSegment,
+  GuideOverview,
   GuideStep,
   GuideUnresolvedStep,
 } from '../dto/code-map-config.dto';
@@ -100,14 +101,21 @@ export class GuideService {
       });
     }
 
+    const overview = this.cleanOverview(input.overview);
+
     FlowLogger.info(LOGGER_CONTEXT, 'Authored guide', {
       slug: input.slug,
       resolved: steps.length,
       unresolved: unresolved.length,
+      hasOverview: !!overview,
     });
 
     return {
-      artifact: { meta: { title: input.title, generatedAt: new Date().toISOString() }, steps },
+      artifact: {
+        meta: { title: input.title, generatedAt: new Date().toISOString() },
+        ...(overview ? { overview } : {}),
+        steps,
+      },
       unresolved,
     };
   }
@@ -135,6 +143,17 @@ export class GuideService {
     };
 
     return search(diff.after, 'after') ?? search(diff.before, 'before');
+  }
+
+  /** Trim/drop empty briefing sentences; return undefined when there's nothing to show. */
+  private cleanOverview(overview: GuideOverview | undefined): GuideOverview | undefined {
+    if (!overview) return undefined;
+    const clean = (lines: string[] | undefined): string[] =>
+      Array.isArray(lines) ? lines.map((l) => l.trim()).filter((l) => l.length > 0) : [];
+    const before = clean(overview.before);
+    const change = clean(overview.change);
+    if (before.length === 0 && change.length === 0) return undefined;
+    return { before, change };
   }
 
   /** Persist an artifact to `.codemap/guides/<slug>.json`. */

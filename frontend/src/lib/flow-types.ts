@@ -99,10 +99,13 @@ export type GuideStep = {
   explanation?: string;
 };
 
+export type GuideOverview = { before: string[]; change: string[] };
+
 export type GuideArtifact = {
   meta: {
     title?: string;
     generatedAt: string;
   };
+  overview?: GuideOverview;
   steps: GuideStep[];
 };

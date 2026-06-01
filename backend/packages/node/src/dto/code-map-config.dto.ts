@@ -158,11 +158,21 @@ export interface GuideSubgraphNode {
   role: 'changed' | 'context';
 }
 
+/** Orientation briefing shown as the guide's first screen (the "big picture"). */
+export interface GuideOverview {
+  /** How the affected area worked before the change — the missing context. */
+  before: string[];
+  /** What the change does and why. */
+  change: string[];
+}
+
 export interface GuideArtifact {
   meta: {
     title?: string;
     generatedAt: string;
   };
+  /** Optional big-picture briefing the player shows before the per-function steps. */
+  overview?: GuideOverview;
   /** Ordered walkthrough — one step per changed node, in the order the LLM curated. */
   steps: GuideStep[];
   /** Optional embedded subgraph for standalone/LLM use; the player latches onto the live graph. */
@@ -200,6 +210,8 @@ export interface GuideAuthorStep {
 export interface GuideAuthorInput {
   slug: string;
   title?: string;
+  /** Optional big-picture briefing (before-state + what changed). */
+  overview?: GuideOverview;
   steps: GuideAuthorStep[];
 }
 

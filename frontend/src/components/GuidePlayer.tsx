@@ -12,6 +12,10 @@ import {
   SkipBack,
   SkipForward,
   FileCode2,
+  LayoutGrid,
+  Info,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 import { SPRING_DEFAULT, SPRING_SNAPPY } from "@/lib/spring";
 import type { DiffLine, PlayableGuide, PlayableGuideStep } from "@/lib/guide-playable";
@@ -189,17 +193,17 @@ function CodePane({
           })}
 
           {/* Narration bubble — floats above the focused change, tail pointing
-              down. With no focus (nothing specific to highlight) it anchors to
-              the top of the code so the sentence still shows. */}
+              down. Only rendered when there's a line to point at; focus-less
+              sentences show in the stage's top context strip instead. */}
           <AnimatePresence>
-            {bubbleText && (
+            {bubbleText && focus && (
               <motion.div
                 key={bubbleKey}
                 initial={{ opacity: 0, scale: 0.97, y: "-100%" }}
                 animate={{ opacity: 1, scale: 1, y: "-100%" }}
                 exit={{ opacity: 0, scale: 0.97, y: "-100%" }}
                 transition={SPRING_DEFAULT}
-                style={{ top: PAD_TOP + (focus ? focus[0] : 0) * LINE_H - 10, left: 28 }}
+                style={{ top: PAD_TOP + focus[0] * LINE_H - 10, left: 28 }}
                 className="absolute z-10 w-[min(300px,calc(100%-44px))] origin-bottom-left pointer-events-none"
               >
                 <div className="relative rounded-xl border border-white/15 bg-zinc-900/95 backdrop-blur px-3 py-2 shadow-[0_8px_32px_rgba(0,0,0,0.85)]">
@@ -229,20 +233,40 @@ const DOT: Record<string, string> = {
 /** Left explorer — the changed files, each expanded into its step functions. */
 function FileSidebar({
   groups,
-  stepIndex,
+  activeIndex,
+  hasOverview,
   onSelect,
+  onSelectOverview,
 }: {
   groups: FileGroup[];
-  stepIndex: number;
+  /** Active step's array index, or -1 when the overview screen is showing. */
+  activeIndex: number;
+  hasOverview: boolean;
   onSelect: (i: number) => void;
+  onSelectOverview: () => void;
 }) {
   return (
     <aside className="w-60 shrink-0 border-r border-white/8 overflow-auto py-3">
+      {hasOverview && (
+        <button
+          onClick={onSelectOverview}
+          className={`w-full flex items-center gap-2 px-4 py-1.5 mb-2 text-left transition-colors ${
+            activeIndex === -1
+              ? "bg-white/[0.06] shadow-[inset_2px_0_0_0_rgba(255,255,255,0.55)]"
+              : "hover:bg-white/[0.03]"
+          }`}
+        >
+          <LayoutGrid className={`w-3.5 h-3.5 shrink-0 ${activeIndex === -1 ? "text-white/70" : "text-white/35"}`} />
+          <span className={`text-[12px] font-medium ${activeIndex === -1 ? "text-white" : "text-gray-300"}`}>
+            Overview
+          </span>
+        </button>
+      )}
       <div className="px-4 pb-2 text-[9px] font-mono uppercase tracking-[0.18em] text-white/30">Files</div>
       {groups.map((g) => {
         const name = g.file.split("/").pop() ?? g.file;
         const dir = g.file.includes("/") ? g.file.slice(0, g.file.lastIndexOf("/")) : "";
-        const hasActive = g.steps.some((s) => s.index === stepIndex);
+        const hasActive = g.steps.some((s) => s.index === activeIndex);
         return (
           <div key={g.file} className="mb-1.5">
             <div className="flex items-center gap-2 px-4 py-1">
@@ -255,7 +279,7 @@ function FileSidebar({
               </div>
             </div>
             {g.steps.map((st) => {
-              const active = st.index === stepIndex;
+              const active = st.index === activeIndex;
               return (
                 <button
                   key={st.index}
@@ -280,6 +304,76 @@ function FileSidebar({
   );
 }
 
+/** One labeled briefing section; the active sentence (by global index) is emphasized. */
+function OverviewBlock({
+  label,
+  lines,
+  offset,
+  activeSegment,
+}: {
+  label: string;
+  lines: string[];
+  offset: number;
+  activeSegment: number;
+}) {
+  if (lines.length === 0) return null;
+  return (
+    <div className="flex flex-col gap-2">
+      <span className="text-[9px] font-mono uppercase tracking-[0.18em] text-white/30">{label}</span>
+      {lines.map((text, i) => {
+        const active = offset + i === activeSegment;
+        return (
+          <p
+            key={i}
+            className={`pl-4 border-l-2 text-[15px] leading-relaxed transition-all duration-500 ${
+              active ? "border-white/55 text-gray-100" : "border-white/10 text-gray-500 opacity-60"
+            }`}
+          >
+            {text}
+          </p>
+        );
+      })}
+    </div>
+  );
+}
+
+/** The guide's first screen — a narrated "before vs what changed" briefing. */
+function OverviewScreen({
+  guide,
+  activeSegment,
+}: {
+  guide: PlayableGuide;
+  /** Index across [before…, change…]; the active sentence is emphasized. */
+  activeSegment: number;
+}) {
+  const before = guide.overview?.before ?? [];
+  const change = guide.overview?.change ?? [];
+
+  const fileCount = new Set(guide.steps.map((s) => s.file)).size;
+  const fnCount = guide.steps.length;
+  const counts: Record<string, number> = {};
+  guide.steps.forEach((s) => (counts[s.changeType] = (counts[s.changeType] ?? 0) + 1));
+  const statBits = (["added", "edited", "removed"] as const)
+    .filter((k) => counts[k])
+    .map((k) => `${counts[k]} ${k}`);
+
+  return (
+    <div className="absolute inset-0 overflow-auto rounded-xl border border-white/10 bg-zinc-950 px-10 py-10">
+      <div className="max-w-2xl mx-auto flex flex-col gap-9">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-2xl font-semibold text-white">{guide.title}</h1>
+          <p className="text-[12px] font-mono text-white/40">
+            {fileCount} file{fileCount !== 1 ? "s" : ""} · {fnCount} function{fnCount !== 1 ? "s" : ""}
+            {statBits.length > 0 ? ` · ${statBits.join(" · ")}` : ""}
+          </p>
+        </div>
+        <OverviewBlock label="Before" lines={before} offset={0} activeSegment={activeSegment} />
+        <OverviewBlock label="What changed" lines={change} offset={before.length} activeSegment={activeSegment} />
+      </div>
+    </div>
+  );
+}
+
 export function GuidePlayer({
   guide,
   onExit,
@@ -288,18 +382,39 @@ export function GuidePlayer({
   onExit: () => void;
 }) {
   const reduced = usePrefersReducedMotion();
-  const [stepIndex, setStepIndex] = useState(0);
-  const [phase, setPhase] = useState<Phase>("reveal");
+
+  // Screens = optional overview (screen 0) + one per step. The overview narrates
+  // its briefing immediately (no code to reveal); steps reveal then narrate.
+  const hasOverview =
+    !!guide.overview && (guide.overview.before.length > 0 || guide.overview.change.length > 0);
+  const overviewOffset = hasOverview ? 1 : 0;
+  const totalScreens = guide.steps.length + overviewOffset;
+
+  const [screenIndex, setScreenIndex] = useState(0);
+  const [phase, setPhase] = useState<Phase>(hasOverview ? "narrating" : "reveal");
   const [segmentIndex, setSegmentIndex] = useState(0);
   const [playing, setPlaying] = useState(true);
+  const [muted, setMuted] = useState(false);
+  const speechSupported = typeof window !== "undefined" && "speechSynthesis" in window;
 
-  const step: PlayableGuideStep = guide.steps[stepIndex];
-  const before = step.diff.before;
-  const after = step.diff.after;
+  const onOverview = hasOverview && screenIndex === 0;
+  const stepArrayIndex = screenIndex - overviewOffset;
+  const step: PlayableGuideStep | null = onOverview ? null : guide.steps[stepArrayIndex];
+  const before = step?.diff.before ?? null;
+  const after = step?.diff.after ?? null;
 
-  const isFirstStep = stepIndex === 0;
-  const isLastStep = stepIndex === guide.steps.length - 1;
-  const lastSegment = step.narration.length - 1;
+  const overviewSegments = useMemo<{ text: string }[]>(() => {
+    if (!guide.overview) return [];
+    return [...guide.overview.before, ...guide.overview.change].map((text) => ({ text }));
+  }, [guide.overview]);
+
+  // The narration driving the active screen (overview briefing or step sentences).
+  const narration = onOverview ? overviewSegments : step?.narration ?? [];
+  const lastSegment = narration.length - 1;
+  const activeText = narration[segmentIndex]?.text ?? "";
+
+  const isFirstScreen = screenIndex === 0;
+  const isLastScreen = screenIndex === totalScreens - 1;
 
   // Group steps by file for the explorer, preserving step order.
   const fileGroups = useMemo<FileGroup[]>(() => {
@@ -315,14 +430,24 @@ export function GuidePlayer({
     return groups;
   }, [guide.steps]);
 
-  const goToStep = useCallback(
+  const goToScreen = useCallback(
     (i: number) => {
-      const clamped = Math.max(0, Math.min(guide.steps.length - 1, i));
-      setStepIndex(clamped);
+      const clamped = Math.max(0, Math.min(totalScreens - 1, i));
+      setScreenIndex(clamped);
       setSegmentIndex(0);
-      setPhase("reveal");
+      // Overview (screen 0 when present) narrates straight away; steps reveal first.
+      setPhase(hasOverview && clamped === 0 ? "narrating" : "reveal");
     },
-    [guide.steps.length],
+    [totalScreens, hasOverview],
+  );
+
+  // Number of narration sentences on a given screen — for landing on the last one.
+  const segmentsOnScreen = useCallback(
+    (i: number): number => {
+      if (hasOverview && i === 0) return overviewSegments.length;
+      return guide.steps[i - overviewOffset]?.narration.length ?? 0;
+    },
+    [hasOverview, overviewSegments.length, guide.steps, overviewOffset],
   );
 
   // Reveal → narrate: hold for the staggered fade-in, then start the narration.
@@ -334,17 +459,47 @@ export function GuidePlayer({
     return () => clearTimeout(id);
   }, [phase, before, after, reduced]);
 
-  // Narration auto-advance.
+  // Advance to the next sentence / screen, or stop at the very end.
+  const advance = useCallback(() => {
+    if (segmentIndex < lastSegment) setSegmentIndex((s) => s + 1);
+    else if (!isLastScreen) goToScreen(screenIndex + 1);
+    else setPlaying(false);
+  }, [segmentIndex, lastSegment, isLastScreen, screenIndex, goToScreen]);
+
+  // Narration playback: speak the active sentence (Web Speech) and advance when
+  // it finishes. Falls back to a timed dwell when muted/unsupported, with a
+  // safety guard so speech that never fires onend can't stall the walkthrough.
   useEffect(() => {
     if (phase !== "narrating" || !playing) return;
-    const text = step.narration[segmentIndex]?.text ?? "";
-    const id = setTimeout(() => {
-      if (segmentIndex < lastSegment) setSegmentIndex((s) => s + 1);
-      else if (!isLastStep) goToStep(stepIndex + 1);
-      else setPlaying(false); // reached the end
-    }, dwellFor(text));
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      advance();
+    };
+
+    const canSpeak = speechSupported && !muted && activeText.length > 0;
+    if (canSpeak) {
+      const synth = window.speechSynthesis;
+      synth.cancel();
+      const utter = new SpeechSynthesisUtterance(activeText);
+      utter.lang = "en-US";
+      utter.onend = finish;
+      utter.onerror = finish;
+      synth.speak(utter);
+      // Guard: if onend never fires (autoplay policy, lost utterance), move on.
+      const guard = setTimeout(finish, activeText.length * 95 + 6000);
+      return () => {
+        clearTimeout(guard);
+        utter.onend = null;
+        utter.onerror = null;
+        synth.cancel();
+      };
+    }
+
+    const id = setTimeout(finish, dwellFor(activeText));
     return () => clearTimeout(id);
-  }, [phase, playing, segmentIndex, lastSegment, isLastStep, stepIndex, step.narration, goToStep]);
+  }, [phase, playing, muted, activeText, screenIndex, segmentIndex, speechSupported, advance]);
 
   const ensureNarrating = useCallback(() => {
     if (phase === "reveal") setPhase("narrating");
@@ -353,19 +508,19 @@ export function GuidePlayer({
   const nextSentence = useCallback(() => {
     ensureNarrating();
     if (segmentIndex < lastSegment) setSegmentIndex((s) => s + 1);
-    else if (!isLastStep) goToStep(stepIndex + 1);
-  }, [ensureNarrating, segmentIndex, lastSegment, isLastStep, stepIndex, goToStep]);
+    else if (!isLastScreen) goToScreen(screenIndex + 1);
+  }, [ensureNarrating, segmentIndex, lastSegment, isLastScreen, screenIndex, goToScreen]);
 
   const prevSentence = useCallback(() => {
     ensureNarrating();
     if (segmentIndex > 0) setSegmentIndex((s) => s - 1);
-    else if (!isFirstStep) {
-      const prev = stepIndex - 1;
-      setStepIndex(prev);
-      setSegmentIndex(guide.steps[prev].narration.length - 1);
+    else if (!isFirstScreen) {
+      const prev = screenIndex - 1;
+      setScreenIndex(prev);
+      setSegmentIndex(Math.max(0, segmentsOnScreen(prev) - 1));
       setPhase("narrating");
     }
-  }, [ensureNarrating, segmentIndex, isFirstStep, stepIndex, guide.steps]);
+  }, [ensureNarrating, segmentIndex, isFirstScreen, screenIndex, segmentsOnScreen]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -373,13 +528,15 @@ export function GuidePlayer({
       else if (e.key === " ") { e.preventDefault(); setPlaying((p) => !p); }
       else if (e.key === "ArrowRight") nextSentence();
       else if (e.key === "ArrowLeft") prevSentence();
+      else if (e.key === "m" || e.key === "M") setMuted((x) => !x);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onExit, nextSentence, prevSentence]);
 
-  const activeFocus = phase === "narrating" ? step.narration[segmentIndex]?.focus ?? null : null;
-  const bubbleText = phase === "narrating" ? step.narration[segmentIndex]?.text ?? null : null;
+  const narrating = !onOverview && phase === "narrating" && !!step;
+  const activeFocus = narrating ? step!.narration[segmentIndex]?.focus ?? null : null;
+  const bubbleText = narrating ? step!.narration[segmentIndex]?.text ?? null : null;
   // Which pane shows the narration bubble — the focused side if it exists, else
   // whichever pane is present (so a no-focus sentence still gets a bubble).
   const preferredSide: "before" | "after" = activeFocus?.side === "before" ? "before" : "after";
@@ -391,7 +548,14 @@ export function GuidePlayer({
     return null;
   };
 
-  const change = CHANGE_LABEL[step.changeType];
+  // A focus-less sentence about off-screen context — shown as a top strip, not
+  // pinned to a line.
+  const contextNote = narrating && !activeFocus ? bubbleText : null;
+  // Reserve the strip's slot for the WHOLE step when it has any context sentence,
+  // so the diff never shifts as the strip fades in/out between sentences.
+  const activeStepHasContext = !onOverview && !!step && step.narration.some((n) => !n.focus);
+
+  const change = step ? CHANGE_LABEL[step.changeType] : null;
   const panes: ("before" | "after")[] = [];
   if (before) panes.push("before");
   if (after) panes.push("after");
@@ -409,14 +573,22 @@ export function GuidePlayer({
         <GraduationCap className="w-4 h-4 text-white/40 shrink-0" />
         <span className="text-[12px] font-semibold text-white truncate">{guide.title}</span>
         <span className="text-[10px] font-mono text-white/30">
-          {stepIndex + 1} / {guide.steps.length}
+          {screenIndex + 1} / {totalScreens}
         </span>
         <div className="w-px h-5 bg-white/10" />
-        <span className="text-[13px] font-mono font-semibold text-white truncate">{step.funcName}</span>
-        <span className="text-[10px] font-mono text-gray-500 truncate">{step.file.split("/").pop()}</span>
-        <span className={`text-[9px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded border ${change.className}`}>
-          {change.label}
-        </span>
+        {onOverview || !step ? (
+          <span className="text-[13px] font-mono font-semibold text-white/70 truncate">Overview</span>
+        ) : (
+          <>
+            <span className="text-[13px] font-mono font-semibold text-white truncate">{step.funcName}</span>
+            <span className="text-[10px] font-mono text-gray-500 truncate">{step.file.split("/").pop()}</span>
+            {change && (
+              <span className={`text-[9px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded border ${change.className}`}>
+                {change.label}
+              </span>
+            )}
+          </>
+        )}
         <div className="flex-1" />
         <button
           onClick={onExit}
@@ -429,34 +601,81 @@ export function GuidePlayer({
 
       {/* Body — file explorer + stage */}
       <div className="flex flex-1 min-h-0">
-        <FileSidebar groups={fileGroups} stepIndex={stepIndex} onSelect={goToStep} />
+        <FileSidebar
+          groups={fileGroups}
+          activeIndex={onOverview ? -1 : stepArrayIndex}
+          hasOverview={hasOverview}
+          onSelect={(i) => goToScreen(i + overviewOffset)}
+          onSelectOverview={() => goToScreen(0)}
+        />
 
-        {/* Stage — before/after panes. Layers crossfade (absolute) so the new
-            step mounts immediately while the old fades out — no layout jump. */}
-        <div className="relative flex-1 min-h-0 px-6 py-5">
-          <AnimatePresence>
-          <motion.div
-            key={stepIndex}
-            initial={{ opacity: 0, y: 14, scale: 0.99 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -14, scale: 0.99 }}
-            transition={SPRING_DEFAULT}
-            className="absolute inset-x-6 inset-y-5 flex gap-px rounded-xl border border-white/10 bg-zinc-950 overflow-hidden divide-x divide-white/8"
-          >
-            {panes.map((side) => (
-              <CodePane
-                key={side}
-                side={side}
-                lines={side === "before" ? before! : after!}
-                phase={phase}
-                focus={focusFor(side)}
-                bubbleText={side === bubbleSide ? bubbleText : null}
-                bubbleKey={segmentIndex}
-                reduced={reduced}
-              />
-            ))}
-          </motion.div>
-        </AnimatePresence>
+        {/* Stage — a column: optional top context strip + the screen area.
+            The strip is in normal flow so it never overlaps the code; screen
+            layers crossfade (absolute) so the new mounts as the old fades out. */}
+        <div className="flex flex-col flex-1 min-h-0 px-6 py-5 gap-3">
+          {/* Context slot — fixed height reserved for the whole step (when it has
+              context), so the diff stays put while the card fades in/out. */}
+          {activeStepHasContext && (
+            <div className="shrink-0 h-[60px]">
+              <AnimatePresence>
+                {contextNote && (
+                  <motion.div
+                    key="context-card"
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={SPRING_DEFAULT}
+                    className="h-full flex items-start gap-2.5 rounded-xl border border-white/12 bg-zinc-900/90 backdrop-blur px-4 py-2.5 overflow-hidden"
+                  >
+                    <Info className="w-3.5 h-3.5 mt-0.5 shrink-0 text-white/40" />
+                    <div className="flex flex-col gap-0.5 min-w-0">
+                      <span className="text-[9px] font-mono uppercase tracking-[0.16em] text-white/30">Context</span>
+                      <p className="text-[13px] leading-snug text-gray-100 line-clamp-2">{contextNote}</p>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
+
+          <div className="relative flex-1 min-h-0">
+            <AnimatePresence>
+              {onOverview ? (
+                <motion.div
+                  key="overview"
+                  initial={{ opacity: 0, y: 14, scale: 0.99 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -14, scale: 0.99 }}
+                  transition={SPRING_DEFAULT}
+                  className="absolute inset-0"
+                >
+                  <OverviewScreen guide={guide} activeSegment={segmentIndex} />
+                </motion.div>
+              ) : (
+                <motion.div
+                  key={screenIndex}
+                  initial={{ opacity: 0, y: 14, scale: 0.99 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -14, scale: 0.99 }}
+                  transition={SPRING_DEFAULT}
+                  className="absolute inset-0 flex gap-px rounded-xl border border-white/10 bg-zinc-950 overflow-hidden divide-x divide-white/8"
+                >
+                  {panes.map((side) => (
+                    <CodePane
+                      key={side}
+                      side={side}
+                      lines={side === "before" ? before! : after!}
+                      phase={phase}
+                      focus={focusFor(side)}
+                      bubbleText={side === bubbleSide && activeFocus ? bubbleText : null}
+                      bubbleKey={segmentIndex}
+                      reduced={reduced}
+                    />
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </div>
 
@@ -464,10 +683,10 @@ export function GuidePlayer({
       <div className="h-0.5 w-full bg-white/5">
         {phase === "narrating" && playing && (
           <motion.div
-            key={`${stepIndex}-${segmentIndex}`}
+            key={`${screenIndex}-${segmentIndex}`}
             initial={{ width: "0%" }}
             animate={{ width: "100%" }}
-            transition={{ duration: dwellFor(bubbleText ?? "") / 1000, ease: "linear" }}
+            transition={{ duration: dwellFor(activeText) / 1000, ease: "linear" }}
             className="h-full bg-white/40"
           />
         )}
@@ -476,8 +695,8 @@ export function GuidePlayer({
       {/* Transport */}
       <div className="flex items-center justify-center gap-2 px-6 py-4 border-t border-white/8">
         <button
-          onClick={() => goToStep(stepIndex - 1)}
-          disabled={isFirstStep}
+          onClick={() => goToScreen(screenIndex - 1)}
+          disabled={isFirstScreen}
           aria-label="Previous step"
           className="w-9 h-9 flex items-center justify-center rounded-lg border border-white/10 text-gray-400 hover:text-white hover:border-white/25 hover:bg-white/5 disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
         >
@@ -485,7 +704,7 @@ export function GuidePlayer({
         </button>
         <button
           onClick={prevSentence}
-          disabled={isFirstStep && segmentIndex === 0}
+          disabled={isFirstScreen && segmentIndex === 0}
           aria-label="Previous sentence"
           className="w-9 h-9 flex items-center justify-center rounded-lg border border-white/10 text-gray-400 hover:text-white hover:border-white/25 hover:bg-white/5 disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
         >
@@ -502,15 +721,15 @@ export function GuidePlayer({
         </motion.button>
         <button
           onClick={nextSentence}
-          disabled={isLastStep && segmentIndex === lastSegment}
+          disabled={isLastScreen && segmentIndex === lastSegment}
           aria-label="Next sentence"
           className="w-9 h-9 flex items-center justify-center rounded-lg border border-white/10 text-gray-400 hover:text-white hover:border-white/25 hover:bg-white/5 disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
         >
           <ChevronRight className="w-4 h-4" />
         </button>
         <button
-          onClick={() => goToStep(stepIndex + 1)}
-          disabled={isLastStep}
+          onClick={() => goToScreen(screenIndex + 1)}
+          disabled={isLastScreen}
           aria-label="Next step"
           className="w-9 h-9 flex items-center justify-center rounded-lg border border-white/10 text-gray-400 hover:text-white hover:border-white/25 hover:bg-white/5 disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
         >
@@ -519,16 +738,35 @@ export function GuidePlayer({
 
         <div className="w-px h-6 bg-white/10 mx-2" />
 
-        {/* Step dots */}
+        <button
+          onClick={() => setMuted((m) => !m)}
+          aria-label={muted ? "Unmute narration" : "Mute narration"}
+          title={
+            speechSupported
+              ? muted
+                ? "Unmute narration"
+                : "Mute narration"
+              : "Narration isn't supported in this browser"
+          }
+          className={`w-9 h-9 flex items-center justify-center rounded-lg border border-white/10 hover:text-white hover:border-white/25 hover:bg-white/5 transition-colors ${
+            muted ? "text-white/30" : "text-gray-400"
+          }`}
+        >
+          {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+        </button>
+
+        <div className="w-px h-6 bg-white/10 mx-2" />
+
+        {/* Screen dots — overview (if any) + one per step */}
         <div className="flex items-center gap-1.5">
-          {guide.steps.map((_, i) => (
+          {Array.from({ length: totalScreens }).map((_, i) => (
             <motion.button
               key={i}
-              onClick={() => goToStep(i)}
-              animate={{ width: i === stepIndex ? 18 : 6, opacity: i === stepIndex ? 1 : 0.25 }}
+              onClick={() => goToScreen(i)}
+              animate={{ width: i === screenIndex ? 18 : 6, opacity: i === screenIndex ? 1 : 0.25 }}
               transition={SPRING_SNAPPY}
               className="h-1.5 rounded-full bg-white"
-              aria-label={`Go to step ${i + 1}`}
+              aria-label={`Go to screen ${i + 1}`}
             />
           ))}
         </div>

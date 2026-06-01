@@ -36,9 +36,13 @@ export type PlayableGuideStep = {
   narration: NarrationSegment[];
 };
 
+export type GuideOverview = { before: string[]; change: string[] };
+
 export type PlayableGuide = {
   title: string;
   slug: string;
+  /** Optional big-picture briefing shown as the first screen. */
+  overview?: GuideOverview;
   steps: PlayableGuideStep[];
 };
 
@@ -52,6 +56,7 @@ export function artifactToPlayable(artifact: GuideArtifact, slug: string): Playa
   return {
     title: artifact.meta?.title ?? slug,
     slug,
+    overview: artifact.overview,
     steps: artifact.steps.map(
       (s): PlayableGuideStep => ({
         nodeId: s.nodeId,

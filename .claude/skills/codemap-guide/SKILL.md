@@ -15,29 +15,50 @@ You write only **semantic** content — which functions changed, and a spoken sc
 
 ## Steps
 
-### 1. Decide the steps from the conversation
+### 1. Brief the big picture (the `overview`)
+Most readers arrive without context — they (often with an LLM) just changed code they didn't write, and can't yet *explain* it because they never understood the before-state. Author an `overview` that orients them; it becomes the guide's **first screen**, before any function.
+- `before` — an array of 1–3 short sentences on how the affected area worked *before* this change. This is the missing context.
+- `change` — an array of 1–3 short sentences on what the change does and why.
+
+Each sentence is narrated one at a time, so keep them tight. The overview is optional but strongly recommended — it's the orientation that makes the rest land.
+
+### 2. Decide the steps from the conversation
 List the functions involved in the change, in the order you'd teach them (usually entry point → downstream). For each, you need:
 - `methodName` — the function name (e.g. `refund`).
 - `file` — enough of the path to identify it (e.g. `orders.controller.ts`). Use a longer path if the basename isn't unique; add `"className"` to disambiguate same-named methods.
 - `changeType` — `"added"` or `"edited"`. (`"removed"` isn't supported — a deleted function has no live node; mention deletions inside a neighboring step's narration instead.)
 
-### 2. Write the narration — this is the value you add
-For each step, write `narration`: an **ordered array of short spoken sentences**. Each sentence is one idea, and carries an optional `focus`:
+### 3. Write the narration — this is the value you add
+For each step, write `narration`: an **ordered array of short spoken sentences**. Each sentence is one idea, and carries a `focus`:
 - `text` — what to say. Write it to be *heard* — conversational, one beat per sentence. The player shows it as a chat bubble above the code and (soon) speaks it aloud.
-- `focus` — a **snippet of the changed code** to spotlight while that sentence plays (e.g. `"assertRefundable"` or `"order.refundedAmount = amount"`). The server finds the diff line(s) containing it and highlights them. Omit `focus` to highlight the whole function for that sentence.
+- `focus` — an **exact substring copied from a changed line** to spotlight while that sentence plays (e.g. `"assertRefundable"` or `"order.refundedAmount = amount"`). The server finds the diff line(s) containing it and highlights them, then anchors the bubble there.
+
+**The rule for `focus`:**
+- If the sentence is about code shown in this step → it **must** have a `focus`, and that `focus` must be an exact substring of a changed line (copy it from the diff, don't paraphrase) so the server can match it. A sentence about the on-screen code with no matching focus floats with nothing to point at — avoid it.
+- Omit `focus` **only** when the sentence is deliberately *not* about the code on screen — context about unchanged code, or a caller/callee in a file this guide doesn't show. These render as a tail-less "context" note, not pinned to a line. Use this sparingly.
 
 Guidance:
 - Keep `focus` distinctive enough to match one place (a method call, an assignment, a decorator). It's matched against the **after** side first, then the before side.
 - Walk the reader through the change: first sentence sets the scene, later sentences land on each meaningful added/edited line.
 - 2–5 sentences per step is the sweet spot.
 
-### 3. POST it to the sidecar
+### 4. POST it to the sidecar
 ```bash
 curl -s -X POST "$BASE/api/flow-map/guide" \
   -H "Content-Type: application/json" \
   -d '{
     "slug": "refund-flow",
     "title": "Refund flow",
+    "overview": {
+      "before": [
+        "Refunds were a one-liner — the service just flipped an order'\''s status to refunded.",
+        "Nothing validated the refund or recorded a money trail."
+      ],
+      "change": [
+        "Adds a refund endpoint that loads the order and delegates to the service.",
+        "The service now guards the operation and writes a ledger entry."
+      ]
+    },
     "steps": [
       { "methodName": "refund", "file": "orders.controller.ts", "changeType": "added",
         "narration": [
@@ -54,7 +75,7 @@ curl -s -X POST "$BASE/api/flow-map/guide" \
 ```
 Pick a short kebab-case `slug` (the feature name).
 
-### 4. Check the response — this is the validation chain
+### 5. Check the response — this is the validation chain
 The response is `{ status, data: { url, resolved, total, unresolved } }`:
 - **`resolved === total`, `unresolved: []`** → success. The guide is written, with the diff and focus already snapshotted.
 - **`unresolved` has entries** → each tells you why a step didn't match:
@@ -66,9 +87,10 @@ The response is `{ status, data: { url, resolved, total, unresolved } }`:
 
 > Focus snippets that don't match a diff line aren't an error — that sentence simply highlights the whole function. If a focus isn't landing where you expect, pick a more exact snippet from the changed line.
 
-### 5. Hand over the URL
+### 6. Hand over the URL
 On success, give the user `$BASE` + the returned `url` (e.g. `http://localhost:4567/app?guide=refund-flow`) and offer to open it (macOS: `open "<url>"`). It loads the guide and starts the narrated playback — each step fades in the function, then the focus walks the change as the narration plays.
 
 ## Notes
-- You only ever send **semantic** content (`methodName` + `file` + `changeType` + `narration`). The server owns id resolution, the git before/after snapshot, focus-to-line mapping, validation, and file-writing. Don't build node ids, line numbers, or `.codemap/guides/*.json` yourself.
+- You only ever send **semantic** content (the guide-level `overview`, plus per step `methodName` + `file` + `changeType` + `narration`). The server owns id resolution, the git before/after snapshot, focus-to-line mapping, validation, and file-writing. Don't build node ids, line numbers, or `.codemap/guides/*.json` yourself.
+- The `overview` is guide-level (one per guide) and needs no graph resolution. Omit it and the guide opens straight on the first function.
 - The diff is captured from `git diff HEAD` at author time, so author the guide **after** making the change and **before** committing-and-moving-on if you want the working-tree diff. The written guide is portable: commit it or open the same URL on a teammate's checkout.
