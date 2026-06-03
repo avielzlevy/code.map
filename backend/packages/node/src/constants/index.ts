@@ -97,8 +97,10 @@ export const GUIDE_CHANGE_TYPES = ['added', 'edited', 'removed'] as const;
 /** Allowed guide slug characters — guards the saved-guide read against path traversal. */
 export const GUIDE_SLUG_PATTERN = /^[a-zA-Z0-9._-]+$/;
 
-/** Unified-diff context lines requested when snapshotting a function's before/after. */
-export const GUIDE_DIFF_CONTEXT = 3;
+/** Unified-diff context lines requested when snapshotting — wide enough to span a
+ *  whole function (which is capped at GUIDE_MAX_FUNCTION_LINES) so the diff can be
+ *  clipped to the full function body, not just the changed hunk. */
+export const GUIDE_DIFF_CONTEXT = 120;
 
 /** Safety cap when extracting a function body from an untracked (brand-new) file. */
 export const GUIDE_MAX_FUNCTION_LINES = 80;

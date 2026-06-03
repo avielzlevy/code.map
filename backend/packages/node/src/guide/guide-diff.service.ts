@@ -13,16 +13,20 @@ import { GuideChangeType, GuideDiff, GuideDiffLine } from '../dto/code-map-confi
 const LOGGER_CONTEXT = 'GuideDiffService';
 
 /**
- * Snapshots a function's before/after code from git at guide-author time, so the
- * written guide is portable (no live working tree needed to replay it).
+ * Snapshots a function's before/after code from git at guide-author time.
  *
- * Strategy is hunk-based and language-agnostic: it reconstructs both panes from
- * the unified `git diff HEAD` of the file — context+removed lines form `before`,
- * context+added lines form `after`. A brand-new (untracked) file has no diff, so
- * we fall back to extracting the function body straight from the working tree.
+ * It captures the **whole function** (not just the changed hunk), with the
+ * changed lines marked — so the narration can point at any line of the function
+ * and the viewer shows the full context, not a tiny slice. It does this by
+ * diffing against `base` with wide context, then clipping the unified diff to
+ * the function's line range. Brand-new / untracked files fall back to reading
+ * the function straight off disk.
+ *
+ * No-ops to an empty diff on any failure — the guide still plays, just without
+ * before/after panes for that step.
  */
 export class GuideDiffService {
-  /** Build the before/after diff for one function. Never throws — degrades to empty. */
+  /** Build the before/after diff for one function (full function body). */
   snapshot(
     root: string,
     relFile: string,
@@ -33,13 +37,30 @@ export class GuideDiffService {
   ): GuideDiff {
     const language = this.languageFor(relFile);
     try {
-      const raw = this.gitDiff(root, relFile, base);
-      if (raw) {
-        const hunk = this.pickHunk(raw, startLine);
-        if (hunk) return this.shape(this.splitHunk(hunk), changeType, language);
+      const abs = path.join(root, relFile);
+      const fileLines = fs.existsSync(abs) ? fs.readFileSync(abs, 'utf8').split('\n') : [];
+      const fnAfter = fileLines.length ? this.extractFunction(fileLines, startLine, language) : [];
+      const endLine = startLine + fnAfter.length - 1;
+
+      // Added function: there is no "before" — show the whole new body.
+      if (changeType === 'added') {
+        return { language, before: null, after: fnAfter.map((text) => ({ text, kind: 'added' })) };
       }
-      // No diff (untracked/new file, or unchanged) — read the function from disk.
-      return this.snapshotFromWorkingTree(root, relFile, methodName, startLine, changeType, language);
+
+      // Edited/removed: clip the unified diff to the function's line range so we
+      // get the full function with adds/removes marked.
+      const raw = fnAfter.length ? this.gitDiff(root, relFile, base) : '';
+      if (raw) {
+        const { before, after } = this.clipDiff(raw, startLine, endLine);
+        if (after.length > 0 || before.length > 0) {
+          if (changeType === 'removed') return { language, before, after: null };
+          return { language, before, after };
+        }
+      }
+
+      // No diff against base (e.g. already committed and no base ref given) — show
+      // the full current function so the narration still has every line to point at.
+      return this.fromWorkingTree(fnAfter, changeType, language);
     } catch (err) {
       FlowLogger.warn(LOGGER_CONTEXT, 'Diff snapshot failed; emitting empty diff', {
         file: relFile,
@@ -50,13 +71,13 @@ export class GuideDiffService {
     }
   }
 
-  /** `git diff <base>` (base → working tree) for a file, or '' when git fails / nothing changed. */
+  /** `git diff <base>` (base → working tree) for a file, with wide context. */
   private gitDiff(root: string, relFile: string, base: string): string {
     try {
       return execFileSync(
         'git',
         ['diff', base, '--no-color', `-U${GUIDE_DIFF_CONTEXT}`, '--', relFile],
-        { cwd: root, encoding: 'utf8', maxBuffer: 10 * 1024 * 1024 },
+        { cwd: root, encoding: 'utf8', maxBuffer: 20 * 1024 * 1024 },
       );
     } catch {
       return '';
@@ -64,79 +85,46 @@ export class GuideDiffService {
   }
 
   /**
-   * Pick the hunk covering the function. Hunk headers read `@@ -a,b +c,d @@`,
-   * where c is the 1-based start line on the AFTER (working-tree) side — the same
-   * coordinate space as the node's `startLine`. Prefer the hunk whose after-range
-   * contains the line; else the first hunk at/after it; else the first hunk.
+   * Reconstruct before/after panes from a unified diff, clipped to a function's
+   * after-side line range [startLine, endLine]. Tracks the after-side line number
+   * across hunks: ` ` context → both panes, `+` added → after, `-` removed →
+   * before (kept when it sits inside the function region).
    */
-  private pickHunk(raw: string, startLine: number): string[] | null {
-    const lines = raw.split('\n');
-    const headers: { index: number; afterStart: number; afterCount: number }[] = [];
-    lines.forEach((line, index) => {
-      const m = /^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@/.exec(line);
-      if (m) headers.push({ index, afterStart: Number(m[1]), afterCount: m[2] ? Number(m[2]) : 1 });
-    });
-    if (headers.length === 0) return null;
-
-    const bodyOf = (hunkIdx: number): string[] => {
-      const start = headers[hunkIdx].index + 1;
-      const end = hunkIdx + 1 < headers.length ? headers[hunkIdx + 1].index : lines.length;
-      return lines.slice(start, end).filter((l) => /^[ +-]/.test(l));
-    };
-
-    const containing = headers.findIndex(
-      (h) => startLine >= h.afterStart && startLine <= h.afterStart + h.afterCount,
-    );
-    if (containing >= 0) return bodyOf(containing);
-
-    const after = headers.findIndex((h) => h.afterStart >= startLine);
-    return bodyOf(after >= 0 ? after : 0);
-  }
-
-  /** Reconstruct before/after panes from a unified-diff hunk body. */
-  private splitHunk(hunk: string[]): { before: GuideDiffLine[]; after: GuideDiffLine[] } {
+  private clipDiff(raw: string, startLine: number, endLine: number): { before: GuideDiffLine[]; after: GuideDiffLine[] } {
     const before: GuideDiffLine[] = [];
     const after: GuideDiffLine[] = [];
-    for (const line of hunk) {
+    let afterNo = 0;
+    for (const line of raw.split('\n')) {
+      const h = /^@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@/.exec(line);
+      if (h) {
+        afterNo = Number(h[1]);
+        continue;
+      }
+      if (!/^[ +-]/.test(line)) continue; // skip headers / metadata
       const text = line.slice(1);
-      if (line.startsWith('+')) after.push({ text, kind: 'added' });
-      else if (line.startsWith('-')) before.push({ text, kind: 'removed' });
-      else {
-        before.push({ text, kind: 'context' });
-        after.push({ text, kind: 'context' });
+      const ch = line[0];
+      if (ch === ' ') {
+        if (afterNo >= startLine && afterNo <= endLine) {
+          before.push({ text, kind: 'context' });
+          after.push({ text, kind: 'context' });
+        }
+        afterNo++;
+      } else if (ch === '+') {
+        if (afterNo >= startLine && afterNo <= endLine) after.push({ text, kind: 'added' });
+        afterNo++;
+      } else {
+        // removed line — sits at the current after position; keep it if inside the fn
+        if (afterNo >= startLine && afterNo <= endLine + 1) before.push({ text, kind: 'removed' });
       }
     }
     return { before, after };
   }
 
-  /** Drop the unused pane per change type (added → no before, removed → no after). */
-  private shape(
-    panes: { before: GuideDiffLine[]; after: GuideDiffLine[] },
-    changeType: GuideChangeType,
-    language: string,
-  ): GuideDiff {
-    if (changeType === 'added') return { language, before: null, after: panes.after };
-    if (changeType === 'removed') return { language, before: panes.before, after: null };
-    return { language, before: panes.before, after: panes.after };
-  }
-
-  /** Fallback for untracked/new files: pull the function body straight off disk. */
-  private snapshotFromWorkingTree(
-    root: string,
-    relFile: string,
-    methodName: string,
-    startLine: number,
-    changeType: GuideChangeType,
-    language: string,
-  ): GuideDiff {
-    const abs = path.join(root, relFile);
-    if (!fs.existsSync(abs)) return { language, before: null, after: null };
-    const source = fs.readFileSync(abs, 'utf8').split('\n');
-    const body = this.extractFunction(source, startLine, language).map(
-      (text): GuideDiffLine => ({ text, kind: 'context' }),
-    );
+  /** Fallback (untracked / no-diff): show the full current function. */
+  private fromWorkingTree(fnAfter: string[], changeType: GuideChangeType, language: string): GuideDiff {
+    if (fnAfter.length === 0) return { language, before: null, after: null };
+    const body = fnAfter.map((text): GuideDiffLine => ({ text, kind: 'context' }));
     if (changeType === 'removed') return { language, before: body, after: null };
-    // Brand-new or unchanged-but-untracked: show the function as the "after".
     return { language, before: null, after: body };
   }
 

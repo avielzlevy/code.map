@@ -138,7 +138,10 @@ export class GuideService {
     snippet: string,
     side?: 'before' | 'after',
   ): GuideFocus | undefined {
-    const needle = snippet.trim();
+    // Match on collapsed whitespace so an LLM's snippet lands even if its spacing
+    // or indentation differs slightly from the source line.
+    const norm = (s: string): string => s.replace(/\s+/g, ' ').trim();
+    const needle = norm(snippet);
     if (!needle) return undefined;
 
     const search = (
@@ -148,7 +151,7 @@ export class GuideService {
       if (!lines) return undefined;
       const hits: number[] = [];
       lines.forEach((l, i) => {
-        if (l.text.includes(needle)) hits.push(i);
+        if (norm(l.text).includes(needle)) hits.push(i);
       });
       if (hits.length === 0) return undefined;
       return { side: paneSide, lines: [hits[0], hits[hits.length - 1]] };

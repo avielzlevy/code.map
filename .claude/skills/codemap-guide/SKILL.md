@@ -42,8 +42,9 @@ For each step, write `narration`: an **ordered array of short spoken sentences**
 - `focusSide` — optional, `"before"` or `"after"`. Forces which diff pane the focus highlights. Default searches the after pane first, then before.
 
 **The rule for `focus`:**
-- If the sentence is about code shown in this step → it **must** have a `focus`, and that `focus` must be an exact substring of a line in the diff (copy it, don't paraphrase) so the server can match it. A sentence about the on-screen code with no matching focus floats with nothing to point at — avoid it.
-- Omit `focus` **only** when the sentence is deliberately *not* about the code on screen — context about unchanged code, or a caller/callee in a file this guide doesn't show. These render as a tail-less "context" note. Use this sparingly.
+- The before/after panes show the **whole function**, not just the changed lines — so you can point at *any* line of it. **Give every on-screen sentence a `focus`**, copied verbatim from a line of the function (the server matches on collapsed whitespace, so exact spacing isn't required, but copy the real tokens — don't paraphrase). A sentence about the code with no focus shows as a tail-less note with nothing highlighted, which feels disconnected — that's the #1 thing that makes a guide feel lacklustre, so avoid it.
+- Walk the function: a typical step is one sentence per meaningful line/region, each with its own focus, so the highlight moves as the narration moves.
+- Omit `focus` **only** when the sentence is deliberately *not* about any code on screen — context about a caller/callee in a file this guide doesn't show. These render as a tail-less "context" note. Use this rarely.
 
 **For `"edited"` steps, narrate the before AND the after.** The reader sees both panes — explain both. Open with what the function did *before* this change, pointing at the prior code with `"focusSide": "before"` (the focus snippet must be a line present in the before pane), then walk the new/changed lines on the after side. Understanding a change means understanding what it replaced, not just what was added.
 
