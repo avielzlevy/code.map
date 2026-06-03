@@ -105,6 +105,9 @@ On success, give the user `$BASE` + the returned `url` (e.g. `http://localhost:4
 
 To produce a **shareable mp4** of the walkthrough (for a PR, Slack, etc.), use the **codemap-guide-video** skill with the same slug.
 
+### 7. (Optional) Put it on the PR
+If this change has an open PR, close the loop: check whether the PR description already has a walkthrough, and if not, render the video and attach it. Hand this off to the **codemap-guide-video** skill, which has the exact steps (it finds the PR with `gh`, skips if a video is already there via the `<!-- codemap-video -->` marker, renders the mp4, and appends it to the description). Skip silently if there's no PR or `gh` isn't set up.
+
 ## Notes
 - You only ever send **semantic** content (guide-level `summary` + `closing` + `overview` + optional `base`, plus per step `methodName` + `file` + `changeType` + `narration`). The server owns id resolution, the git before/after snapshot, focus-to-line mapping, validation, and file-writing. Don't build node ids, line numbers, or `.codemap/guides/*.json` yourself.
 - The `overview` is guide-level (one per guide) and needs no graph resolution. Omit it and the guide opens straight on the first function.

@@ -1,6 +1,6 @@
 ---
 name: codemap-guide-video
-description: Render a saved code-map guide to a shareable mp4 (narrated walkthrough with before/after code) by recording its live playback. Use after authoring a guide when the user wants a video — "render the guide to mp4", "make a video of the walkthrough", "export the guide as video", "guide video for the PR".
+description: Render a saved code-map guide to a shareable mp4 (narrated walkthrough with before/after code) by recording its live playback, and optionally attach it to the change's open PR. Use after authoring a guide when the user wants a video — "render the guide to mp4", "make a video of the walkthrough", "export the guide as video", "put the walkthrough on the PR".
 ---
 
 # code-map guide → video
@@ -37,7 +37,31 @@ It will:
 It runs in **real time** — roughly the length of the guide (a 2-minute walkthrough takes ~2 minutes) — and prints progress (`clip N/total`) then `DONE → <path>`.
 
 ### 3. Hand over the file
-Give the user the mp4 path. It's PR/Slack/Loom-ready: plays inline on GitHub, no app or link needed.
+Give the user the mp4 path. It's PR/Slack/Loom-ready — dragged into a PR/issue/Slack it plays inline.
+
+### 4. (Optional) Attach it to the open PR
+If the change has an open PR, offer to put the walkthrough on it. **Skip the whole step** if `gh` isn't installed, the user isn't authed (`gh auth status`), or there's no PR for the current branch.
+
+1. **Find the PR + read its body:**
+   ```bash
+   gh pr view --json number,url,body,headRepositoryOwner,headRepository
+   ```
+2. **Idempotency — skip if it already has a walkthrough.** If the body contains the marker `<!-- codemap-video -->`, or any existing `<video`, `user-attachments/assets`, or `.mp4`, stop — don't add another.
+3. **The GitHub limitation — be upfront with the user.** A *truly inline, auto-playing* video in a PR body only works via GitHub's web-composer "user-attachments" upload, which has **no token/API path**. So you can't fully script inline autoplay. Do the best automatable thing, then tell them the one manual fallback.
+4. **Upload for a stable URL + append to the body** (preserve the existing description — read it, add to the end):
+   ```bash
+   gh release create codemap-walkthroughs -n "code-map narrated walkthroughs" 2>/dev/null || true
+   gh release upload codemap-walkthroughs "<slug>.mp4" --clobber
+   # URL: https://github.com/<owner>/<repo>/releases/download/codemap-walkthroughs/<slug>.mp4
+   gh pr edit <number> --body "<existing body>
+
+   <!-- codemap-video -->
+   ### 🎓 Narrated walkthrough
+
+   https://github.com/<owner>/<repo>/releases/download/codemap-walkthroughs/<slug>.mp4"
+   ```
+   Put the URL on its own line — GitHub auto-embeds a player for supported media URLs when it can.
+5. **Tell the user the fallback:** GitHub renders some asset URLs as an inline player and others as a plain link. If it shows as a link and they want guaranteed inline autoplay, they drag the local `<slug>.mp4` into the PR description box once (the user-attachments path this can't script). Hand them the file either way.
 
 ## Notes
 - **Zero npm deps.** The script drives Chrome over the DevTools protocol using Node's built-in `WebSocket`/`fetch` (Node ≥ 22), and shells out to the system `ffmpeg`. It changes nothing in the sidecar or the player.
