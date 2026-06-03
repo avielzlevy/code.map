@@ -475,6 +475,8 @@ export function GuidePlayer({
   const [segmentIndex, setSegmentIndex] = useState(0);
   const [playing, setPlaying] = useState(true);
   const [muted, setMuted] = useState(false);
+  // True when the browser blocked autoplay on load (no user gesture yet).
+  const [audioBlocked, setAudioBlocked] = useState(false);
   const speechSupported = typeof window !== "undefined" && "speechSynthesis" in window;
 
   // Playback speed (applies to audio, speech, and the dwell timer).
@@ -629,7 +631,12 @@ export function GuidePlayer({
       audio.playbackRate = rate;
       audio.onended = finish;
       audio.onerror = finish; // missing clip shouldn't stall the walkthrough
-      void audio.play().catch(() => {}); // autoplay-blocked → guard advances
+      // If the browser blocks autoplay (no gesture yet), pause and prompt instead
+      // of silently advancing — so the very first sentence is heard too.
+      audio.play().then(() => setAudioBlocked(false)).catch(() => {
+        setAudioBlocked(true);
+        setPlaying(false);
+      });
       const guard = setTimeout(finish, (activeText.length * 95) / rate + 8000);
       return () => {
         clearTimeout(guard);
@@ -1018,6 +1025,26 @@ export function GuidePlayer({
           ))}
         </div>
       </div>
+
+      {/* Autoplay gate — browsers block sound without a gesture, so the first
+          sentence would be silent. One click starts it (and unblocks the rest). */}
+      <AnimatePresence>
+        {audioBlocked && !playing && (
+          <motion.button
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={SPRING_DEFAULT}
+            onClick={() => setPlaying(true)}
+            className="absolute inset-0 z-[60] flex flex-col items-center justify-center gap-4 bg-black/60 backdrop-blur-sm"
+          >
+            <span className="w-16 h-16 rounded-full bg-white text-black flex items-center justify-center shadow-[0_8px_32px_rgba(0,0,0,0.6)]">
+              <Play className="w-7 h-7 ml-1" />
+            </span>
+            <span className="text-[13px] text-white/80">Play the walkthrough — with narration</span>
+          </motion.button>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
