@@ -93,7 +93,9 @@ async function connectBrowser() {
 
 async function main() {
   assertFfmpeg();
-  const url = `${BASE}/app?guide=${encodeURIComponent(slug)}`;
+  // record=1 tells the player to never pause on a blocked clip (we force autoplay
+  // and compose the audio from the clips ourselves).
+  const url = `${BASE}/app?guide=${encodeURIComponent(slug)}&record=1`;
 
   // how many narrated clips should play (so we know when the guide is truly done)
   const res = await fetch(`${BASE}/api/flow-map/guide/saved/${encodeURIComponent(slug)}`);

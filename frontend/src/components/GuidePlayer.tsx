@@ -478,6 +478,10 @@ export function GuidePlayer({
   // True when the browser blocked autoplay on load (no user gesture yet).
   const [audioBlocked, setAudioBlocked] = useState(false);
   const speechSupported = typeof window !== "undefined" && "speechSynthesis" in window;
+  // The mp4 renderer opens the guide with ?record=1 — it forces autoplay and
+  // composes audio separately, so it must never pause on a blocked clip.
+  const recordMode =
+    typeof window !== "undefined" && new URLSearchParams(window.location.search).get("record") === "1";
 
   // Playback speed (applies to audio, speech, and the dwell timer).
   const [rate, setRate] = useState<number>(() => {
@@ -634,6 +638,7 @@ export function GuidePlayer({
       // If the browser blocks autoplay (no gesture yet), pause and prompt instead
       // of silently advancing — so the very first sentence is heard too.
       audio.play().then(() => setAudioBlocked(false)).catch(() => {
+        if (recordMode) return; // renderer: let the guard advance, never pause
         setAudioBlocked(true);
         setPlaying(false);
       });
@@ -670,7 +675,7 @@ export function GuidePlayer({
 
     const id = setTimeout(finish, dwellFor(activeText) / rate);
     return () => clearTimeout(id);
-  }, [phase, playing, muted, rate, activeText, screenIndex, segmentIndex, speechSupported, selectedVoice, advance, guide.audio]);
+  }, [phase, playing, muted, rate, activeText, screenIndex, segmentIndex, speechSupported, selectedVoice, advance, guide.audio, recordMode]);
 
   const ensureNarrating = useCallback(() => {
     if (phase === "reveal") setPhase("narrating");
