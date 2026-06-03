@@ -53,7 +53,22 @@ Guidance:
 - A typical edited step reads: *"Before, it just did X"* (before pane) → *"now it also does Y"* (after pane) → *"and Z"* (after pane).
 - 2–5 sentences per step is the sweet spot.
 
-### 4. POST it to the sidecar
+### 4. (Context-aware) Capture the decisions page
+This guide has two flows, chosen automatically from what THIS conversation contains:
+
+- **Diff-only** — the conversation is just "here's the change" with no design discussion. Author overview + steps + closing as above. **Skip this step.**
+- **Context-aware** — the conversation (or a handoff doc / memory / summary you were given) **actually weighed alternatives**: options considered, a path rejected, a tradeoff argued. Then add a **decisions page** that captures *why this approach* — the part a git diff can never show.
+
+**The mining rule — be strict.** Include a decision **only** when an alternative was *genuinely* weighed or rejected in the conversation. Never infer "they probably considered X", never invent a tradeoff to fill the page. If no real alternatives were discussed, **omit `decisions` entirely** — a diff-only guide is the correct output, not a padded one. (The server also drops the page if it's empty.)
+
+When there *is* real decision content, send a `decisions` object alongside `steps`:
+- `entries` — the options weighed. Each is `{ option, chosen, rationale }`:
+  - `option` — the approach considered (e.g. `"a DB row lock"`).
+  - `chosen` — `true` for the one adopted, `false` for each rejected alternative. Mark exactly the approach the change actually took as chosen.
+  - `rationale` — one short clause on why it was chosen or rejected.
+- `narration` — **one composed spoken script** (2–4 sentences) that tells the tradeoff as a story: "We weighed X, but went with Y because Z." Written to be *heard* — this is the single clip narrated over the page. Don't just concatenate the rationales; compose them.
+
+### 5. POST it to the sidecar
 ```bash
 curl -s -X POST "$BASE/api/flow-map/guide" \
   -H "Content-Type: application/json" \
@@ -84,12 +99,19 @@ curl -s -X POST "$BASE/api/flow-map/guide" \
           { "text": "Now it first asserts the order can actually be refunded.", "focus": "assertRefundable" },
           { "text": "And it records the amount, so partial refunds are tracked.", "focus": "order.refundedAmount = amount" }
         ] }
-    ]
+    ],
+    "decisions": {
+      "entries": [
+        { "option": "A DB row lock around the refund", "chosen": false, "rationale": "Too coarse — it serialized unrelated order writes." },
+        { "option": "An idempotency key on the refund call", "chosen": true, "rationale": "Cheap, and makes client retries safe without locking." }
+      ],
+      "narration": "We considered locking the order row during a refund, but that would have serialized unrelated writes. So we went with an idempotency key instead — retries stay safe, and nothing else has to wait."
+    }
   }'
 ```
-Pick a short kebab-case `slug` (the feature name).
+Pick a short kebab-case `slug` (the feature name). The `decisions` block is **optional** — include it only in the context-aware flow (step 4); omit it for diff-only guides.
 
-### 5. Check the response — this is the validation chain
+### 6. Check the response — this is the validation chain
 The response is `{ status, data: { url, resolved, total, unresolved } }`:
 - **`resolved === total`, `unresolved: []`** → success. The guide is written, with the diff and focus already snapshotted.
 - **`unresolved` has entries** → each tells you why a step didn't match:
@@ -101,16 +123,13 @@ The response is `{ status, data: { url, resolved, total, unresolved } }`:
 
 > Focus snippets that don't match a diff line aren't an error — that sentence simply highlights the whole function. If a focus isn't landing where you expect, pick a more exact snippet from the changed line.
 
-### 6. Hand over the URL
-On success, give the user `$BASE` + the returned `url` (e.g. `http://localhost:4567/app?guide=refund-flow`) and offer to open it (macOS: `open "<url>"`). It loads the guide and starts the narrated playback — each step fades in the function, then the focus walks the change as the narration plays.
+### 7. Hand over the URL
+On success, give the user `$BASE` + the returned `url` (e.g. `http://localhost:4567/app?guide=refund-flow`) and offer to open it (macOS: `open "<url>"`). It loads the guide and starts the narrated playback — each step fades in the function, then the focus walks the change as the narration plays. A context-aware guide plays the decisions page after the steps.
 
-To produce a **shareable mp4** of the walkthrough (for a PR, Slack, etc.), use the **codemap-guide-video** skill with the same slug.
-
-### 7. (Optional) Put it on the PR
-If this change has an open PR, close the loop: check whether the PR description already has a walkthrough, and if not, render the video and attach it. Hand this off to the **codemap-guide-video** skill, which has the exact steps (it finds the PR with `gh`, skips if a video is already there via the `<!-- codemap-video -->` marker, renders the mp4, and appends it to the description). Skip silently if there's no PR or `gh` isn't set up.
+To produce a **shareable mp4** of the walkthrough (for Slack, a doc, etc.), use the **codemap-guide-video** skill with the same slug.
 
 ## Notes
-- You only ever send **semantic** content (guide-level `summary` + `closing` + `overview` + optional `base`, plus per step `methodName` + `file` + `changeType` + `narration`). The server owns id resolution, the git before/after snapshot, focus-to-line mapping, validation, and file-writing. Don't build node ids, line numbers, or `.codemap/guides/*.json` yourself.
-- The `overview` is guide-level (one per guide) and needs no graph resolution. Omit it and the guide opens straight on the first function.
+- You only ever send **semantic** content (guide-level `summary` + `closing` + `overview` + optional `decisions` + optional `base`, plus per step `methodName` + `file` + `changeType` + `narration`). The server owns id resolution, the git before/after snapshot, focus-to-line mapping, validation, and file-writing. Don't build node ids, line numbers, or `.codemap/guides/*.json` yourself.
+- The `overview` and `decisions` are guide-level (one per guide) and need no graph resolution. Omit either and the player simply skips that screen.
 - Narration is **spoken** during playback. If the sidecar has `OPENAI_API_KEY` set, the server pre-renders each sentence to audio at author time (cached, portable); otherwise the player uses the browser's local voice. Either way, write narration to be *heard*.
 - The diff is captured from `git diff HEAD` at author time, so author the guide **after** making the change and **before** committing-and-moving-on if you want the working-tree diff. The written guide is portable: commit it or open the same URL on a teammate's checkout.

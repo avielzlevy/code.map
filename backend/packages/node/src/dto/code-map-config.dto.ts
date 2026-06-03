@@ -166,6 +166,28 @@ export interface GuideOverview {
   change: string[];
 }
 
+/** One option weighed while making the change — chosen or rejected, and why. */
+export interface GuideDecision {
+  /** The option that was considered (e.g. "a DB lock"). */
+  option: string;
+  /** True for the option that was adopted; false for a rejected alternative. */
+  chosen: boolean;
+  /** Why it was chosen or rejected. */
+  rationale: string;
+}
+
+/**
+ * The "decisions" page: the rejected options and tradeoffs behind the change.
+ * Only present when the change's alternatives were genuinely weighed (mined from
+ * the authoring conversation/handoff), so it's absent on diff-only guides.
+ */
+export interface GuideDecisions {
+  /** The options considered — the chosen one plus the rejected alternatives. */
+  entries: GuideDecision[];
+  /** One composed spoken script narrating the decision, played over the page. */
+  narration: string;
+}
+
 /** Pre-rendered narration audio, keyed by the exact sentence text → clip URL. */
 export interface GuideAudioManifest {
   voice: string;
@@ -189,6 +211,8 @@ export interface GuideArtifact {
   audio?: GuideAudioManifest;
   /** Ordered walkthrough — one step per changed node, in the order the LLM curated. */
   steps: GuideStep[];
+  /** Optional rejected-options/tradeoffs page, shown after the steps (context-aware guides only). */
+  decisions?: GuideDecisions;
   /** Optional embedded subgraph for standalone/LLM use; the player latches onto the live graph. */
   subgraph?: {
     nodes: GuideSubgraphNode[];
@@ -242,6 +266,12 @@ export interface GuideAuthorInput {
   base?: string;
   /** Optional big-picture briefing (before-state + what changed). */
   overview?: GuideOverview;
+  /**
+   * Optional rejected-options/tradeoffs page. Include ONLY when alternatives were
+   * genuinely weighed in the conversation; the server omits it if entries or the
+   * composed narration are empty.
+   */
+  decisions?: GuideDecisions;
   steps: GuideAuthorStep[];
 }
 

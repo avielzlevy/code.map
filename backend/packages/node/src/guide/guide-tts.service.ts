@@ -77,6 +77,7 @@ export class GuideTtsService {
     for (const step of artifact.steps) {
       for (const segment of step.narration) texts.add(segment.text);
     }
+    if (artifact.decisions) texts.add(artifact.decisions.narration);
     if (artifact.closing) texts.add(artifact.closing);
     return [...texts].filter((t) => t.trim().length > 0);
   }

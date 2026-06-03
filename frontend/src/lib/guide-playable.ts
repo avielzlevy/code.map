@@ -38,6 +38,11 @@ export type PlayableGuideStep = {
 
 export type GuideOverview = { before: string[]; change: string[] };
 
+/** One option weighed for the change — chosen or rejected, and why. */
+export type GuideDecision = { option: string; chosen: boolean; rationale: string };
+/** The rejected-options/tradeoffs page: the options + a composed spoken script. */
+export type GuideDecisions = { entries: GuideDecision[]; narration: string };
+
 /** Pre-rendered narration audio: sentence text → clip URL. */
 export type GuideAudio = { voice: string; model: string; clips: Record<string, string> };
 
@@ -50,6 +55,8 @@ export type PlayableGuide = {
   closing?: string;
   /** Optional big-picture briefing shown as the first screen. */
   overview?: GuideOverview;
+  /** Optional rejected-options/tradeoffs page, shown after the steps. */
+  decisions?: GuideDecisions;
   /** Pre-rendered narration audio (HD voice); absent → Web Speech fallback. */
   audio?: GuideAudio;
   steps: PlayableGuideStep[];
@@ -68,6 +75,7 @@ export function artifactToPlayable(artifact: GuideArtifact, slug: string): Playa
     summary: artifact.summary,
     closing: artifact.closing,
     overview: artifact.overview,
+    decisions: artifact.decisions,
     audio: artifact.audio,
     steps: artifact.steps.map(
       (s): PlayableGuideStep => ({

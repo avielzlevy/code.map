@@ -19,9 +19,15 @@ import {
   AudioLines,
   ChevronDown,
   Check,
+  Scale,
 } from "lucide-react";
 import { SPRING_DEFAULT, SPRING_SNAPPY } from "@/lib/spring";
-import type { DiffLine, PlayableGuide, PlayableGuideStep } from "@/lib/guide-playable";
+import type {
+  DiffLine,
+  GuideDecisions,
+  PlayableGuide,
+  PlayableGuideStep,
+} from "@/lib/guide-playable";
 
 const CHANGE_LABEL: Record<string, { label: string; className: string }> = {
   added: { label: "added", className: "text-green-300 border-green-400/40 bg-green-500/10" },
@@ -279,18 +285,22 @@ function FileSidebar({
   groups,
   activeIndex,
   hasOverview,
+  hasDecisions,
   hasClosing,
   onSelect,
   onSelectOverview,
+  onSelectDecisions,
   onSelectClosing,
 }: {
   groups: FileGroup[];
-  /** Active step's array index; -1 = overview screen, -2 = recap screen. */
+  /** Active step's array index; -1 = overview, -2 = recap, -3 = decisions. */
   activeIndex: number;
   hasOverview: boolean;
+  hasDecisions: boolean;
   hasClosing: boolean;
   onSelect: (i: number) => void;
   onSelectOverview: () => void;
+  onSelectDecisions: () => void;
   onSelectClosing: () => void;
 }) {
   return (
@@ -348,6 +358,21 @@ function FileSidebar({
           </div>
         );
       })}
+      {hasDecisions && (
+        <button
+          onClick={onSelectDecisions}
+          className={`w-full flex items-center gap-2 px-4 py-1.5 mt-2 text-left transition-colors ${
+            activeIndex === -3
+              ? "bg-amber-400/[0.08] shadow-[inset_2px_0_0_0_rgba(245,158,11,0.6)]"
+              : "hover:bg-white/[0.03]"
+          }`}
+        >
+          <Scale className={`w-3.5 h-3.5 shrink-0 ${activeIndex === -3 ? "text-amber-400/90" : "text-amber-400/40"}`} />
+          <span className={`text-[12px] font-medium ${activeIndex === -3 ? "text-white" : "text-gray-300"}`}>
+            Decisions
+          </span>
+        </button>
+      )}
       {hasClosing && (
         <button
           onClick={onSelectClosing}
@@ -440,6 +465,66 @@ function OverviewScreen({
   );
 }
 
+/**
+ * The decisions page — the rejected options and tradeoffs behind the change.
+ * Enriched/optional content, so it carries the amber accent; the chosen option
+ * uses white emphasis + a green check, rejected ones are dimmed and struck.
+ */
+function DecisionsScreen({ decisions }: { decisions: GuideDecisions }) {
+  return (
+    <div className="absolute inset-0 overflow-auto rounded-xl border border-amber-400/20 bg-zinc-950 px-10 py-10">
+      <div className="max-w-2xl mx-auto flex flex-col gap-8">
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-center gap-2">
+            <Scale className="w-3.5 h-3.5 text-amber-400/80" />
+            <span className="text-[9px] font-mono uppercase tracking-[0.18em] text-amber-400/60">
+              Decisions
+            </span>
+          </div>
+          <h1 className="text-2xl font-semibold text-white">Why this approach</h1>
+          <p className="text-[13px] leading-relaxed text-white/45">
+            The options weighed — and the tradeoffs behind the one that shipped.
+          </p>
+        </div>
+        <div className="flex flex-col gap-3">
+          {decisions.entries.map((e, i) => (
+            <div
+              key={i}
+              className={`flex items-start gap-3 rounded-xl border px-4 py-3 ${
+                e.chosen
+                  ? "border-amber-400/30 bg-amber-400/[0.04]"
+                  : "border-white/8 bg-white/[0.01]"
+              }`}
+            >
+              <span className="mt-0.5 shrink-0">
+                {e.chosen ? (
+                  <Check className="w-4 h-4 text-green-400" />
+                ) : (
+                  <X className="w-4 h-4 text-white/30" />
+                )}
+              </span>
+              <div className="flex flex-col gap-1 min-w-0">
+                <span
+                  className={`text-[14px] font-medium ${
+                    e.chosen
+                      ? "text-white"
+                      : "text-white/40 line-through decoration-white/20"
+                  }`}
+                >
+                  {e.option}
+                </span>
+                <p className={`text-[13px] leading-relaxed ${e.chosen ? "text-gray-300" : "text-gray-500"}`}>
+                  {e.rationale}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /** The guide's final screen — a short narrated recap that wraps the walkthrough up. */
 function ClosingScreen({ text }: { text: string }) {
   return (
@@ -465,10 +550,17 @@ export function GuidePlayer({
   // its briefing immediately (no code to reveal); steps reveal then narrate.
   const hasOverview =
     !!guide.overview && (guide.overview.before.length > 0 || guide.overview.change.length > 0);
+  const hasDecisions =
+    !!guide.decisions &&
+    guide.decisions.entries.length > 0 &&
+    guide.decisions.narration.trim().length > 0;
   const hasClosing = !!guide.closing && guide.closing.trim().length > 0;
   const overviewOffset = hasOverview ? 1 : 0;
+  const decisionsOffset = hasDecisions ? 1 : 0;
   const closingOffset = hasClosing ? 1 : 0;
-  const totalScreens = guide.steps.length + overviewOffset + closingOffset;
+  const totalScreens = guide.steps.length + overviewOffset + decisionsOffset + closingOffset;
+  // The decisions page sits right after the last step (before any closing recap).
+  const decisionsScreenIndex = overviewOffset + guide.steps.length;
 
   const [screenIndex, setScreenIndex] = useState(0);
   const [phase, setPhase] = useState<Phase>(hasOverview ? "narrating" : "reveal");
@@ -541,9 +633,11 @@ export function GuidePlayer({
   );
 
   const onOverview = hasOverview && screenIndex === 0;
+  const onDecisions = hasDecisions && screenIndex === decisionsScreenIndex;
   const onClosing = hasClosing && screenIndex === totalScreens - 1;
   const stepArrayIndex = screenIndex - overviewOffset;
-  const step: PlayableGuideStep | null = onOverview || onClosing ? null : guide.steps[stepArrayIndex];
+  const step: PlayableGuideStep | null =
+    onOverview || onDecisions || onClosing ? null : guide.steps[stepArrayIndex];
   const before = step?.diff.before ?? null;
   const after = step?.diff.after ?? null;
 
@@ -551,13 +645,23 @@ export function GuidePlayer({
     if (!guide.overview) return [];
     return [...guide.overview.before, ...guide.overview.change].map((text) => ({ text }));
   }, [guide.overview]);
+  const decisionsSegments = useMemo<{ text: string }[]>(
+    () => (guide.decisions ? [{ text: guide.decisions.narration }] : []),
+    [guide.decisions],
+  );
   const closingSegments = useMemo<{ text: string }[]>(
     () => (guide.closing ? [{ text: guide.closing }] : []),
     [guide.closing],
   );
 
-  // The narration driving the active screen (overview briefing, step, or recap).
-  const narration = onOverview ? overviewSegments : onClosing ? closingSegments : step?.narration ?? [];
+  // The narration driving the active screen (overview briefing, step, decisions, or recap).
+  const narration = onOverview
+    ? overviewSegments
+    : onDecisions
+      ? decisionsSegments
+      : onClosing
+        ? closingSegments
+        : step?.narration ?? [];
   const lastSegment = narration.length - 1;
   const activeText = narration[segmentIndex]?.text ?? "";
 
@@ -583,21 +687,25 @@ export function GuidePlayer({
       const clamped = Math.max(0, Math.min(totalScreens - 1, i));
       setScreenIndex(clamped);
       setSegmentIndex(0);
-      // Overview and recap screens narrate straight away; code steps reveal first.
-      const isBrief = (hasOverview && clamped === 0) || (hasClosing && clamped === totalScreens - 1);
+      // Prose screens (overview, decisions, recap) narrate straight away; code steps reveal first.
+      const isBrief =
+        (hasOverview && clamped === 0) ||
+        (hasDecisions && clamped === decisionsScreenIndex) ||
+        (hasClosing && clamped === totalScreens - 1);
       setPhase(isBrief ? "narrating" : "reveal");
     },
-    [totalScreens, hasOverview, hasClosing],
+    [totalScreens, hasOverview, hasDecisions, decisionsScreenIndex, hasClosing],
   );
 
   // Number of narration sentences on a given screen — for landing on the last one.
   const segmentsOnScreen = useCallback(
     (i: number): number => {
       if (hasOverview && i === 0) return overviewSegments.length;
+      if (hasDecisions && i === decisionsScreenIndex) return decisionsSegments.length;
       if (hasClosing && i === totalScreens - 1) return closingSegments.length;
       return guide.steps[i - overviewOffset]?.narration.length ?? 0;
     },
-    [hasOverview, hasClosing, totalScreens, overviewSegments.length, closingSegments.length, guide.steps, overviewOffset],
+    [hasOverview, hasDecisions, decisionsScreenIndex, hasClosing, totalScreens, overviewSegments.length, decisionsSegments.length, closingSegments.length, guide.steps, overviewOffset],
   );
 
   // Reveal → narrate: hold for the staggered fade-in, then start the narration.
@@ -756,6 +864,8 @@ export function GuidePlayer({
         <div className="w-px h-5 bg-white/10" />
         {onOverview ? (
           <span className="text-[13px] font-mono font-semibold text-white/70 truncate">Overview</span>
+        ) : onDecisions ? (
+          <span className="text-[13px] font-mono font-semibold text-amber-300/80 truncate">Decisions</span>
         ) : onClosing ? (
           <span className="text-[13px] font-mono font-semibold text-white/70 truncate">Recap</span>
         ) : !step ? (
@@ -785,11 +895,13 @@ export function GuidePlayer({
       <div className="flex flex-1 min-h-0">
         <FileSidebar
           groups={fileGroups}
-          activeIndex={onOverview ? -1 : onClosing ? -2 : stepArrayIndex}
+          activeIndex={onOverview ? -1 : onDecisions ? -3 : onClosing ? -2 : stepArrayIndex}
           hasOverview={hasOverview}
+          hasDecisions={hasDecisions}
           hasClosing={hasClosing}
           onSelect={(i) => goToScreen(i + overviewOffset)}
           onSelectOverview={() => goToScreen(0)}
+          onSelectDecisions={() => goToScreen(decisionsScreenIndex)}
           onSelectClosing={() => goToScreen(totalScreens - 1)}
         />
 
@@ -834,6 +946,17 @@ export function GuidePlayer({
                   className="absolute inset-0"
                 >
                   <OverviewScreen guide={guide} activeSegment={segmentIndex} />
+                </motion.div>
+              ) : onDecisions && guide.decisions ? (
+                <motion.div
+                  key="decisions"
+                  initial={{ opacity: 0, y: 14, scale: 0.99 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -14, scale: 0.99 }}
+                  transition={SPRING_DEFAULT}
+                  className="absolute inset-0"
+                >
+                  <DecisionsScreen decisions={guide.decisions} />
                 </motion.div>
               ) : onClosing ? (
                 <motion.div

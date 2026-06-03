@@ -101,6 +101,9 @@ export type GuideStep = {
 
 export type GuideOverview = { before: string[]; change: string[] };
 
+export type GuideDecision = { option: string; chosen: boolean; rationale: string };
+export type GuideDecisions = { entries: GuideDecision[]; narration: string };
+
 export type GuideAudioManifest = {
   voice: string;
   model: string;
@@ -118,4 +121,5 @@ export type GuideArtifact = {
   overview?: GuideOverview;
   audio?: GuideAudioManifest;
   steps: GuideStep[];
+  decisions?: GuideDecisions;
 };

@@ -8,6 +8,7 @@ import {
   FlowGraph,
   GuideArtifact,
   GuideAuthorInput,
+  GuideDecisions,
   GuideDiff,
   GuideFocus,
   GuideNarrationSegment,
@@ -104,6 +105,7 @@ export class GuideService {
     }
 
     const overview = this.cleanOverview(input.overview);
+    const decisions = this.cleanDecisions(input.decisions);
     const summary = input.summary?.trim() || undefined;
     const closing = input.closing?.trim() || undefined;
 
@@ -114,6 +116,7 @@ export class GuideService {
       hasOverview: !!overview,
       hasSummary: !!summary,
       hasClosing: !!closing,
+      hasDecisions: !!decisions,
     });
 
     return {
@@ -123,6 +126,7 @@ export class GuideService {
         ...(closing ? { closing } : {}),
         ...(overview ? { overview } : {}),
         steps,
+        ...(decisions ? { decisions } : {}),
       },
       unresolved,
     };
@@ -172,6 +176,25 @@ export class GuideService {
     const change = clean(overview.change);
     if (before.length === 0 && change.length === 0) return undefined;
     return { before, change };
+  }
+
+  /**
+   * Trim/drop the decisions page. Each entry needs a non-empty option + rationale;
+   * the page is omitted unless at least one valid entry AND a composed narration
+   * survive — so a context-less guide simply has no decisions page.
+   */
+  private cleanDecisions(decisions: GuideDecisions | undefined): GuideDecisions | undefined {
+    if (!decisions) return undefined;
+    const entries = (Array.isArray(decisions.entries) ? decisions.entries : [])
+      .map((e) => ({
+        option: e.option?.trim() ?? '',
+        chosen: !!e.chosen,
+        rationale: e.rationale?.trim() ?? '',
+      }))
+      .filter((e) => e.option.length > 0 && e.rationale.length > 0);
+    const narration = decisions.narration?.trim() ?? '';
+    if (entries.length === 0 || narration.length === 0) return undefined;
+    return { entries, narration };
   }
 
   /** Persist an artifact to `.codemap/guides/<slug>.json`. */
