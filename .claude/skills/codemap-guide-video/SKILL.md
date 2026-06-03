@@ -1,6 +1,6 @@
 ---
 name: codemap-guide-video
-description: Render a saved code-map guide to a shareable mp4 (narrated walkthrough with before/after code) by recording its live playback, and optionally attach it to the change's open PR. Use after authoring a guide when the user wants a video — "render the guide to mp4", "make a video of the walkthrough", "export the guide as video", "put the walkthrough on the PR".
+description: Render a saved code-map guide to a shareable mp4 (narrated walkthrough with before/after code) by recording its live playback. Use after authoring a guide when the user wants a video — "render the guide to mp4", "make a video of the walkthrough", "export the guide as video".
 ---
 
 # code-map guide → video
@@ -21,9 +21,11 @@ This pairs with the **codemap-guide** skill: author the guide first (that writes
 You need the guide's slug (the same one `codemap-guide` wrote, e.g. `refund-flow`). If unsure, list saved guides: `curl -s "$BASE/api/flow-map/guide/saved"`.
 
 ### 2. Render it
-Run the bundled script (it lives next to this SKILL.md — use this skill's base directory):
+Locate `render-guide.mjs` by finding the directory that contains this SKILL.md file (`<skill-dir>`); the script sits next to it. If you can't determine that path, ask the user for it before running the command.
+
+Derive the output filename from the slug, but **sanitize it first**: replace any non-alphanumeric character (spaces, slashes, etc.) with hyphens to get `<safe-slug>`, then use `<safe-slug>.mp4`. Pass the original slug to the script as the guide identifier.
 ```bash
-node "<skill-dir>/render-guide.mjs" <slug> "$BASE" "<slug>.mp4"
+node "<skill-dir>/render-guide.mjs" <slug> "$BASE" "<safe-slug>.mp4"
 ```
 e.g.
 ```bash
@@ -32,36 +34,14 @@ node "<skill-dir>/render-guide.mjs" refund-flow http://localhost:4567 refund-flo
 It will:
 - open the guide and **record the live auto-play** (so it captures exactly what a viewer sees — voice timing, before/after reveal, the focus walking the change),
 - rebuild the audio from the guide's narration clips, synced by play timestamp,
-- write an `<slug>.mp4` (h264 + aac).
+- write an `<safe-slug>.mp4` (h264 + aac).
 
 It runs in **real time** — roughly the length of the guide (a 2-minute walkthrough takes ~2 minutes) — and prints progress (`clip N/total`) then `DONE → <path>`.
 
+**If it fails:** if the script exits without printing `DONE → <path>` (e.g. non-zero exit, Chrome crash, ffmpeg encode failure), capture its stderr and surface it to the user verbatim — e.g. "Render failed: `<stderr>`. Check that Chrome/ffmpeg are installed and that the code-map sidecar is running." Don't claim success.
+
 ### 3. Hand over the file
-Give the user the mp4 path. It's PR/Slack/Loom-ready — dragged into a PR/issue/Slack it plays inline.
-
-### 4. (Optional) Attach it to the open PR
-If the change has an open PR, offer to put the walkthrough on it. **Skip the whole step** if `gh` isn't installed, the user isn't authed (`gh auth status`), or there's no PR for the current branch.
-
-1. **Find the PR + read its body:**
-   ```bash
-   gh pr view --json number,url,body,headRepositoryOwner,headRepository
-   ```
-2. **Idempotency — skip if it already has a walkthrough.** If the body contains the marker `<!-- codemap-video -->`, or any existing `<video`, `user-attachments/assets`, or `.mp4`, stop — don't add another.
-3. **The GitHub limitation — be upfront with the user.** A *truly inline, auto-playing* video in a PR body only works via GitHub's web-composer "user-attachments" upload, which has **no token/API path**. So you can't fully script inline autoplay. Do the best automatable thing, then tell them the one manual fallback.
-4. **Upload for a stable URL + append to the body** (preserve the existing description — read it, add to the end):
-   ```bash
-   gh release create codemap-walkthroughs -n "code-map narrated walkthroughs" 2>/dev/null || true
-   gh release upload codemap-walkthroughs "<slug>.mp4" --clobber
-   # URL: https://github.com/<owner>/<repo>/releases/download/codemap-walkthroughs/<slug>.mp4
-   gh pr edit <number> --body "<existing body>
-
-   <!-- codemap-video -->
-   ### 🎓 Narrated walkthrough
-
-   https://github.com/<owner>/<repo>/releases/download/codemap-walkthroughs/<slug>.mp4"
-   ```
-   Put the URL on its own line — GitHub auto-embeds a player for supported media URLs when it can.
-5. **Tell the user the fallback:** GitHub renders some asset URLs as an inline player and others as a plain link. If it shows as a link and they want guaranteed inline autoplay, they drag the local `<slug>.mp4` into the PR description box once (the user-attachments path this can't script). Hand them the file either way.
+Give the user the mp4 path. It's Slack/Loom-ready — and dragged into a GitHub PR/issue or Slack it plays inline.
 
 ## Notes
 - **Zero npm deps.** The script drives Chrome over the DevTools protocol using Node's built-in `WebSocket`/`fetch` (Node ≥ 22), and shells out to the system `ffmpeg`. It changes nothing in the sidecar or the player.
